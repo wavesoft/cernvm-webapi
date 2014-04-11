@@ -65,6 +65,7 @@ public:
 	~CVMWebAPISession() {
 		CVMWA_LOG("Debug", "Destructing CVMWebAPISession");
 		hvSession->off( "stateChanged", hStateChanged );
+		hvSession->abort();
 	}
 
 	/**
