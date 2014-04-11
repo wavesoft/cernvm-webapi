@@ -22,11 +22,11 @@
 #ifndef DAEMON_COMPONENT_WEBAPISESSION_H
 #define DAEMON_COMPONENT_WEBAPISESSION_H
 
-#include <Common/Hypervisor.h>
-#include <Common/ProgressFeedback.h>
-#include <Common/Utilities.h>
-
-#include <Hypervisor/Virtualbox/VBoxSession.h>
+#include <CernVM/Hypervisor.h>
+#include <CernVM/ProgressFeedback.h>
+#include <CernVM/Utilities.h>
+ 
+#include <CernVM/Hypervisor/Virtualbox/VBoxSession.h>
 
 
 class CVMWebAPISession {
@@ -35,7 +35,7 @@ public:
 	/**
 	 * Constructor for the CernVM WebAPI Session 
 	 */
-	CVMWebAPISession( DaemonCore& core, DaemonConnection& connection, HVSessionPtr hvSession, int uuid  )
+	CVMWebAPISession( DaemonCore* core, DaemonConnection& connection, HVSessionPtr hvSession, int uuid  )
 		: core(core), connection(connection), hvSession(hvSession), uuid(uuid), uuid_str(ntos<int>(uuid)), 
 		  callbackForwarder( connection, uuid_str ), apiPortOnline(false), periodicsRunning(false), apiPortCounter(0)
 	{ 
@@ -117,7 +117,7 @@ private:
 	/**
 	 * The daemon's core state manager
 	 */
-	DaemonCore&			core;
+	DaemonCore*			core;
 
 	/**
 	 * Hook slots (used for unbinding the hooks at destruction)

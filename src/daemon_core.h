@@ -23,10 +23,11 @@
 #define DAEMON_CORE_H
 
 #include "daemon.h"
+#include <boost/shared_ptr.hpp>
 
-#include <Common/Hypervisor.h>
-#include <Common/DomainKeystore.h>
-#include <Common/DownloadProvider.h>
+#include <CernVM/Hypervisor.h>
+#include <CernVM/DomainKeystore.h>
+#include <CernVM/DownloadProvider.h>
 
 class AuthKey {
 public:
@@ -75,7 +76,7 @@ public:
 	 * Allocate a new UUID and store the given session information to the
 	 * sessions map.
 	 */
-	CVMWebAPISessionPtr			storeSession( DaemonConnection& session, HVSessionPtr hvSession );
+	CVMWebAPISession*			storeSession( DaemonConnection& session, HVSessionPtr hvSession );
 
 	/**
 	 * Unregister all sessions launched from the given connection
@@ -137,7 +138,7 @@ public:
 	/**
 	 * Sessions
 	 */
-	std::map<int, CVMWebAPISessionPtr >			sessions;
+	std::map<int, CVMWebAPISession* >			sessions;
 
 };
 

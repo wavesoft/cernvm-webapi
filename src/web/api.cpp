@@ -21,7 +21,7 @@
 #include "api.h"
 #include <sstream>
  
-#include <Common/Utilities.h>
+#include <CernVM/Utilities.h>
 
 /**
  * Handle incoming raw request from the browser

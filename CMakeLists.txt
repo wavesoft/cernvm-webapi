@@ -124,9 +124,6 @@ file ( GLOB WEBAPI_RESOURCES
 		${PLATFORM_DIR}/icon.*
 	)
 
-# Locate the common sources
-file ( GLOB WEBAPI_SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp  )
-
 # Setup includes
 include_directories( ${PROJECT_SOURCE_DIR}/src )
 include_directories( ${CERNVM_INCLUDE_DIRS} )

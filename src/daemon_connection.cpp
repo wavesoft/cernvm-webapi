@@ -27,8 +27,8 @@
 #include <json/json.h>
 #include <boost/thread.hpp>
 
-#include <Common/Hypervisor.h>
-#include <Common/ProgressFeedback.h>
+#include <CernVM/Hypervisor.h>
+#include <CernVM/ProgressFeedback.h>
 
 /**
  * Handle incoming websocket action
@@ -367,7 +367,7 @@ void DaemonConnection::requestSession_thread( const std::string& eventID, const 
         session->update();
 
         // Register session on store
-        CVMWebAPISessionPtr cvmSession = core.storeSession( *this, session );
+        CVMWebAPISession* cvmSession = core.storeSession( *this, session );
         
         // Completed
         cb.fire("succeed", ArgumentList("Session oppened successfully")(cvmSession->uuid));

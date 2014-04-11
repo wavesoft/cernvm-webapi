@@ -20,7 +20,7 @@
 
 // Everything is included in daemon.h
 // (Including cross-referencing)
-#include "../daemon.h"
+#include "daemon.h"
 
 /**
  * Unregister everything upon destruction

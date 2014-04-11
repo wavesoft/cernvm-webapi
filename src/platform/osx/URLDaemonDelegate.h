@@ -10,10 +10,10 @@
 #import <Foundation/NSAppleEventManager.h>
 
 // Webserver
-#include <MicroDaemon/web/webserver.h>
+#include <web/webserver.h>
 
 // Daemon components
-#include <MicroDaemon/daemon.h>
+#include <daemon.h>
 
 @interface URLDaemonDelegate : NSObject <NSApplicationDelegate> {
   

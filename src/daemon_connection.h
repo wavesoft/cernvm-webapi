@@ -24,9 +24,9 @@
 
 #include "daemon.h"
 
-#include <Common/Config.h>
-#include <Common/UserInteraction.h>
-#include <Common/Callbacks.h>
+#include <CernVM/Config.h>
+#include <CernVM/UserInteraction.h>
+#include <CernVM/Callbacks.h>
 
 #include <boost/make_shared.hpp>
 #include <boost/bind.hpp>

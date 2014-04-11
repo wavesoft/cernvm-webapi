@@ -3,14 +3,14 @@ set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS ON)
 project(mongoose C)
 
 # Download information for OpenSSL
-set(MONGOOSE_VERSION 5.3)
+set(MONGOOSE_VERSION 5.2)
 
 #############################################################
 # DOWNLOAD BOOTSTRAP 
 #############################################################
 
 # Setup archive
-set( ARCHIVE_URL "https://codeload.github.com/cesanta/mongoose/zip/5.3" )
+set( ARCHIVE_URL "https://codeload.github.com/cesanta/mongoose/zip/${MONGOOSE_VERSION}" )
 set( ARCHIVE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/mongoose-${MONGOOSE_VERSION}" )
 set( ARCHIVE_EXT ".zip" )
 

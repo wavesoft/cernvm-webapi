@@ -22,8 +22,8 @@
 #ifndef SERVERAPI_H
 #define SERVERAPI_H
 
-#include <Common/ParameterMap.h>
-#include <Common/ArgumentList.h>
+#include <CernVM/ParameterMap.h>
+#include <CernVM/ArgumentList.h>
 
 #include "webserver.h"
 #include "api.h"

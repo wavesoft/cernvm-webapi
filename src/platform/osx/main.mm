@@ -7,7 +7,7 @@
 //
 
 #import <Cocoa/Cocoa.h>
-#import <Common/DomainKeystore.h>
+#import <CernVM/DomainKeystore.h>
 #import "URLDaemonDelegate.h"
 
 int main(int argc, const char * argv[])
