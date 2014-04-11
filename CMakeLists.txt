@@ -1,23 +1,29 @@
 cmake_minimum_required (VERSION 2.8)
 
 # Guess system architecture
-set(GUESS_ARCH "i386")
-if(CMAKE_SYSTEM_PROCESSOR)
+set(GUESS_ARCH "i386") 							# 1) Fallback to x86
+if(CMAKE_SYSTEM_PROCESSOR) 						# 2) Build on the same processor
 	set(GUESS_ARCH ${CMAKE_SYSTEM_PROCESSOR})
+	if(${GUESS_ARCH} STREQUAL "AMD64")
+		# We don't do any differentiation for AMD64 instruction set
+		set(GUESS_ARCH "x86_64")
+	endif()
 endif()
-if(CMAKE_OSX_ARCHITECTURES)
+if(CMAKE_OSX_ARCHITECTURES)						# 3) Lookup on OSX Architectures
 	set(GUESS_ARCH ${CMAKE_OSX_ARCHITECTURES})
-endif()
-# We don't do any differentiation for AMD64 instruction set
-if(${GUESS_ARCH} STREQUAL "AMD64")
+elseif ("${CMAKE_GENERATOR}" MATCHES "Win64") 	# 4) Lookup on Windows Generator
 	set(GUESS_ARCH "x86_64")
 endif()
 
 # Prompt architecture
-set(TARGET_ARCH "${GUESS_ARCH}" CACHE STRING "Define the target architecture" )
-set(CMAKE_OSX_ARCHITECTURES ${TARGET_ARCH})
-set(OSX_ARCHITECTURES ${TARGET_ARCH})
+set(TARGET_ARCH "${GUESS_ARCH}" CACHE STRING "Override the identified target architecture (x86_64 or i386)" )
 message(STATUS "Building cernvm-webapi for arch: ${TARGET_ARCH}")
+
+# Change OSX architectures
+if (APPLE)
+	set(CMAKE_OSX_ARCHITECTURES ${TARGET_ARCH})
+	set(OSX_ARCHITECTURES ${TARGET_ARCH})
+endif()
 
 # Logging option
 set(LOGGING_ENABLED 0 CACHE STRING "Define the target architecture" )
@@ -150,6 +156,15 @@ else()
 		${WEBAPI_SOURCES}
 		)
 
+endif()
+
+# On linux we should add a flag to define the architecture we are building for
+if (UNIX)
+	if ("${TARGET_ARCH}" STREQUAL "x86_64")
+		add_compile_flags( ${PROJECT_NAME} -m64 )
+	else()
+		add_compile_flags( ${PROJECT_NAME} -m32 )
+	endif()
 endif()
 
 # Post-target Fixes for windows
