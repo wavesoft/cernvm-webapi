@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>CernVM WebAPI :: Socket Test</title>
+		<style type="text/css">
+		body {
+			font-family: Georgia, Tahoma, Arial;
+			font-size: 14px;
+		}
+
+		pre#log {
+			width: 100%;
+		}
+		</style>
+		<script type="text/javascript" src="cvmwebapi-2.0.0-src.js"></script>
+		<script type="text/javascript">
+
+		var sess;
+		CVM.startCVMWebAPI(function(api) {
+
+			console.info("Got API: ",api);
+
+			api.requestSession(
+				"http://localhost/sign.php",
+				function(session) {
+					sess = session;
+					console.info("Got Session: ",session);
+				});
+
+		});
+
+		/*
+		var ws = new CVM.Socket();
+		var session_id = 0;
+		function initialize() {
+			ws.connect();
+		}
+		function stop() {
+			sess.stop();
+		}
+		function start() {
+			ws.send("requestSession", {
+				"vmcp": "http://localhost/sign.php"
+			}, {
+				onSucceed : function( msg, id ) {
+					session_id = id;
+				}
+			});
+
+		}
+		function sendSession(what) {
+			ws.send(what, {
+				"session_id": session_id
+			});
+		}
+		*/
+
+		</script>
+	</head>
+	<body>
+		<h1>CernVM WebAPI</h1>
+		<pre id="log">
+		</pre>
+		<input type="button" value="Start" />
+		<input type="button" value="Stop" onclick="stop()" />
+		<input type="button" value="Open session" onclick="start()" />
+		<div class="display:none" id="session_controls">
+			<input type="button" value="Start" onclick="sess.start()" />
+			<input type="button" value="Stop" onclick="sess.stop()" />
+			<input type="button" value="Pause" onclick="sess.pause()" />
+			<input type="button" value="Resume" onclick="sess.resume()" />
+			<input type="button" value="Hibernate" onclick="sess.hibernate()" />
+			<input type="button" value="Close" onclick="sess.close()" />
+		</div>
+		<script type="text/javascript">initialize();</script>
+	</body>
+</html>

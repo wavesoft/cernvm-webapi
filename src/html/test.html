@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>CernVM WebAPI :: Socket Test</title>
+		<style type="text/css">
+		body {
+			font-family: Georgia, Tahoma, Arial;
+			font-size: 14px;
+		}
+
+		pre#log {
+			width: 100%;
+		}
+		</style>
+		<script type="text/javascript" src="js/WebAPI.js"></script>
+		<script type="text/javascript" src="js/EventDispatcher.js"></script>
+		<script type="text/javascript" src="js/Socket.js"></script>
+		<script type="text/javascript">
+
+		var ws = new WebAPI.Socket();
+		function initialize() {
+			ws.connect();
+		}
+
+		</script>
+	</head>
+	<body>
+		<h1>CernVM WebAPI</h1>
+		<pre id="log">
+		</pre>
+		<input type="button" onclick="initialize()" value="Start" />
+		<script type="text/javascript"></script>
+	</body>
+</html>

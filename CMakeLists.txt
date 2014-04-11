@@ -96,18 +96,64 @@ if (WIN32)
 	ADD_DEFINITIONS(-DCURL_STATICLIB)
 endif(WIN32)
 
+# Locate platform-dependant sources
+if (WIN32)
+	set ( PLATFORM_DIR ${PROJECT_SOURCE_DIR}/src/platform/win )
+	file ( GLOB PLATFORM_SOURCES ${PLATFORM_DIR}/*.cpp  )
+elseif (APPLE)
+	set ( PLATFORM_DIR ${PROJECT_SOURCE_DIR}/src/platform/osx )
+	file ( GLOB PLATFORM_SOURCES ${PLATFORM_DIR}/*.mm  )
+elseif(UNIX)
+	set ( PLATFORM_DIR ${PROJECT_SOURCE_DIR}/src/platform/unix )
+	file ( GLOB PLATFORM_SOURCES ${PLATFORM_DIR}/*.cpp  )
+endif()
+
+# Locate the daemon sources
+file ( GLOB WEBAPI_SOURCES 
+		${PROJECT_SOURCE_DIR}/src/*.cpp
+		${PROJECT_SOURCE_DIR}/src/web/*.cpp  
+		${PROJECT_SOURCE_DIR}/src/components/*.cpp  
+	)
+
+# Collect resources
+file ( GLOB WEBAPI_RESOURCES
+		# Get HTML Websites
+		${PROJECT_SOURCE_DIR}/src/html/*.html
+		${PROJECT_SOURCE_DIR}/src/html/*.js
+		# Get Icon
+		${PLATFORM_DIR}/icon.*
+	)
+
 # Locate the common sources
-file ( GLOB CERNVM_WEBAPI_SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp  )
+file ( GLOB WEBAPI_SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp  )
 
 # Setup includes
 include_directories( ${PROJECT_SOURCE_DIR}/src )
 include_directories( ${CERNVM_INCLUDE_DIRS} )
 include_directories( ${PROJECT_INCLUDES} )
 
-# Add executable
-add_executable( ${PROJECT_NAME} 
-	${CERNVM_WEBAPI_SOURCES}
-	)
+# Add executable, depending on the platform
+if (APPLE)
+
+	# Mac OSX Foundations
+	find_library(FRAMEWORK_FOUNDATION NAMES Foundation)
+	find_library(FRAMEWORK_COCOA NAMES Cocoa)
+
+	# Sources
+	add_executable( ${PROJECT_NAME} MACOSX_BUNDLE
+		${PLATFORM_SOURCES}
+		${WEBAPI_SOURCES}
+		${WEBAPI_RESOURCES}
+		)
+else()
+
+	# Sources
+	add_executable( ${PROJECT_NAME}
+		${PLATFORM_SOURCES}
+		${WEBAPI_SOURCES}
+		)
+
+endif()
 
 # Post-target Fixes for windows
 if (WIN32)
@@ -118,3 +164,16 @@ endif(WIN32)
 # Libraries
 target_link_libraries ( ${PROJECT_NAME} ${CERNVM_LIBRARIES} )
 target_link_libraries ( ${PROJECT_NAME} ${PROJECT_LIBRARIES} )
+
+# Link OSX Frameworks
+if (APPLE)
+	target_link_libraries ( ${PROJECT_NAME} ${FRAMEWORK_FOUNDATION} )
+	target_link_libraries ( ${PROJECT_NAME} ${FRAMEWORK_COCOA} )
+	set_target_properties( ${PROJECT_NAME} PROPERTIES 
+		MACOSX_BUNDLE_INFO_PLIST ${PLATFORM_DIR}/Info.plist
+	)
+	set_source_files_properties(
+		${WEBAPI_RESOURCES} PROPERTIES
+		MACOSX_PACKAGE_LOCATION Resources
+	)
+endif()
