@@ -19,3 +19,9 @@
 *.exe
 *.out
 *.app
+
+# Exclude build dirs
+build
+
+# Exclude archives from the extern
+extern/mongoose/mongoose-*
