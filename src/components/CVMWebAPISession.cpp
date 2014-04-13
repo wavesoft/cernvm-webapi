@@ -25,24 +25,111 @@
 /**
  * Handle session commands
  */
-void CVMWebAPISession::handleAction( const std::string& id, const std::string& action, ParameterMapPtr parameters ) {
+void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& action, ParameterMapPtr parameters ) {
+	int ret;
 	if (action == "start") {
 
 		ParameterMapPtr startParm = parameters->subgroup("parameters");
-		hvSession->start( startParm );
+		ret = hvSession->start( startParm );
+		if (ret != HVE_OK) {
+	        cb.fire("failed", ArgumentList( "Unable to start session" )( ret ) );
+		} else {
+	        cb.fire("succeed", ArgumentList("Session started successfully"));
+		}
 
 	} else if (action == "stop") {
-		hvSession->stop();
+        
+		ret = hvSession->stop();
+		if (ret != HVE_OK) {
+	        cb.fire("failed", ArgumentList( "Unable to stop session" )( ret ) );
+		} else {
+	        cb.fire("succeed", ArgumentList("Session stopped successfully"));
+		}
+
 	} else if (action == "pause") {
-		hvSession->pause();
+        
+		ret = hvSession->pause();
+		if (ret != HVE_OK) {
+	        cb.fire("failed", ArgumentList( "Unable to pause session" )( ret ) );
+		} else {
+	        cb.fire("succeed", ArgumentList("Session paused successfully"));
+		}
+
 	} else if (action == "resume") {
-		hvSession->resume();
+        
+		ret = hvSession->resume();
+		if (ret != HVE_OK) {
+	        cb.fire("failed", ArgumentList( "Unable to resume session" )( ret ) );
+		} else {
+	        cb.fire("succeed", ArgumentList("Session resumed successfully"));
+		}
+
 	} else if (action == "hibernate") {
-		hvSession->hibernate();
+        
+		ret = hvSession->hibernate();
+		if (ret != HVE_OK) {
+	        cb.fire("failed", ArgumentList( "Unable to hibernate session" )( ret ) );
+		} else {
+	        cb.fire("succeed", ArgumentList("Session hibernated successfully"));
+		}
+
 	} else if (action == "reset") {
-		hvSession->reset();
+        
+		ret = hvSession->reset();
+		if (ret != HVE_OK) {
+	        cb.fire("failed", ArgumentList( "Unable to reset session" )( ret ) );
+		} else {
+	        cb.fire("succeed", ArgumentList("Session reseted successfully"));
+		}
+
 	} else if (action == "close") {
-		hvSession->close();
+        
+		ret = hvSession->close();
+		if (ret != HVE_OK) {
+	        cb.fire("failed", ArgumentList( "Unable to close session" )( ret ) );
+		} else {
+	        cb.fire("succeed", ArgumentList("Session closed successfully"));
+		}
+
+	} else if (action == "get") {
+		std::string keyName = parameters->get("key", ""),
+					keyValue = "";
+
+		// Reply only to known key values
+		if (keyName == "api_uri") {
+			// Calculate the API URL
+			std::string host = hvSession->local->get("apiHost",""),
+						port = hvSession->local->get("apiPort", "");
+			keyValue = "http://" + host + ":" + port + "/";
+
+		} else if (keyName == "rdp_uri") {
+			// Calculate the VRDE path:port
+			keyValue = hvSession->getRDPAddress();
+
+		} else if (keyName == "cpus") {
+			keyValue = hvSession->parameters->get("cpus", "1");
+        } else if (keyName == "disk") {
+			keyValue = hvSession->parameters->get("disk", "1024");
+		} else if (keyName == "ram") {
+			keyValue = hvSession->parameters->get("ram", "512");
+		} else if (keyName == "cernvmVersion") {
+			keyValue = hvSession->parameters->get("cernvmVersion", "1.17-8");
+		} else if (keyName == "cernvmFlavor") {
+			keyValue = hvSession->parameters->get("cernvmFlavor", "prod");
+		} else if (keyName == "executionCap") {
+			keyValue = hvSession->parameters->get("executionCap", "prod");
+		} else if (keyName == "flags") {
+			keyValue = hvSession->parameters->get("flags", "0");
+
+		}
+
+		// Return value
+        cb.fire("succeed", ArgumentList(keyValue));
+
+	} else if (action == "set") {
+        
+        hvSession->parameters->get("");
+        
 	}
 }
 
@@ -68,7 +155,10 @@ void CVMWebAPISession::periodicJobsThread() {
 
 	// Check for API port state
     int sessionState = hvSession->local->getNum<int>("state", 0);
-    int apiPort = hvSession->local->getNum<int>("apiPort", 80);
+    std::string apiHost = hvSession->local->get("apiHost", "127.0.0.1");
+    std::string apiPort = hvSession->local->get("apiPort", "80");
+    std::string apiURL = "http://" + apiHost + ":" + apiURL;
+
 	CVMWA_LOG("Debug", "Session state: " << sessionState);
     if (sessionState == SS_RUNNING) {
     	if (!apiPortOnline) {
@@ -76,7 +166,7 @@ void CVMWebAPISession::periodicJobsThread() {
     		// Check if API port has gone online
     		bool newState = hvSession->isAPIAlive();
     		if (newState) {
-	    		connection.sendEvent( "apiPortStateChanged", ArgumentList(true)(apiPort) );
+	    		connection.sendEvent( "apiStateChanged", ArgumentList(true)(apiURL) );
     			apiPortOnline = true;
     		}
 
@@ -87,7 +177,7 @@ void CVMWebAPISession::periodicJobsThread() {
 
     			// Check for offline port
 	    		if (!hvSession->isAPIAlive()) {
-		    		connection.sendEvent( "apiPortStateChanged", ArgumentList(false)(apiPort) );
+		    		connection.sendEvent( "apiStateChanged", ArgumentList(false)(apiURL) );
 	    			apiPortOnline = true;
 	    		}
 
@@ -99,7 +189,7 @@ void CVMWebAPISession::periodicJobsThread() {
     } else {
     	if (apiPortOnline) {
     		// In any other state, the port is just offline
-    		connection.sendEvent( "apiPortStateChanged", ArgumentList(false)(apiPort) );
+    		connection.sendEvent( "apiStateChanged", ArgumentList(false)(apiURL) );
     		apiPortOnline = false;
     	}
     }
@@ -116,10 +206,14 @@ void CVMWebAPISession::__cbStateChanged( VariantArgList& args ) {
 	connection.sendEvent( "stateChanged", args, uuid_str );
 
 	// Check if we switched to a state where API is not available any more
-	int session = boost::get<int>(args[0]);
-	if ((session != SS_RUNNING) && apiPortOnline) {
+	int sessionState = boost::get<int>(args[0]);
+    std::string apiHost = hvSession->local->get("apiHost", "127.0.0.1");
+    std::string apiPort = hvSession->local->get("apiPort", "80");
+    std::string apiURL = "http://" + apiHost + ":" + apiURL;
+
+	if ((sessionState != SS_RUNNING) && apiPortOnline) {
 		// In any other state, the port is just offline
-		connection.sendEvent( "apiPortStateChanged", ArgumentList(false) );
+		connection.sendEvent( "apiStateChanged", ArgumentList(false)(apiURL) );
 		apiPortOnline = false;
 	}
 

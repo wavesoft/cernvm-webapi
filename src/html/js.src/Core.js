@@ -35,7 +35,9 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 		var instance = new _NS_.WebAPIPlugin();
 
 		// Connect and wait for status
+		var ignoreCallbacks = true;
 		instance.connect(function( hasAPI ) {
+			if (!ignoreCallbacks) return;
 			if (hasAPI) {
 
 				// We do have an API and we have a connection,
@@ -55,18 +57,29 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 				UserInteraction.createFramedWindow( cFrame );
 
 				// Wait until the application is installed
-				var infiniteTimer;
-				infiniteTimer = setInterval(function() {
-					instance.connect(function(hasAPI) {
+				var schedule_timer = 0, recheck,
+					schedule_recheck = function() {
+						if (schedule_timer != 0) clearTimeout(schedule_timer);
+						schedule_timer = setTimeout(recheck, 5000);
+					};
+					recheck = function() {
+						instance.connect(function(hasAPI) {
+							// Check if we have API
+							alert("Bah:" + hasAPI);
+							if (hasAPI) {
+								clearTimeout(schedule_timer);
+								cbOK( instance );
+							} else {
+								schedule_recheck();
+							}
+						});
+					};
 
-						// Check if we have API
-						if (hasAPI) {
-							clearInterval(infiniteTimer);
-							cbOK( instance );
-						}
+				// Ignore callbacks that are triggered from
+				ignoreCallbacks = true;
 
-					});
-				}, 5000);
+				// Schedule first re-check
+				schedule_recheck();
 
 			}
 		});

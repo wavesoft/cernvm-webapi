@@ -1,5 +1,5 @@
 
-4var WS_ENDPOINT = "ws://127.0.0.1:1793",
+var WS_ENDPOINT = "ws://127.0.0.1:1793",
 	WS_URI = "cernvm-webapi:";
 
 /**
@@ -296,6 +296,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState ) {
 	 */
 	var socket_failure = function( socket ) {
 		console.error("Unable to contact CernVM WebAPI");
+		if (!self.connecting) return;
 		self.connecting = false;
 		self.connected = false;
 

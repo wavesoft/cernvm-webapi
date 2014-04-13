@@ -14,6 +14,13 @@ _NS_.WebAPIPlugin = function() {
 _NS_.WebAPIPlugin.prototype = Object.create( _NS_.Socket.prototype );
 
 /**
+ * Stop the CernVM WebAPI Service
+ */
+_NS_.WebAPIPlugin.prototype.stopService = function() {
+	this.send("stopService");
+}
+
+/**
  * Open a session and call the cbOk when ready
  */
 _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
@@ -40,6 +47,8 @@ _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
 
 		},
 		onFailed: function( msg, code ) {
+
+			console.error("Failed to request session! "+msg);
 
 			// Fire the failed callback
 			if (cbFail) cbFail(msg, code);

@@ -36,7 +36,9 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 		var instance = new _NS_.WebAPIPlugin();
 
 		// Connect and wait for status
+		var ignoreCallbacks = true;
 		instance.connect(function( hasAPI ) {
+			if (!ignoreCallbacks) return;
 			if (hasAPI) {
 
 				// We do have an API and we have a connection,
@@ -56,18 +58,29 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 				UserInteraction.createFramedWindow( cFrame );
 
 				// Wait until the application is installed
-				var infiniteTimer;
-				infiniteTimer = setInterval(function() {
-					instance.connect(function(hasAPI) {
+				var schedule_timer = 0, recheck,
+					schedule_recheck = function() {
+						if (schedule_timer != 0) clearTimeout(schedule_timer);
+						schedule_timer = setTimeout(recheck, 5000);
+					};
+					recheck = function() {
+						instance.connect(function(hasAPI) {
+							// Check if we have API
+							alert("Bah:" + hasAPI);
+							if (hasAPI) {
+								clearTimeout(schedule_timer);
+								cbOK( instance );
+							} else {
+								schedule_recheck();
+							}
+						});
+					};
 
-						// Check if we have API
-						if (hasAPI) {
-							clearInterval(infiniteTimer);
-							cbOK( instance );
-						}
+				// Ignore callbacks that are triggered from
+				ignoreCallbacks = true;
 
-					});
-				}, 5000);
+				// Schedule first re-check
+				schedule_recheck();
 
 			}
 		});
@@ -123,6 +136,7 @@ _NS_.EventDispatcher.prototype.removeEventListener = function( name, listener ) 
 _NS_.ProgressFeedback = function() {
 	
 };
+
 var WS_ENDPOINT = "ws://127.0.0.1:1793",
 	WS_URI = "cernvm-webapi:";
 
@@ -254,9 +268,9 @@ _NS_.Socket.prototype.send = function(action, data, responseEvents, responseTime
 			// We got a response, reset timeout timer
 			if (timeoutTimer!=null) clearTimeout(timeoutTimer);
 
-			// Cleanup when we received a 'succeed' frame
+			// Cleanup when we received a 'succeed' or 'failed' event
 			if ((data['name'] == 'succeed') || (data['name'] == 'failed')) {
-				delete self.responseCallbacks[frameID];		
+				delete self.responseCallbacks[frameID];
 			}
 
 			// Pick and fire the appropriate event response
@@ -420,6 +434,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState ) {
 	 */
 	var socket_failure = function( socket ) {
 		console.error("Unable to contact CernVM WebAPI");
+		if (!self.connecting) return;
 		self.connecting = false;
 		self.connected = false;
 
@@ -456,8 +471,8 @@ _NS_.Socket.prototype.connect = function( cbAPIState ) {
 
 			// We ned to do a URL launch
 			var e = document.createElement('iframe'); 
-			e.style.display="none"; 
 			e.src = WS_URI + "launch";
+			e.style.display="none"; 
 			document.body.appendChild(e);
 
 			// And start loop for 5 sec
@@ -883,6 +898,13 @@ _NS_.WebAPIPlugin = function() {
 _NS_.WebAPIPlugin.prototype = Object.create( _NS_.Socket.prototype );
 
 /**
+ * Stop the CernVM WebAPI Service
+ */
+_NS_.WebAPIPlugin.prototype.stopService = function() {
+	this.send("stopService");
+}
+
+/**
  * Open a session and call the cbOk when ready
  */
 _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
@@ -892,6 +914,8 @@ _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
 	this.send("requestSession", {
 		"vmcp": vmcp
 	}, {
+
+		// Basic responses
 		onSucceed : function( msg, session_id ) {
 
 			// Create a new session object
@@ -908,10 +932,14 @@ _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
 		},
 		onFailed: function( msg, code ) {
 
+			console.error("Failed to request session! "+msg);
+
 			// Fire the failed callback
 			if (cbFail) cbFail(msg, code);
 
 		},
+
+		// Progress feedbacks
 		onProgress: function( msg, percent ) {
 			self.__fire("progress", [msg, percent]);
 		},
@@ -921,6 +949,7 @@ _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
 		onCompleted: function( msg ) {
 			self.__fire("completed", [msg]);
 		}
+
 	});
 
 
@@ -937,6 +966,14 @@ _NS_.WebAPISession = function( socket, session_id ) {
 	this.socket = socket;
 	this.session_id = session_id;
 
+    var u = undefined;
+    Object.defineProperties(this, {
+        "state"         :   {   get: function () { if (!this.__valid) return u; return this.__session.state;                 } },
+        "stateName"     :   {   get: function () { if (!this.__valid) return u; return state_string(this.__session.state );  } },
+        "ip"            :   {   get: function () { if (!this.__valid) return u; return this.__session.ip;                    } },
+        "ram"           :   {   get: function () { if (!this.__valid) return u; return this.__session.ram;                   } },
+
+    });
 }
 
 /**
@@ -998,6 +1035,18 @@ _NS_.WebAPISession.prototype.close = function() {
 	// Send a close message
 	this.socket.send("close", {
 		"session_id": this.session_id
+	})
+}
+
+_NS_.WebAPISession.prototype.get = function(parameter, cb) {
+	// Send a close message
+	this.socket.send("get", {
+		"session_id": this.session_id,
+		"key": parameter
+	},{
+		onSucceed : function( value ) {
+			cb(value);
+		}
 	})
 }
 

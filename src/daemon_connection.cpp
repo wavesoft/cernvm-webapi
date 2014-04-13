@@ -120,7 +120,7 @@ void DaemonConnection::handleAction( const std::string& id, const std::string& a
 
         // [Stop] 
         //  Shut down the CernVM WebAPI Daemon.
-        if ( action == "stop" ) {
+        if ( action == "stopService" ) {
 
             // Mark core for forced shutdown
             core.running = false;
@@ -165,10 +165,11 @@ void DaemonConnection::__callbackLicenseURL (const std::string& title, const std
 /**
  * [Thread] Handle action for the given session in another thread
  */
-void DaemonConnection::handleAction_thread( boost::thread** thread, CVMWebAPISession* session, const std::string& id, const std::string& action, ParameterMapPtr parameters ) {
+void DaemonConnection::handleAction_thread( boost::thread** thread, CVMWebAPISession* session, const std::string& eventID, const std::string& action, ParameterMapPtr parameters ) {
     boost::thread *thisThread = *thread;
+    CVMCallbackFw cb( *this, eventID );
     // Handle action
-    session->handleAction(id, action, parameters);
+    session->handleAction(cb, action, parameters);
     // Remove this thread from the active threads
     runningThreads.remove_thread(thisThread);
 }

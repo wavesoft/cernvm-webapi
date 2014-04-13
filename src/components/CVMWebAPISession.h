@@ -71,7 +71,7 @@ public:
 	/**
 	 * Handling of commands directed for this session
 	 */
-	void handleAction( const std::string& id, const std::string& action, ParameterMapPtr parameters );
+	void handleAction( CVMCallbackFw& cb, const std::string& action, ParameterMapPtr parameters );
 
 	/**
 	 * Session polling timer

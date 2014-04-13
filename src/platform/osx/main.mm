@@ -20,6 +20,7 @@ int main(int argc, const char * argv[])
 	URLDaemonDelegate * delegate = [[URLDaemonDelegate alloc] init];
 	[[NSApplication sharedApplication] setDelegate:delegate];
 	[NSApp run];
+    [delegate release];
 
 	// Cleanup subsystems
 	DomainKeystore::Cleanup();

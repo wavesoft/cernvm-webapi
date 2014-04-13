@@ -15,45 +15,24 @@
 		<script type="text/javascript" src="cvmwebapi-2.0.0-src.js"></script>
 		<script type="text/javascript">
 
-		var sess;
-		CVM.startCVMWebAPI(function(api) {
+		var sess, cvmapi;
+		function openSession() {
+			CVM.startCVMWebAPI(function(api) {
 
-			console.info("Got API: ",api);
+				console.info("Got API: ",api);
+				cvmapi = api;
 
-			api.requestSession(
-				"http://localhost/sign.php",
-				function(session) {
-					sess = session;
-					console.info("Got Session: ",session);
-				});
+				api.requestSession(
+					"http://localhost/sign.php",
+					function(session) {
+						sess = session;
+						console.info("Got Session: ",session);
+					}, function(errorMsg, errorCode) {
+						CVM.UserInteraction.alert("CernVM WebAPI", "We were unable to request VM session! " + errorMsg);
+					});
 
-		});
-
-		/*
-		var ws = new CVM.Socket();
-		var session_id = 0;
-		function initialize() {
-			ws.connect();
-		}
-		function stop() {
-			sess.stop();
-		}
-		function start() {
-			ws.send("requestSession", {
-				"vmcp": "http://localhost/sign.php"
-			}, {
-				onSucceed : function( msg, id ) {
-					session_id = id;
-				}
-			});
-
-		}
-		function sendSession(what) {
-			ws.send(what, {
-				"session_id": session_id
 			});
 		}
-		*/
 
 		</script>
 	</head>
@@ -61,9 +40,8 @@
 		<h1>CernVM WebAPI</h1>
 		<pre id="log">
 		</pre>
-		<input type="button" value="Start" />
-		<input type="button" value="Stop" onclick="stop()" />
-		<input type="button" value="Open session" onclick="start()" />
+		<input type="button" value="Open Session" onclick="openSession()" />
+		<input type="button" value="Stop Service" onclick="cvmapi.stopService()" />
 		<div class="display:none" id="session_controls">
 			<input type="button" value="Start" onclick="sess.start()" />
 			<input type="button" value="Stop" onclick="sess.stop()" />

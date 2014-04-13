@@ -11,6 +11,14 @@ _NS_.WebAPISession = function( socket, session_id ) {
 	this.socket = socket;
 	this.session_id = session_id;
 
+    var u = undefined;
+    Object.defineProperties(this, {
+        "state"         :   {   get: function () { if (!this.__valid) return u; return this.__session.state;                 } },
+        "stateName"     :   {   get: function () { if (!this.__valid) return u; return state_string(this.__session.state );  } },
+        "ip"            :   {   get: function () { if (!this.__valid) return u; return this.__session.ip;                    } },
+        "ram"           :   {   get: function () { if (!this.__valid) return u; return this.__session.ram;                   } },
+
+    });
 }
 
 /**
@@ -72,5 +80,17 @@ _NS_.WebAPISession.prototype.close = function() {
 	// Send a close message
 	this.socket.send("close", {
 		"session_id": this.session_id
+	})
+}
+
+_NS_.WebAPISession.prototype.get = function(parameter, cb) {
+	// Send a close message
+	this.socket.send("get", {
+		"session_id": this.session_id,
+		"key": parameter
+	},{
+		onSucceed : function( value ) {
+			cb(value);
+		}
 	})
 }
