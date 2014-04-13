@@ -25,7 +25,6 @@
 #include <vector>
 
 #include <json/json.h>
-#include <boost/thread.hpp>
 
 #include <CernVM/Hypervisor.h>
 #include <CernVM/ProgressFeedback.h>
@@ -85,7 +84,9 @@ void DaemonConnection::handleAction( const std::string& id, const std::string& a
         if (parameters->contains("vmcp")) {
 
             // Try to open session
-            boost::thread( boost::bind( &DaemonConnection::requestSession_thread, this, id, parameters->get("vmcp") ) );
+            boost::thread* t = NULL;
+            t = new boost::thread( boost::bind( &DaemonConnection::requestSession_thread, this, &t, id, parameters->get("vmcp") ) );
+            runningThreads.add_thread(t);
 
         } else {
             sendError("Missing 'vmcp' parameter", id);
@@ -104,7 +105,9 @@ void DaemonConnection::handleAction( const std::string& id, const std::string& a
             sendError("Unable to find a session with the specified session id!", id);
         } else {
             // Handle session action in another thread
-            boost::thread( boost::bind( &CVMWebAPISession::handleAction, core.sessions[session_id], id, action, parameters ) );
+            boost::thread* t = NULL;
+            t = new boost::thread( boost::bind( &DaemonConnection::handleAction_thread, this, &t, core.sessions[session_id], id, action, parameters ) );
+            runningThreads.add_thread(t);
         }
 
     }
@@ -160,19 +163,33 @@ void DaemonConnection::__callbackLicenseURL (const std::string& title, const std
 }
 
 /**
+ * [Thread] Handle action for the given session in another thread
+ */
+void DaemonConnection::handleAction_thread( boost::thread** thread, CVMWebAPISession* session, const std::string& id, const std::string& action, ParameterMapPtr parameters ) {
+    boost::thread *thisThread = *thread;
+    // Handle action
+    session->handleAction(id, action, parameters);
+    // Remove this thread from the active threads
+    runningThreads.remove_thread(thisThread);
+}
+
+/**
  * [Thread] Request Session
  */
-void DaemonConnection::requestSession_thread( const std::string& eventID, const std::string& vmcpURL ) {
+void DaemonConnection::requestSession_thread( boost::thread ** thread, const std::string& eventID, const std::string& vmcpURL ) {
 	CRASH_REPORT_BEGIN;
     Json::Value data;
 	HVInstancePtr hv = core.hypervisor;
+    boost::thread *thisThread = *thread;
 
     // Create the object where we can forward the events
     CVMCallbackFw cb( *this, eventID );
+    std::cout << "Thread: " << thisThread << std::endl;
 
     // Block requests when reached throttled state
     if (this->throttleBlock) {
         cb.fire("failed", ArgumentList( "Request denied by throttle protection" )( HVE_ACCESS_DENIED ) );
+        runningThreads.remove_thread(thisThread);
         return;
     }
 
@@ -181,7 +198,7 @@ void DaemonConnection::requestSession_thread( const std::string& eventID, const 
         // Create a progress feedback mechanism
         FiniteTaskPtr pTasks = boost::make_shared<FiniteTask>();
         pTasks->setMax( 2 );
-        cb.listen( *pTasks.get() );
+        cb.listen( pTasks );
 
         // Create two sub-tasks that will be used for equally
         // dividing the progress into two tasks: validate and start
@@ -204,12 +221,14 @@ void DaemonConnection::requestSession_thread( const std::string& eventID, const 
         // Still invalid? Something's wrong
         if (!core.keystore.valid) {
             cb.fire("failed", ArgumentList( "Unable to initialize cryptographic store" )( HVE_NOT_VALIDATED ) );
+            runningThreads.remove_thread(thisThread);
             return;
         }
 
         // Block requests from untrusted domains
         if (!core.keystore.isDomainValid(domain)) {
             cb.fire("failed", ArgumentList( "The domain is not trusted" )( HVE_NOT_TRUSTED ) );
+            runningThreads.remove_thread(thisThread);
             return;
         }
         
@@ -234,6 +253,7 @@ void DaemonConnection::requestSession_thread( const std::string& eventID, const 
         int res = core.downloadProvider->downloadText( newURL, &jsonString );
         if (res < 0) {
             cb.fire("failed", ArgumentList( "Unable to contact the VMCP endpoint" )( res ) );
+            runningThreads.remove_thread(thisThread);
             return;
         }
 
@@ -247,11 +267,13 @@ void DaemonConnection::requestSession_thread( const std::string& eventID, const 
             if ( !parsingSuccessful ) {
                 // report to the user the failure and their locations in the document.
                 cb.fire("failed", ArgumentList( "Unable to parse response data as JSON" )( HVE_QUERY_ERROR ) );
+                runningThreads.remove_thread(thisThread);
                 return;
             }
         } catch (std::exception& e) {
             CVMWA_LOG("Error", "JSON Parse exception " << e.what());
             cb.fire("failed", ArgumentList( "Unable to parse response data as JSON" )( HVE_QUERY_ERROR ) );
+            runningThreads.remove_thread(thisThread);
             return;
         }
     
@@ -263,18 +285,22 @@ void DaemonConnection::requestSession_thread( const std::string& eventID, const 
         // Validate response
         if (!vmcpData->contains("name")) {
             cb.fire("failed", ArgumentList( "Missing 'name' parameter from the VMCP response" )( HVE_USAGE_ERROR ) );
+            runningThreads.remove_thread(thisThread);
             return;
         };
         if (!vmcpData->contains("secret")) {
             cb.fire("failed", ArgumentList( "Missing 'secret' parameter from the VMCP response" )( HVE_USAGE_ERROR ) );
+            runningThreads.remove_thread(thisThread);
             return;
         };
         if (!vmcpData->contains("signature")) {
             cb.fire("failed", ArgumentList( "Missing 'signature' parameter from the VMCP response" )( HVE_USAGE_ERROR ) );
+            runningThreads.remove_thread(thisThread);
             return;
         };
         if (vmcpData->contains("diskURL") && !vmcpData->contains("diskChecksum")) {
             cb.fire("failed", ArgumentList( "A 'diskURL' was specified, but no 'diskChecksum' was found in the VMCP response" )( HVE_USAGE_ERROR ) );
+            runningThreads.remove_thread(thisThread);
             return;
         }
 
@@ -282,6 +308,7 @@ void DaemonConnection::requestSession_thread( const std::string& eventID, const 
         res = core.keystore.signatureValidate( domain, salt, vmcpData );
         if (res < 0) {
             cb.fire("failed", ArgumentList( "The VMCP response signature could not be validated" )( res ) );
+            runningThreads.remove_thread(thisThread);
             return;
         }
 
@@ -298,6 +325,7 @@ void DaemonConnection::requestSession_thread( const std::string& eventID, const 
         if (res == 2) { 
             // Invalid password
             cb.fire("failed", ArgumentList( "The password specified is invalid for this session" )( HVE_PASSWORD_DENIED ) );
+            runningThreads.remove_thread(thisThread);
             return;
         }
 
@@ -317,7 +345,10 @@ void DaemonConnection::requestSession_thread( const std::string& eventID, const 
             if (userInteraction->confirm("New CernVM WebAPI Session", msg) != UI_OK) {
             
                 // If we were aborted due to shutdown, exit
-                if (core.hasExited()) return;
+                if (core.hasExited()) {
+                    runningThreads.remove_thread(thisThread);
+                    return;
+                }
 
                 // Manage throttling 
                 if ((getMillis() - this->throttleTimestamp) <= THROTTLE_TIMESPAN) {
@@ -330,6 +361,7 @@ void DaemonConnection::requestSession_thread( const std::string& eventID, const 
 
                 // Fire error
                 cb.fire("failed", ArgumentList( "User denied the allocation of new session" )( HVE_ACCESS_DENIED ) );
+                runningThreads.remove_thread(thisThread);
                 return;
             
             } else {
@@ -354,6 +386,7 @@ void DaemonConnection::requestSession_thread( const std::string& eventID, const 
         HVSessionPtr session = hv->sessionOpen( vmcpData, pOpen );
         if (!session) {
             cb.fire("failed", ArgumentList( "Unable to open session" )( HVE_ACCESS_DENIED ) );
+            runningThreads.remove_thread(thisThread);
             return;
         }
 
@@ -363,8 +396,12 @@ void DaemonConnection::requestSession_thread( const std::string& eventID, const 
         // Check if we need a daemon for our current services
         hv->checkDaemonNeed();
 
-        // Sync session state
-        session->update();
+        // If session is new, place it on stopped state (created on the VM)
+        if (res == 0) {
+            session->stop();
+        } else {
+            session->update();
+        }
 
         // Register session on store
         CVMWebAPISession* cvmSession = core.storeSession( *this, session );
@@ -380,6 +417,8 @@ void DaemonConnection::requestSession_thread( const std::string& eventID, const 
         cb.fire("failed", ArgumentList( "Unexpected exception occured while requesting session" )( HVE_EXTERNAL_ERROR ) );
 
     }
+
+    runningThreads.remove_thread(thisThread);
 
     CRASH_REPORT_END;
 }

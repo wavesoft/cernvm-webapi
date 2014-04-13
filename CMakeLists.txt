@@ -170,7 +170,7 @@ endif()
 # Post-target Fixes for windows
 if (WIN32)
 	# Fix: OpenSSL builds are not built with safe exception handlers
-	my_add_link_flags( ${PROJECT_NAME} "/SAFESEH:NO")
+	add_link_flags( ${PROJECT_NAME} "/SAFESEH:NO")
 endif(WIN32)
 
 # Libraries

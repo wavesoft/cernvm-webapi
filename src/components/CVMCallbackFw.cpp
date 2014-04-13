@@ -34,16 +34,18 @@ CVMCallbackFw::~CVMCallbackFw() {
 		delete dd;
 	}
 
+	// Remove all entries
+	listening.clear();
 }
 
 /**
  * Listen the events of the specified callback object
  */
-void CVMCallbackFw::listen( Callbacks & cb ) {
+void CVMCallbackFw::listen( FiniteTaskPtr cb ) {
 
 	// Register an anyEvent receiver and keep the slot reference
 	listening.push_back(
-		new DisposableDelegate( &cb, boost::bind( &CVMCallbackFw::fire, this, _1, _2 ) )
+		new DisposableDelegate( cb, boost::bind( &CVMCallbackFw::fire, this, _1, _2 ) )
 	);
 		
 }
@@ -51,14 +53,14 @@ void CVMCallbackFw::listen( Callbacks & cb ) {
 /**
  * Stop listening for events of the specified callback object
  */
-void CVMCallbackFw::stopListening( Callbacks & cb ) {
+void CVMCallbackFw::stopListening( FiniteTaskPtr cb ) {
 
 	// Register an anyEvent receiver and keep the slot reference
 	for (std::vector< DisposableDelegate* >::iterator it = listening.begin(); it != listening.end(); ++it ) {
 		DisposableDelegate * dd = *it;
 
 		// Erase the callback item
-		if (dd->cb == &cb) {
+		if (dd->cb == cb) {
 
 			// Erase item from vector
 			listening.erase( it );

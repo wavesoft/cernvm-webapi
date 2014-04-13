@@ -30,7 +30,8 @@
 
 #include <boost/make_shared.hpp>
 #include <boost/bind.hpp>
- 
+#include <boost/thread.hpp>
+
 /**
  * Websocket Session
  */
@@ -62,6 +63,10 @@ public:
 	 */
 	~DaemonConnection() {
 
+		// Abort and join all threads
+		runningThreads.interrupt_all();
+		runningThreads.join_all();
+
 		// Release all sessions by this connection
 		core.releaseConnectionSessions( *this );
 
@@ -83,6 +88,11 @@ protected:
 	 * The User interaction class
 	 */
 	UserInteractionPtr	userInteraction;
+
+	/**
+	 * Bookkeeping of running threads (for clean shutdown)
+	 */
+	boost::thread_group runningThreads;
 
 	/**
 	 * A flag that defines if this session is authenticated
@@ -114,7 +124,8 @@ private:
 	/**
 	 * RequestSession Thread
 	 */
-	void requestSession_thread( const std::string& eventID, const std::string& vmcpURL );
+	void requestSession_thread 	( boost::thread** t, const std::string& eventID, const std::string& vmcpURL );
+	void handleAction_thread 	( boost::thread** t, CVMWebAPISession* session, const std::string& id, const std::string& action, ParameterMapPtr parameters );
 
 };
 

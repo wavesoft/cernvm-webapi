@@ -76,6 +76,7 @@ int CVMWebserver::api_handler(struct mg_connection *conn) {
         // Check if a connection is active
         CVMWebserverConnection * c;
         if (self->connections.find(conn) == self->connections.end()) {
+            boost::mutex::scoped_lock lock(self->connMutex);
             c = new CVMWebserverConnection( self->factory.createHandler(domain, url) );
             c->isIterated = true;
             self->connections[conn] = c;
@@ -223,14 +224,19 @@ CVMWebserver::~CVMWebserver() {
     mg_destroy_server( &server );
 
 	// Destroy connections
-    std::map<mg_connection*, CVMWebserverConnection*>::iterator it;
-    for (it=connections.begin(); it!=connections.end(); ++it) {
-        CVMWebserverConnection * c = it->second;
-        delete c;
-    }
+    {
+        boost::mutex::scoped_lock lock(connMutex);
 
-    // Clear map
-    connections.clear();
+        std::map<mg_connection*, CVMWebserverConnection*>::iterator it;
+        for (it=connections.begin(); it!=connections.end(); ++it) {
+            CVMWebserverConnection * c = it->second;
+            delete c;
+        }
+
+        // Clear map
+        connections.clear();
+
+    }
 
 }
 
@@ -251,10 +257,13 @@ void CVMWebserver::serve_static( const std::string& url, const std::string& file
 void CVMWebserver::poll( const int timeout) {
 
     // Mark all the connections as 'not iterated'
-    std::map<mg_connection*, CVMWebserverConnection*>::iterator it;
-    for (it=connections.begin(); it!=connections.end(); ++it) {
-        CVMWebserverConnection * c = it->second;
-        c->isIterated = false;
+    {
+        boost::mutex::scoped_lock lock(connMutex);
+        std::map<mg_connection*, CVMWebserverConnection*>::iterator it;
+        for (it=connections.begin(); it!=connections.end(); ++it) {
+            CVMWebserverConnection * c = it->second;
+            c->isIterated = false;
+        }
     }
 
     // Send the message to iterate over connections
@@ -264,25 +273,28 @@ void CVMWebserver::poll( const int timeout) {
     mg_poll_server(server, timeout);	
 
     // Find dead connections
-    for (it=connections.begin(); it!=connections.end(); ++it) {
-        CVMWebserverConnection * c = it->second;
+    {
+        boost::mutex::scoped_lock lock(connMutex);
+        std::map<mg_connection*, CVMWebserverConnection*>::iterator it;
+        for (it=connections.begin(); it!=connections.end(); ++it) {
+            CVMWebserverConnection * c = it->second;
 
-        // Delete non-iterated over actions
-        if (!c->isIterated) {
+            // Delete non-iterated over actions
+            if (!c->isIterated) {
 
-            // Release connection object
-            delete c;
+                // Release connection object
+                delete c;
 
-            // Delete element
-            it = connections.erase(it);
+                // Delete element
+                it = connections.erase(it);
 
-            // Skip deleted element or exit
-            if (it == connections.end()) {
-                break;
+                // Skip deleted element or exit
+                if (connections.empty() || (it == connections.end())) {
+                    break;
+                }
+
             }
-
         }
-
     }
 
 }
@@ -305,5 +317,6 @@ void CVMWebserver::start() {
  * Check if there are live registered connections
  */
 bool CVMWebserver::hasLiveConnections() {
+    boost::mutex::scoped_lock lock(connMutex);
     return !connections.empty();
 }

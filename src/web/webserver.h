@@ -23,6 +23,7 @@
 #define WEBSERVER_H
 
 #include <mongoose.h>
+#include <boost/thread/mutex.hpp>
 
 #include <string>
 #include <map>
@@ -87,7 +88,9 @@ public:
 	 * Destruct handler when destructing connection record
 	 */
 	virtual ~CVMWebserverConnection() {
-		if (h != NULL) delete h;
+		if (h != NULL) {
+			delete h;
+		 }
 	}
 
 	/**
@@ -151,6 +154,11 @@ private:
 	 * A list of active webserver connections
 	 */
 	std::map<mg_connection*, CVMWebserverConnection*> 	connections;
+
+	/**
+	 * Mutex for accessing the connections array
+	 */
+	boost::mutex connMutex;
 
 	/**
 	 * The mongoose server instance

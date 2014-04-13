@@ -50,7 +50,7 @@ public:
         // give the progress feedback object for use by the FSM  
         //
         FiniteTaskPtr ft = boost::make_shared<FiniteTask>();
-        callbackForwarder.listen( *ft.get() );
+        callbackForwarder.listen( ft );
 
         // That's currently a VBoxSession-only feature
         boost::static_pointer_cast<VBoxSession>(hvSession)->FSMUseProgress( ft, "Serving request" );

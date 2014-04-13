@@ -255,8 +255,9 @@ _NS_.Socket.prototype.send = function(action, data, responseEvents, responseTime
 			if (timeoutTimer!=null) clearTimeout(timeoutTimer);
 
 			// Cleanup when we received a 'succeed' frame
-			if ((data['name'] == 'succeed') || (data['name'] == 'failed'))
-				delete self.responseCallbacks[frameID];
+			if ((data['name'] == 'succeed') || (data['name'] == 'failed')) {
+				delete self.responseCallbacks[frameID];		
+			}
 
 			// Pick and fire the appropriate event response
 			var evName = eventify(data['name']);
