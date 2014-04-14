@@ -15,41 +15,65 @@
 		<script type="text/javascript" src="cvmwebapi-2.0.0-src.js"></script>
 		<script type="text/javascript">
 
-		var sess, cvmapi;
-		function openSession() {
-			CVM.startCVMWebAPI(function(api) {
+		var sess, cvmapi, elmControls, elmSessionControls;
 
+		function initialize() {
+			elmControls = document.getElementById('btn-controls');
+			elmSession = document.getElementById('btn-session');
+			elmControls.style['display'] = 'none';
+			elmSession.style['display'] = 'none';
+			CVM.startCVMWebAPI(function(api) {
 				console.info("Got API: ",api);
 				cvmapi = api;
+				elmControls.style['display'] = 'block';
+				api.addEventListener('disconnected', function() {
+					elmControls.style['display'] = 'none';
+				});
+			});
+		}
 
-				api.requestSession(
-					"http://localhost/sign.php",
-					function(session) {
-						sess = session;
-						console.info("Got Session: ",session);
-					}, function(errorMsg, errorCode) {
-						CVM.UserInteraction.alert("CernVM WebAPI", "We were unable to request VM session! " + errorMsg);
+		function openSession() {
+			cvmapi.requestSession(
+				"http://localhost/sign.php",
+				function(session) {
+					sess = session;
+					console.info("Got Session: ",session);
+					elmSession.style['display'] = 'block';
+
+					var elmState = document.getElementById('sess-state');
+					sess.addEventListener('stateChanged', function(state) {
+						elmState.innerHTML = state;
 					});
 
-			});
+				}, function(errorMsg, errorCode) {
+					CVM.UserInteraction.alert("CernVM WebAPI", "We were unable to request VM session! " + errorMsg);
+				});
 		}
 
 		</script>
 	</head>
 	<body>
 		<h1>CernVM WebAPI</h1>
+
+
+		<div id="btn-controls">
+			<input type="button" value="Open Session" onclick="openSession()" />
+			<input type="button" value="Stop Service" onclick="cvmapi.stopService()" />
+			<div id="btn-session">
+			<div class="display:none" id="session_controls">
+				<input type="button" value="Start" onclick="sess.start()" />
+				<input type="button" value="Stop" onclick="sess.stop()" />
+				<input type="button" value="Pause" onclick="sess.pause()" />
+				<input type="button" value="Resume" onclick="sess.resume()" />
+				<input type="button" value="Hibernate" onclick="sess.hibernate()" />
+				<input type="button" value="Close" onclick="sess.close()" />
+				<input type="button" value="RDP Window" onclick="sess.openRDPWindow()" />
+				<div>state = <span id="sess-state" style="font-weight:bold">0</span></div>
+			</div>
+		</div>
+
 		<pre id="log">
 		</pre>
-		<input type="button" value="Open Session" onclick="openSession()" />
-		<input type="button" value="Stop Service" onclick="cvmapi.stopService()" />
-		<div class="display:none" id="session_controls">
-			<input type="button" value="Start" onclick="sess.start()" />
-			<input type="button" value="Stop" onclick="sess.stop()" />
-			<input type="button" value="Pause" onclick="sess.pause()" />
-			<input type="button" value="Resume" onclick="sess.resume()" />
-			<input type="button" value="Hibernate" onclick="sess.hibernate()" />
-			<input type="button" value="Close" onclick="sess.close()" />
-		</div>
 		<script type="text/javascript">initialize();</script>
 	</body>
 </html>

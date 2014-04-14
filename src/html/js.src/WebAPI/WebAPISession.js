@@ -13,11 +13,10 @@ _NS_.WebAPISession = function( socket, session_id ) {
 
     var u = undefined;
     Object.defineProperties(this, {
-        "state"         :   {   get: function () { if (!this.__valid) return u; return this.__session.state;                 } },
-        "stateName"     :   {   get: function () { if (!this.__valid) return u; return state_string(this.__session.state );  } },
-        "ip"            :   {   get: function () { if (!this.__valid) return u; return this.__session.ip;                    } },
-        "ram"           :   {   get: function () { if (!this.__valid) return u; return this.__session.ram;                   } },
-
+        "state"         :   {   get: function () { return u; } },
+        "stateName"     :   {   get: function () { return u; } },
+        "ip"            :   {   get: function () { return u; } },
+        "ram"           :   {   get: function () { return u; } },
     });
 }
 
@@ -93,4 +92,11 @@ _NS_.WebAPISession.prototype.get = function(parameter, cb) {
 			cb(value);
 		}
 	})
+}
+
+_NS_.WebAPISession.prototype.openRDPWindow = function(parameter, cb) {
+	this.get("rdpURL", function(info) {
+		var parts = info.split("@");
+		_NS_.launchRDP( parts[0], parts[1] )
+	});
 }

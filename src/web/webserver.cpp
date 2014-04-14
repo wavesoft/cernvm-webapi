@@ -103,6 +103,8 @@ int CVMWebserver::api_handler(struct mg_connection *conn) {
         // Check for static URLs
         if (self->staticResources.find(url) != self->staticResources.end()) {
 
+            // TODO: Windows (http://blog.kowalczyk.info/article/zy/Embedding-binary-resources-on-Windows.html)
+
             // Get the name of the file to serve
             string file = self->staticResources[url];
 

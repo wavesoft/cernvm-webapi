@@ -18,6 +18,35 @@ _NS_.markPageLoaded = function() {
     __pageLoaded = true;
 };
 
+/**
+ * Helper function to start RDP client using the flash API from CernVM
+ */
+_NS_.launchRDP = function( rdpURL, resolution ) {
+
+    // Process resolution parameter
+    var width=800, height=600, bpp=24;
+    if (resolution != undefined ) {
+        // Split <width>x<height>x<bpp> string into it's components
+        var res_parts = resolution.split("x");
+        width = parseInt(res_parts[0]);
+        height = parseInt(res_parts[1]);
+        if (res_parts.length > 2)
+            bpp  = parseInt(res_parts[2]);
+    }
+
+    // Open web-RDP client from CernVM
+    var w = window.open(
+        'http://cernvm.cern.ch/releases/webapi/webrdp/webclient.html#' + rdpURL + ',' + width + ',' + height, 
+        'WebRDPClient', 
+        'width=' + width + ',height=' + height
+    );
+
+    // Align, center and focus
+    w.moveTo( (screen.width - width)/2, (screen.height - height)/2 );
+    setTimeout(function() { w.focus() }, 100);
+    w.focus();
+
+}
 
 /**
  * Global function to initialize the plugin and callback when ready

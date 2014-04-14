@@ -96,15 +96,16 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 					keyValue = "";
 
 		// Reply only to known key values
-		if (keyName == "api_uri") {
+		if (keyName == "apiURL") {
 			// Calculate the API URL
 			std::string host = hvSession->local->get("apiHost",""),
 						port = hvSession->local->get("apiPort", "");
 			keyValue = "http://" + host + ":" + port + "/";
 
-		} else if (keyName == "rdp_uri") {
+		} else if (keyName == "rdpURL") {
 			// Calculate the VRDE path:port
-			keyValue = hvSession->getRDPAddress();
+			std::string resolution = hvSession->getExtraInfo(EXIF_VIDEO_MODE);
+			keyValue = hvSession->getRDPAddress() + "@" + resolution;
 
 		} else if (keyName == "cpus") {
 			keyValue = hvSession->parameters->get("cpus", "1");
