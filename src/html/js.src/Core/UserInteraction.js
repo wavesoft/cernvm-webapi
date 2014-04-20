@@ -10,7 +10,13 @@ var UI_OK 			= 0x01,
  * The private WebAPI Interaction class
  */
 var UserInteraction = _NS_.UserInteraction = function( socket ) {
+	var self = this;
 	this.socket = socket;
+	this.onResize = null;
+	window.addEventListener('resize', function() {
+		console.log("RESIZE!");
+		if (self.onResize) self.onResize();
+	});
 };
 
 
@@ -18,8 +24,10 @@ var UserInteraction = _NS_.UserInteraction = function( socket ) {
  * Hide the active interaction screen
  */
 UserInteraction.hideInteraction = function() {
-	if (UserInteraction.activeScreen) {
-		document.body.removeChild(UserInteraction.activeScreen);
+	if (UserInteraction.activeScreen != null) {
+		try {
+			document.body.removeChild(UserInteraction.activeScreen);
+		} catch(e) { }
 		UserInteraction.activeScreen = null;
 	}
 }
@@ -88,7 +96,7 @@ UserInteraction.createButton = function( title, baseColor ) {
 /**
  * Create a framed window, used for various reasons
  */
-UserInteraction.createFramedWindow = function( body, header, footer, cbClose ) {
+UserInteraction.createFramedWindow = function( body, header, footer, icon, cbClose ) {
 	var floater = document.createElement('div'),
 		content = document.createElement('div'),
 		cHeader = document.createElement('div'),
@@ -140,17 +148,41 @@ UserInteraction.createFramedWindow = function( body, header, footer, cbClose ) {
 	// Append header
 	content.appendChild(cHeader);
 	if (header) {
+
+		// Setup header
 		if (typeof(header) == "string") {
-			cHeader.innerHTML = header;
-			cHeader.style.fontSize = "1.6em";
-			cHeader.style.marginBottom = "8px";
+
+			// Prepare icon
+			var elmIcon;
+			if (icon) {
+				elmIcon = document.createElement('img');
+				elmIcon.src = icon;
+				elmIcon.style.verticalAlign = '-8px';
+				elmIcon.style.marginRight = '6px';
+			} else {
+				elmIcon = document.createElement('span');
+			}
+
+			// Prepare body
+			var headerBody = document.createElement('span');
+			headerBody.innerHTML = header;
+			headerBody.style.fontSize = "1.6em";
+			headerBody.style.marginBottom = "8px";
+
+			// Nest
+			cHeader.appendChild(elmIcon);
+			cHeader.appendChild(headerBody);
+
 		} else {
 			cHeader.appendChild(header);
 		}
 	}
 
 	// Append body
-	if (body) cBody.appendChild(body);
+	if (body) {
+		cBody.style.overflow = "auto";
+		cBody.appendChild(body);
+	}
 	content.appendChild(cBody);
 
 	// Append footer
@@ -165,9 +197,19 @@ UserInteraction.createFramedWindow = function( body, header, footer, cbClose ) {
 
 	// Update vertical-centering information
 	var updateMargin = function() {
-		var top = (window.innerHeight-content.clientHeight)/2;
+
+		// Calculate outer-body dimentions
+		var outerBodyHeight = cHeader.offsetHeight + cFooter.offsetHeight + 50;
+
+		// Calculate max-height
+		var bodyHeight = window.innerHeight - outerBodyHeight;
+		cBody.style.maxHeight = bodyHeight + "px";
+
+		// Calculate vertical position
+		var top = (window.innerHeight-content.offsetHeight)/2;
 		if (top < 0) top = 0;
 		content.style.marginTop = top + "px";
+
 	}
 
 	// Close when clicking the floater
@@ -186,11 +228,14 @@ UserInteraction.createFramedWindow = function( body, header, footer, cbClose ) {
 
 	// Remove previous element
 	UserInteraction.hideInteraction();
-	UserInteraction.activeScreen = floater;
 
 	// Append element in the body
 	document.body.appendChild(floater);
+	UserInteraction.activeScreen = floater;
 	updateMargin();
+
+	// Register updateMargin on resize
+	this.onResize = updateMargin;
 
 	// Return root element
 	return floater;
@@ -235,7 +280,7 @@ UserInteraction.displayLicenseWindow = function( title, body, isURL, cbAccept, c
 
 	// Create framed window
 	var elm;
-	elm = UserInteraction.createFramedWindow( cBody, title, cControls, function() {
+	elm = UserInteraction.createFramedWindow( cBody, title, cControls, ICON_LICENSE, function() {
 	   document.body.removeChild(elm);
 	   if (cbDecline) cbDecline();
 	});
@@ -282,7 +327,7 @@ UserInteraction.confirm = function( title, body, callback ) {
 	cButtons.appendChild(lnkCancel);
 
 	// Display window
-	win = UserInteraction.createFramedWindow( cBody, title, cButtons, function() {
+	win = UserInteraction.createFramedWindow( cBody, title, cButtons, ICON_CONFIRM, function() {
 		document.body.removeChild(win);
 		callback(false);
 	});
@@ -308,7 +353,7 @@ UserInteraction.alert = function( title, body, callback ) {
 	cButtons.appendChild(lnkOk);
 
 	// Display window
-	win = UserInteraction.createFramedWindow( cBody, title, cButtons );
+	win = UserInteraction.createFramedWindow( cBody, title, cButtons, ICON_ALERT );
 
 }
 

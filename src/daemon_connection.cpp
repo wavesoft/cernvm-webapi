@@ -209,7 +209,7 @@ void DaemonConnection::requestSession_thread( boost::thread ** thread, const std
         // =======================================================================
 
         // Wait for delaied hypervisor initiation
-        hv->waitTillReady( pInit->begin<FiniteTask>( "Initializing hypervisor" ) );
+        hv->waitTillReady( pInit->begin<FiniteTask>( "Initializing hypervisor" ), userInteraction );
 
         // =======================================================================
 
@@ -409,6 +409,9 @@ void DaemonConnection::requestSession_thread( boost::thread ** thread, const std
         
         // Completed
         cb.fire("succeed", ArgumentList("Session oppened successfully")(cvmSession->uuid));
+
+        // Send status message
+        sendEvent("stateChanged", ArgumentList(session->local->getNum<int>("state", 0)), cvmSession->uuid_str);
     
     } catch (...) {
 

@@ -67,7 +67,7 @@
 
 	// Start a polling timer
 	timer = [NSTimer 
-		scheduledTimerWithTimeInterval:.01 
+		scheduledTimerWithTimeInterval:0.01 
 		target:self
 		selector:@selector(serverLoop)
 		userInfo:nil
@@ -87,7 +87,7 @@
 
 		// Launch URL right after the server started polling
 		delayLaunch = [NSTimer 
-			scheduledTimerWithTimeInterval:0.05
+			scheduledTimerWithTimeInterval:0.5
 			target:self
 			selector:@selector(launchURL)
 			userInfo:nil
@@ -166,7 +166,7 @@
 	std::string authToken = core->newAuthKey();
 
 	// Concat url + auth token
-	NSMutableString* url = [[NSMutableString alloc] initWithString:@"http://test.local:1793/control.html#"];
+	NSMutableString* url = [[NSMutableString alloc] initWithString:@"http://127.0.0.1:5624/control.html#"];
 	[url appendString:[NSString stringWithCString:authToken.c_str() encoding:[NSString defaultCStringEncoding]]];
 
 	// Open again the management interface

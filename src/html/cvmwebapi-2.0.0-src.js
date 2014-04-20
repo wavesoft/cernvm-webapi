@@ -1,4 +1,8 @@
 window.CVM={'version':'2.0.0'};(function(_NS_) {
+var ICON_ALERT = "data:image/gif;base64,R0lGODlhIAAgALMAAGZmZnl5eczMzJ+fn////7Ozs4yMjGtra+Li4nFxcaampgAAAAAAAAAAAAAAAAAAACH5BAEHAAQALAAAAAAgACAAAASjkMhJq704681JKV04JYkYDgAwmBuSpgibGS9gyJdQpwJeBTtAwDcpBFMgYuJ1WKZKPlRqSACmVjLXK2l8xVi0raSbupl0Ne6uJ7K+zOEXtUOWS9zijrNGxT87UjtURyothAASh18YcUGJhGY5hzZ7R2wWfpNHcxR1lmiHSRSVQQoSCpNQE4GQEo1HWARamgcHmjCut7pvBKC7ugKZv4ecRMYsEQA7";
+var ICON_CONFIRM = "data:image/gif;base64,R0lGODlhIAAgAMQAAGZmZnt7e8TExK2treXl5dXV1Wtra4qKivj4+L29vd7e3pGRke/v78zMzLW1tYSEhHR0dJmZmQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEHAAgALAAAAAAgACAAAAXUICKOZGmeKMoUguMIBZPOY3IAeI4fCX0KEJ0wBxH4RouhMrfwEQLLKCBAmEGl0UAqmRUQBsumSYBtjG5KYykoVYwiS0gpgQUsZAVp71zHsaMHIwx9hAAyCHmACQoEDn9RBSJkSweMI5NSag51VSJ1DiKbWJ0In5JYBiOJmSKrYSNgWJEIg3ojV1KHCGhLnbVSgTVRciINdXsjjzpaxVjEJJhDbiIKCrhCaiVcQwEJBAoJD68o14VTM0/mOFQ+231iR0B1RUdzvEI89SosLjC6+gBnhAAAOw==";
+var ICON_INSTALL = "data:image/gif;base64,R0lGODlhIAAgALMAAGZmZpOTk93d3Wtra8zMzLW1tXNzc3p6eu/v78XFxYODg9bW1qWlpejo6Pj4+IqKiiH5BAEHAA4ALAAAAAAgACAAAATr0MlJq7046827p4QBGMTHicBoVohApTAlIN4yjE1TwGmRH4DBooMa3XipQXFA0wiQ0ChguAHyFCUJQYE8dBqogY8BPDB0R0Pje0zYkMJEcs3ZAQKII7zx6GlCPAsMKQcuC1YMBDwkF0UpDih0DgspBghIBhdQDjcDEgEOl0EOmxaOAJApLlqVojCZFoeBgwAHQ4AAiTy2GnZ4p619AAUdeSlupwYLckFNG2BJBQgMIgYMCAVpkhpWMFg0CFuYHE9S5lMnr3o8SjBM5DcHDdhI0g1AQh+rEkgyziupKgHMsKAalYEIEypcyHBDBAA7";
+var ICON_LICENSE = "data:image/gif;base64,R0lGODlhIAAgANUAAPX19fT09PLy8vDw8O7u7uzs7OLi4tnZ2c/Pz83NzczMzMXFxby8vLKysqmpqZ+fn5iYmJWVlZKSkoyMjICAgHx8fHl5eXZ2dnR0dHBwcG9vb21tbWtra2pqamhoaGdnZ2ZmZkxMTEpKSv///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEHACMALAAAAAAgACAAAAauwJFwSCwaj8ikcln5OJ/QqFRKnFqv0OpnyR05tV3mdvgNC87GslCtFbnf7/R4PTfLwfYjm41I+P+AgYB7cyAZG4iJiouIdHh5RYSQd2R1Sg0RDwwAkXV8R5iGoguPXpZGDKKqIAeVpXqrqq6zSbGyjrSgtqO4vbq7rL5Ylbumhm0eycoSQ6GxfYqQD8+TqNMTDgXV23nY0A3cyMHhdBqG4OSmBgvj5BEGQgvo6WFBADs=";
 /**
  * Private variables
  */
@@ -65,9 +69,7 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 		var instance = new _NS_.WebAPIPlugin();
 
 		// Connect and wait for status
-		var ignoreCallbacks = true;
 		instance.connect(function( hasAPI ) {
-			if (!ignoreCallbacks) return;
 			if (hasAPI) {
 
 				// We do have an API and we have a connection,
@@ -83,33 +85,23 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 				cFrame.height = 400;
 				cFrame.frameBorder = 0;
 
+				// Prepare the retry frame
+				var cControls = document.createElement('div'),
+					linkRetry = UserInteraction.createButton('Click here to try again', '#E1E1E1');
+
 				// Show frame
-				UserInteraction.createFramedWindow( cFrame );
+				cControls.appendChild(linkRetry);
+				UserInteraction.createFramedWindow( cFrame, false, cControls, ICON_INSTALL );
 
-				// Wait until the application is installed
-				var schedule_timer = 0, recheck,
-					schedule_recheck = function() {
-						if (schedule_timer != 0) clearTimeout(schedule_timer);
-						schedule_timer = setTimeout(recheck, 5000);
-					};
-					recheck = function() {
-						instance.connect(function(hasAPI) {
-							// Check if we have API
-							alert("Bah:" + hasAPI);
-							if (hasAPI) {
-								clearTimeout(schedule_timer);
-								cbOK( instance );
-							} else {
-								schedule_recheck();
-							}
-						});
-					};
-
-				// Ignore callbacks that are triggered from
-				ignoreCallbacks = true;
-
-				// Schedule first re-check
-				schedule_recheck();
+				// User has to click on linkRetry to try again
+				linkRetry.onclick = function() {
+					// Check if we have API now
+					instance.connect(function(hasAPI) {
+						if (hasAPI) {
+							cbOK( instance );
+						}
+					});		
+				};
 
 			}
 		});
@@ -166,7 +158,7 @@ _NS_.ProgressFeedback = function() {
 	
 };
 
-var WS_ENDPOINT = "ws://127.0.0.1:1793",
+var WS_ENDPOINT = "ws://127.0.0.1:5624",
 	WS_URI = "cernvm-webapi:";
 
 /**
@@ -355,22 +347,29 @@ _NS_.Socket.prototype.connect = function( cbAPIState ) {
 	 *
 	 * The second parameter is the websocket instance.
 	 */
-	var probe_socket = function(cb) {
+	var probe_socket = function(cb, timeout) {
 		try {
 
+			// Calculate timeout
+			if (!timeout) timeout=100;
+
 			// Safari bugfix: When everything else fails
-			var timeoutCb = setTimeout(function() {
-				cb(false);
-			}, 100);
+			var timedOut = false,
+				timeoutCb = setTimeout(function() {
+					timedOut = true;
+					cb(false);
+				}, timeout);
 
 			// Setup websocket & callbacks
 			var socket = new WebSocket(WS_ENDPOINT);
 			socket.onerror = function(e) {
+				if (timedOut) return;
 				clearTimeout(timeoutCb);
 				if (!self.connecting) return;
 				cb(false);
 			};
 			socket.onopen = function(e) {
+				if (timedOut) return;
 				clearTimeout(timeoutCb);
 				if (!self.connecting) return;
 				cb(true, socket);
@@ -378,6 +377,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState ) {
 
 		} catch(e) {
 			console.warn("[socket] Error setting up socket! ",e);
+			if (timedOut) return;
 			cb(false);
 		}
 	};
@@ -398,31 +398,39 @@ _NS_.Socket.prototype.connect = function( cbAPIState ) {
 
 		// Register a callback that will be fired when we reach
 		// the timeout defined
-		var timeoutTimer = setTimeout(function() {
-			cb(false);
-		}, msLeft);
+		var timedOut = false,
+			timeoutTimer = setTimeout(function() {
+				timedOut = true;
+				cb(false);
+			}, msLeft);
 
 		// Setup probe callback
 		var probe_cb = function( state, socket ) {
-				// Don't fire timeout callback
-				if (state) {
-					clearTimeout(timeoutTimer);
-					cb(true, socket); // We found an open socket
-				} else {
-					// If we don't have enough time to retry,
-					// just wait for the timeoutTimer to kick-in
-					if (msLeft < _retryDelay) return;
-					// Otherwise clear timeout timer
-					clearTimeout(timeoutTimer);
-					// And re-schedule websocket poll
-					setTimeout(function() {
-						check_loop( cb, timeout, _retryDelay, _startTime );
-					}, _retryDelay);
-				}
-			};
+			if (timedOut) return;
+			// Don't fire timeout callback
+			if (state) {
+				clearTimeout(timeoutTimer);
+				cb(true, socket); // We found an open socket
+			} else {
+				// If we don't have enough time to retry,
+				// just wait for the timeoutTimer to kick-in
+				if (msLeft < _retryDelay) return;
+				// Otherwise clear timeout timer
+				clearTimeout(timeoutTimer);
+				// And re-schedule websocket poll
+				setTimeout(function() {
+					check_loop( cb, timeout, _retryDelay, _startTime );
+				}, _retryDelay);
+			}
+		};
+
+		// Calculate timeout allowance for the probe socket
+		var probeTimeout = 100;
+		if (msLeft < probeTimeout)
+			probeTimeout = msLeft;
 
 		// And send probe
-		probe_socket( probe_cb );
+		probe_socket( probe_cb, probeTimeout );
 
 	};
 
@@ -521,7 +529,13 @@ var UI_OK 			= 0x01,
  * The private WebAPI Interaction class
  */
 var UserInteraction = _NS_.UserInteraction = function( socket ) {
+	var self = this;
 	this.socket = socket;
+	this.onResize = null;
+	window.addEventListener('resize', function() {
+		console.log("RESIZE!");
+		if (self.onResize) self.onResize();
+	});
 };
 
 
@@ -529,8 +543,10 @@ var UserInteraction = _NS_.UserInteraction = function( socket ) {
  * Hide the active interaction screen
  */
 UserInteraction.hideInteraction = function() {
-	if (UserInteraction.activeScreen) {
-		document.body.removeChild(UserInteraction.activeScreen);
+	if (UserInteraction.activeScreen != null) {
+		try {
+			document.body.removeChild(UserInteraction.activeScreen);
+		} catch(e) { }
 		UserInteraction.activeScreen = null;
 	}
 }
@@ -599,7 +615,7 @@ UserInteraction.createButton = function( title, baseColor ) {
 /**
  * Create a framed window, used for various reasons
  */
-UserInteraction.createFramedWindow = function( body, header, footer, cbClose ) {
+UserInteraction.createFramedWindow = function( body, header, footer, icon, cbClose ) {
 	var floater = document.createElement('div'),
 		content = document.createElement('div'),
 		cHeader = document.createElement('div'),
@@ -651,17 +667,41 @@ UserInteraction.createFramedWindow = function( body, header, footer, cbClose ) {
 	// Append header
 	content.appendChild(cHeader);
 	if (header) {
+
+		// Setup header
 		if (typeof(header) == "string") {
-			cHeader.innerHTML = header;
-			cHeader.style.fontSize = "1.6em";
-			cHeader.style.marginBottom = "8px";
+
+			// Prepare icon
+			var elmIcon;
+			if (icon) {
+				elmIcon = document.createElement('img');
+				elmIcon.src = icon;
+				elmIcon.style.verticalAlign = '-8px';
+				elmIcon.style.marginRight = '6px';
+			} else {
+				elmIcon = document.createElement('span');
+			}
+
+			// Prepare body
+			var headerBody = document.createElement('span');
+			headerBody.innerHTML = header;
+			headerBody.style.fontSize = "1.6em";
+			headerBody.style.marginBottom = "8px";
+
+			// Nest
+			cHeader.appendChild(elmIcon);
+			cHeader.appendChild(headerBody);
+
 		} else {
 			cHeader.appendChild(header);
 		}
 	}
 
 	// Append body
-	if (body) cBody.appendChild(body);
+	if (body) {
+		cBody.style.overflow = "auto";
+		cBody.appendChild(body);
+	}
 	content.appendChild(cBody);
 
 	// Append footer
@@ -676,9 +716,19 @@ UserInteraction.createFramedWindow = function( body, header, footer, cbClose ) {
 
 	// Update vertical-centering information
 	var updateMargin = function() {
-		var top = (window.innerHeight-content.clientHeight)/2;
+
+		// Calculate outer-body dimentions
+		var outerBodyHeight = cHeader.offsetHeight + cFooter.offsetHeight + 50;
+
+		// Calculate max-height
+		var bodyHeight = window.innerHeight - outerBodyHeight;
+		cBody.style.maxHeight = bodyHeight + "px";
+
+		// Calculate vertical position
+		var top = (window.innerHeight-content.offsetHeight)/2;
 		if (top < 0) top = 0;
 		content.style.marginTop = top + "px";
+
 	}
 
 	// Close when clicking the floater
@@ -697,11 +747,14 @@ UserInteraction.createFramedWindow = function( body, header, footer, cbClose ) {
 
 	// Remove previous element
 	UserInteraction.hideInteraction();
-	UserInteraction.activeScreen = floater;
 
 	// Append element in the body
 	document.body.appendChild(floater);
+	UserInteraction.activeScreen = floater;
 	updateMargin();
+
+	// Register updateMargin on resize
+	this.onResize = updateMargin;
 
 	// Return root element
 	return floater;
@@ -746,7 +799,7 @@ UserInteraction.displayLicenseWindow = function( title, body, isURL, cbAccept, c
 
 	// Create framed window
 	var elm;
-	elm = UserInteraction.createFramedWindow( cBody, title, cControls, function() {
+	elm = UserInteraction.createFramedWindow( cBody, title, cControls, ICON_LICENSE, function() {
 	   document.body.removeChild(elm);
 	   if (cbDecline) cbDecline();
 	});
@@ -793,7 +846,7 @@ UserInteraction.confirm = function( title, body, callback ) {
 	cButtons.appendChild(lnkCancel);
 
 	// Display window
-	win = UserInteraction.createFramedWindow( cBody, title, cButtons, function() {
+	win = UserInteraction.createFramedWindow( cBody, title, cButtons, ICON_CONFIRM, function() {
 		document.body.removeChild(win);
 		callback(false);
 	});
@@ -819,7 +872,7 @@ UserInteraction.alert = function( title, body, callback ) {
 	cButtons.appendChild(lnkOk);
 
 	// Display window
-	win = UserInteraction.createFramedWindow( cBody, title, cButtons );
+	win = UserInteraction.createFramedWindow( cBody, title, cButtons, ICON_ALERT );
 
 }
 

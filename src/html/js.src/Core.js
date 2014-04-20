@@ -64,9 +64,7 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 		var instance = new _NS_.WebAPIPlugin();
 
 		// Connect and wait for status
-		var ignoreCallbacks = true;
 		instance.connect(function( hasAPI ) {
-			if (!ignoreCallbacks) return;
 			if (hasAPI) {
 
 				// We do have an API and we have a connection,
@@ -82,33 +80,23 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 				cFrame.height = 400;
 				cFrame.frameBorder = 0;
 
+				// Prepare the retry frame
+				var cControls = document.createElement('div'),
+					linkRetry = UserInteraction.createButton('Click here to try again', '#E1E1E1');
+
 				// Show frame
-				UserInteraction.createFramedWindow( cFrame );
+				cControls.appendChild(linkRetry);
+				UserInteraction.createFramedWindow( cFrame, false, cControls, ICON_INSTALL );
 
-				// Wait until the application is installed
-				var schedule_timer = 0, recheck,
-					schedule_recheck = function() {
-						if (schedule_timer != 0) clearTimeout(schedule_timer);
-						schedule_timer = setTimeout(recheck, 5000);
-					};
-					recheck = function() {
-						instance.connect(function(hasAPI) {
-							// Check if we have API
-							alert("Bah:" + hasAPI);
-							if (hasAPI) {
-								clearTimeout(schedule_timer);
-								cbOK( instance );
-							} else {
-								schedule_recheck();
-							}
-						});
-					};
-
-				// Ignore callbacks that are triggered from
-				ignoreCallbacks = true;
-
-				// Schedule first re-check
-				schedule_recheck();
+				// User has to click on linkRetry to try again
+				linkRetry.onclick = function() {
+					// Check if we have API now
+					instance.connect(function(hasAPI) {
+						if (hasAPI) {
+							cbOK( instance );
+						}
+					});		
+				};
 
 			}
 		});

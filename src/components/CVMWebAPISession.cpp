@@ -158,7 +158,7 @@ void CVMWebAPISession::periodicJobsThread() {
     int sessionState = hvSession->local->getNum<int>("state", 0);
     std::string apiHost = hvSession->local->get("apiHost", "127.0.0.1");
     std::string apiPort = hvSession->local->get("apiPort", "80");
-    std::string apiURL = "http://" + apiHost + ":" + apiURL;
+    std::string apiURL = "http://" + apiHost + ":" + apiPort;
 
 	CVMWA_LOG("Debug", "Session state: " << sessionState);
     if (sessionState == SS_RUNNING) {
@@ -210,7 +210,7 @@ void CVMWebAPISession::__cbStateChanged( VariantArgList& args ) {
 	int sessionState = boost::get<int>(args[0]);
     std::string apiHost = hvSession->local->get("apiHost", "127.0.0.1");
     std::string apiPort = hvSession->local->get("apiPort", "80");
-    std::string apiURL = "http://" + apiHost + ":" + apiURL;
+    std::string apiURL = "http://" + apiHost + ":" + apiPort;
 
 	if ((sessionState != SS_RUNNING) && apiPortOnline) {
 		// In any other state, the port is just offline

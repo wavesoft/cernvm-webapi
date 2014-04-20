@@ -115,7 +115,7 @@ public:
 	/**
 	 * Create a webserver and setup listening port
 	 */
-	CVMWebserver( CVMWebserverConnectionFactory& factory, const int port = 1793 );
+	CVMWebserver( CVMWebserverConnectionFactory& factory, const int port = 5624 );
 
 	/**
 	 * Cleanup and destroy server

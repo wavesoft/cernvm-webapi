@@ -1,5 +1,5 @@
 
-var WS_ENDPOINT = "ws://127.0.0.1:1793",
+var WS_ENDPOINT = "ws://127.0.0.1:5624",
 	WS_URI = "cernvm-webapi:";
 
 /**
@@ -188,22 +188,29 @@ _NS_.Socket.prototype.connect = function( cbAPIState ) {
 	 *
 	 * The second parameter is the websocket instance.
 	 */
-	var probe_socket = function(cb) {
+	var probe_socket = function(cb, timeout) {
 		try {
 
+			// Calculate timeout
+			if (!timeout) timeout=100;
+
 			// Safari bugfix: When everything else fails
-			var timeoutCb = setTimeout(function() {
-				cb(false);
-			}, 100);
+			var timedOut = false,
+				timeoutCb = setTimeout(function() {
+					timedOut = true;
+					cb(false);
+				}, timeout);
 
 			// Setup websocket & callbacks
 			var socket = new WebSocket(WS_ENDPOINT);
 			socket.onerror = function(e) {
+				if (timedOut) return;
 				clearTimeout(timeoutCb);
 				if (!self.connecting) return;
 				cb(false);
 			};
 			socket.onopen = function(e) {
+				if (timedOut) return;
 				clearTimeout(timeoutCb);
 				if (!self.connecting) return;
 				cb(true, socket);
@@ -211,6 +218,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState ) {
 
 		} catch(e) {
 			console.warn("[socket] Error setting up socket! ",e);
+			if (timedOut) return;
 			cb(false);
 		}
 	};
@@ -231,31 +239,39 @@ _NS_.Socket.prototype.connect = function( cbAPIState ) {
 
 		// Register a callback that will be fired when we reach
 		// the timeout defined
-		var timeoutTimer = setTimeout(function() {
-			cb(false);
-		}, msLeft);
+		var timedOut = false,
+			timeoutTimer = setTimeout(function() {
+				timedOut = true;
+				cb(false);
+			}, msLeft);
 
 		// Setup probe callback
 		var probe_cb = function( state, socket ) {
-				// Don't fire timeout callback
-				if (state) {
-					clearTimeout(timeoutTimer);
-					cb(true, socket); // We found an open socket
-				} else {
-					// If we don't have enough time to retry,
-					// just wait for the timeoutTimer to kick-in
-					if (msLeft < _retryDelay) return;
-					// Otherwise clear timeout timer
-					clearTimeout(timeoutTimer);
-					// And re-schedule websocket poll
-					setTimeout(function() {
-						check_loop( cb, timeout, _retryDelay, _startTime );
-					}, _retryDelay);
-				}
-			};
+			if (timedOut) return;
+			// Don't fire timeout callback
+			if (state) {
+				clearTimeout(timeoutTimer);
+				cb(true, socket); // We found an open socket
+			} else {
+				// If we don't have enough time to retry,
+				// just wait for the timeoutTimer to kick-in
+				if (msLeft < _retryDelay) return;
+				// Otherwise clear timeout timer
+				clearTimeout(timeoutTimer);
+				// And re-schedule websocket poll
+				setTimeout(function() {
+					check_loop( cb, timeout, _retryDelay, _startTime );
+				}, _retryDelay);
+			}
+		};
+
+		// Calculate timeout allowance for the probe socket
+		var probeTimeout = 100;
+		if (msLeft < probeTimeout)
+			probeTimeout = msLeft;
 
 		// And send probe
-		probe_socket( probe_cb );
+		probe_socket( probe_cb, probeTimeout );
 
 	};
 
