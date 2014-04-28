@@ -91,9 +91,11 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 				// User has to click on linkRetry to try again
 				linkRetry.onclick = function() {
 					// Check if we have API now
+					instance = new _NS_.WebAPIPlugin();
 					instance.connect(function(hasAPI) {
 						if (hasAPI) {
 							cbOK( instance );
+							UserInteraction.hideInteraction();
 						}
 					});		
 				};
