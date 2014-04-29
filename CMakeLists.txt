@@ -169,8 +169,15 @@ endif()
 
 # Post-target Fixes for windows
 if (WIN32)
+	
 	# Fix: OpenSSL builds are not built with safe exception handlers
-	add_link_flags( ${PROJECT_NAME} "/SAFESEH:NO")
+	add_link_flags( ${PROJECT_NAME} "/SAFESEH:NO" )
+
+	if(MSVC) # Check if we are using the Visual Studio compiler
+		# Build for windows subsystem (does not display a console window)
+		add_link_flags( ${PROJECT_NAME} "/SUBSYSTEM:WINDOWS" )
+	endif()
+
 endif(WIN32)
 
 # Libraries
