@@ -1,5 +1,24 @@
 
 /**
+ * Return the textual representation of the specified state
+ */
+function _stateNameFor(state) {
+	var states = [
+		'missing',
+		'available',
+		'poweroff',
+		'saved',
+		'paused',
+		'running'
+	];
+
+	// Validate state range
+	if ((state < 0) || (state>=states.length))
+		return 'unknown';
+	return states[state];
+}
+
+/**
  * WebAPI Socket handler
  */
 _NS_.WebAPISession = function( socket, session_id ) {
@@ -11,13 +30,88 @@ _NS_.WebAPISession = function( socket, session_id ) {
 	this.socket = socket;
 	this.session_id = session_id;
 
+	// Local variables
+	this.__state = 0;
+	this.__properties = {};
+	this.__config = {};
+	this.__valid = true;
+
+    // Connect plugin properties with this object properties using getters/setters
     var u = undefined;
     Object.defineProperties(this, {
-        "state"         :   {   get: function () { return u; } },
-        "stateName"     :   {   get: function () { return u; } },
-        "ip"            :   {   get: function () { return u; } },
-        "ram"           :   {   get: function () { return u; } },
+        "state"         :   {   get: function () { if (!this.__valid) return u; return this.__state;                 		 } },
+        "stateName"     :   {   get: function () { if (!this.__valid) return u; return _stateNameFor(this.__state );  		 } },
+        "ip"            :   {   get: function () { if (!this.__valid) return u; return this.__config['ip'];                  } },
+        "ram"           :   {   get: function () { if (!this.__valid) return u; return this.__config['ram'];                 } },
+        "disk"          :   {   get: function () { if (!this.__valid) return u; return this.__config['disk'];                } },
+        "apiURL"        :   {   get: function () { if (!this.__valid) return u; return this.__config['apiURL'];              } },
+        "rdpURL"        :   {   get: function () { if (!this.__valid) return u; return this.__config['rdpURL'];              } },
+        "executionCap"  :   {   get: function () { if (!this.__valid) return u; return this.__config['executionCap'];          }, 
+                                set: function(v) { this.__config['executionCap']=v; this.setAsync('executionCap', v);        } },
+
+        /* Version/DiskURL switching */
+        "version"       :     {   get: function () {
+                                        if (!this.__valid) return u; 
+                                        return this.__config['cernvmVersion'];
+                                  },
+                                  set: function(v) {
+                                        if (!this.__valid) return; 
+                                        this.__config['cernvmVersion']=v;
+                                        this.setAsync('cernvmVersion', v);
+                                  }
+                              }, 
+        "flavor "       :     {   get: function () {
+                                        if (!this.__valid) return u; 
+                                        return this.__config['cernvmFlavor'];
+                                  },
+                                  set: function(v) {
+                                        if (!this.__valid) return; 
+                                        this.__config['cernvmFlavor']=v;
+                                        this.setAsync('cernvmFlavor', v);
+                                  }
+                              }, 
+        "diskURL"       :     {   get: function () {
+                                        if (!this.__valid) return u; 
+                                        return this.__config['diskURL'];
+                                  },
+                                  set: function(v) {
+                                        if (!this.__valid) return; 
+                                        this.__config['diskURL']=v;
+                                        this.setAsync('diskURL', v);
+                                  }
+                              }, 
+        "diskChecksum"       :     {   get: function () {
+                                        if (!this.__valid) return u; 
+                                        return this.__config['diskChecksum'];
+                                  },
+                                  set: function(v) {
+                                        if (!this.__valid) return; 
+                                        this.__config['diskChecksum']=v;
+                                        this.setAsync('diskChecksum', v);
+                                  }
+                              }, 
+        
+        /* A smarter way of accessing flags */
+          "flags"         :   {   get: function () {
+                                    // Return a smart object with properties that when changed
+                                    // they automatically update the session object.
+                                    if (!this.__valid) return u; 
+                                    return new SessionFlags(this);
+                                  },
+                                  set: function(v) {
+                                    // If the user is setting a number, update the flags object directly
+                                    if (typeof(v) == 'number') {
+                                        this.__config['flags'] = v;
+
+                                    // Otherwise parse the flags from an object
+                                    } else if (typeof(v) == 'object') {
+                                        this.__config['flags'] = parseSessionFlags(v);
+                                    }
+                                  } 
+                              }
+
     });
+
 }
 
 /**
@@ -29,6 +123,42 @@ _NS_.WebAPISession.prototype = Object.create( _NS_.EventDispatcher.prototype );
  * Handle incoming event
  */
 _NS_.WebAPISession.prototype.handleEvent = function(data) {
+
+	// Take this opportunity to update some of our local cached data
+	if (data['name'] == 'propertiesUpdated') {
+
+		// Convert JSON string to object
+		if (data['data'][0]) {
+			try {
+				data['data'][0] = JSON.parse(data['data'][0]);
+			} catch (e) {
+				data['data'][0] = {};
+			}
+		}
+
+		// Update properties
+		this.__properties = data['data'][0];
+
+	} else if (data['name'] == 'configurationUpdated') {
+
+		// Convert JSON string to object
+		if (data['data'][0]) {
+			try {
+				data['data'][0] = JSON.parse(data['data'][0]);
+			} catch (e) {
+				data['data'][0] = {};
+			}
+		}
+
+		// Update properties
+		this.__config = data['data'][0];
+
+	} else if (data['name'] == 'stateChanged') {
+		this.__state = data['data'][0];
+
+	}
+
+	// Also fire the raw event
 	this.__fire(data['name'], data['data']);
 }
 
@@ -82,8 +212,8 @@ _NS_.WebAPISession.prototype.close = function() {
 	})
 }
 
-_NS_.WebAPISession.prototype.get = function(parameter, cb) {
-	// Send a close message
+_NS_.WebAPISession.prototype.getAsync = function(parameter, cb) {
+	// Get a session parameter
 	this.socket.send("get", {
 		"session_id": this.session_id,
 		"key": parameter
@@ -94,8 +224,48 @@ _NS_.WebAPISession.prototype.get = function(parameter, cb) {
 	})
 }
 
+_NS_.WebAPISession.prototype.setAsync = function(parameter, value, cb) {
+	// Update a session parameter
+	this.socket.send("set", {
+		"session_id": this.session_id,
+		"key": parameter,
+		"value": value
+	},{
+		onSucceed : function() {
+			cb();
+		}
+	})
+}
+
+/**
+ * Return the cached value of the property specified
+ */
+_NS_.WebAPISession.prototype.getProperty = function(name) {
+    if (!name) return "";
+    if (this.__properties[name] == undefined) return "";
+    return this.__properties[name];
+}
+
+/**
+ * Update local and remote properties
+ */
+_NS_.WebAPISession.prototype.setProperty = function(name, value) {
+    if (!name) return "";
+
+    // Update cache
+    this.__properties[name] = value;
+
+	// Send update event (without feedback)
+	this.socket.send("set_property", {
+		"session_id": this.session_id,
+		"key": name,
+		"value": value
+	});
+
+}
+
 _NS_.WebAPISession.prototype.openRDPWindow = function(parameter, cb) {
-	this.get("rdpURL", function(info) {
+	this.getAsync("rdpURL", function(info) {
 		var parts = info.split("@");
 		_NS_.launchRDP( parts[0], parts[1] )
 	});

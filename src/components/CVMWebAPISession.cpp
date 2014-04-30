@@ -107,6 +107,8 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 			std::string resolution = hvSession->getExtraInfo(EXIF_VIDEO_MODE);
 			keyValue = hvSession->getRDPAddress() + "@" + resolution;
 
+        } else if (keyName == "ip") {
+			keyValue = hvSession->parameters->get("ip", "");
 		} else if (keyName == "cpus") {
 			keyValue = hvSession->parameters->get("cpus", "1");
         } else if (keyName == "disk") {
@@ -128,9 +130,39 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
         cb.fire("succeed", ArgumentList(keyValue));
 
 	} else if (action == "set") {
-        
-        hvSession->parameters->get("");
-        
+		std::string keyName = parameters->get("key", ""),
+					keyValue = parameters->get("value", "");
+
+		// Update only particular variables
+		if (keyName == "cpus") {
+			hvSession->parameters->set("cpus", keyValue);
+        } else if (keyName == "disk") {
+			hvSession->parameters->set("disk", keyValue);
+		} else if (keyName == "ram") {
+			hvSession->parameters->set("ram", keyValue);
+		} else if (keyName == "cernvmVersion") {
+			hvSession->parameters->set("cernvmVersion", keyValue);
+		} else if (keyName == "cernvmFlavor") {
+			hvSession->parameters->set("cernvmFlavor", keyValue);
+		} else if (keyName == "executionCap") {
+			hvSession->parameters->set("executionCap", keyValue);
+		} else if (keyName == "flags") {
+			hvSession->parameters->set("flags", keyValue);
+		}
+
+		// Notify success
+        cb.fire("succeed", ArgumentList(1));
+
+	} else if (action == "setProperty") {
+		std::string keyName = parameters->get("key", ""),
+					keyValue = parameters->get("value", "");
+
+		// Update property
+		hvSession->properties->set(keyName, keyValue);
+
+		// Notify success
+        cb.fire("succeed", ArgumentList(1));
+
 	}
 }
 
@@ -220,3 +252,50 @@ void CVMWebAPISession::__cbStateChanged( VariantArgList& args ) {
 
 }
 
+/**
+ * Return all the properties of the current session as JSON
+ */
+std::string CVMWebAPISession::propertiesAsJSON() {
+	Json::FastWriter writer;
+	Json::Value data;
+
+    // Loop over the entries in the record
+    for ( std::map<std::string, std::string>::iterator it = hvSession->parameters->parameters->begin(); it != hvSession->parameters->parameters->end(); ++it ) {
+    	// Convert to json
+        data[it->first] = it->second;
+  	}
+
+  	// Return JSON string
+  	return writer.write(data);
+}
+
+/**
+ * Return all the config parameters of the current session as JSON
+ */
+std::string CVMWebAPISession::configAsJSON() {
+	Json::FastWriter writer;
+	Json::Value data;
+
+	// Calculate api URL
+    std::string apiHost = hvSession->local->get("apiHost", "127.0.0.1");
+    std::string apiPort = hvSession->local->get("apiPort", "80");
+    std::string apiURL = "http://" + apiHost + ":" + apiPort;
+    data["apiURL"] = apiURL;
+
+    // Calculate RDP URl
+	std::string resolution = hvSession->getExtraInfo(EXIF_VIDEO_MODE);
+	data["rdpURL"] = hvSession->getRDPAddress() + "@" + resolution;
+
+	// Return only particular configuration variables
+	data["ip"] = hvSession->parameters->get("ip", "");
+	data["cpus"] = hvSession->parameters->getNum<int>("cpus", 1);
+	data["disk"] = hvSession->parameters->getNum<int>("disk", 1024);
+	data["ram"] = hvSession->parameters->getNum<int>("ram", 512);
+	data["cernvmVersion"] = hvSession->parameters->get("cernvmVersion", "1.17-8");
+	data["cernvmFlavor"] = hvSession->parameters->get("cernvmFlavor", "prod");
+	data["executionCap"] = hvSession->parameters->getNum<int>("executionCap", 100);
+	data["flags"] = hvSession->parameters->getNum<int>("flags", 0);
+
+  	// Return JSON string
+  	return writer.write(data);
+}

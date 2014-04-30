@@ -118,7 +118,87 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
         fn_start();
     }
 
+};/**
+ * Constants
+ */
+var HV_NONE = 0;
+var HV_VIRTUALBOX = 1;
+
+var HVE_ALREADY_EXISTS = 2;
+var HVE_SCHEDULED = 1;
+var HVE_OK = 0;
+var HVE_CREATE_ERROR = -1;
+var HVE_MODIFY_ERROR = -2;
+var HVE_CONTROL_ERROR = -3;
+var HVE_DELETE_ERROR = -4;
+var HVE_QUERY_ERROR = -5;
+var HVE_IO_ERROR = -6;
+var HVE_EXTERNAL_ERROR = -7;
+var HVE_INVALID_STATE = -8;
+var HVE_NOT_FOUND = -9;
+var HVE_NOT_ALLOWED = -10;
+var HVE_NOT_SUPPORTED = -11;
+var HVE_NOT_VALIDATED = -12;
+var HVE_NOT_TRUSTED = -13;
+var HVE_USAGE_ERROR = -99;
+var HVE_NOT_IMPLEMENTED = -100;
+
+var STATE_CLOSED = 0;
+var STATE_OPPENING = 1;
+var STATE_OPEN = 2;
+var STATE_STARTING = 3;
+var STATE_STARTED = 4;
+var STATE_ERROR = 5;
+var STATE_PAUSED = 6;
+
+var HVF_SYSTEM_64BIT = 1; 
+var HVF_DEPLOYMENT_HDD = 2; 
+var HVF_GUEST_ADDITIONS = 4;
+var HVF_FLOPPY_IO = 8;
+var HVF_HEADFUL = 16;
+
+/* Daemon flags */
+var DF_SUSPEND = 1;
+var DF_AUTOSTART = 2;
+
+/**
+ * Convert state to string
+ */
+function state_string(state) {
+    if (state == STATE_CLOSED)      return "Closed";
+    if (state == STATE_OPPENING)    return "Oppening";
+    if (state == STATE_OPEN)        return "Open";
+    if (state == STATE_STARTING)    return "Starting";
+    if (state == STATE_STARTED)     return "Started";
+    if (state == STATE_ERROR)       return "Error";
+    if (state == STATE_PAUSED)      return "Paused";
+    return "Unknown state " + state;
 };
+
+/**
+ * Convert error code to string
+ */
+function error_string(code) {
+    if (code == HVE_ALREADY_EXISTS) return "Already exists";
+    if (code == HVE_SCHEDULED) return "Scheduled";
+    if (code == HVE_OK) return "No error";
+    if (code == HVE_CREATE_ERROR) return "Creation Error";
+    if (code == HVE_MODIFY_ERROR) return "Modification Error";
+    if (code == HVE_CONTROL_ERROR) return "Control Error";
+    if (code == HVE_DELETE_ERROR) return "Deletion Error";
+    if (code == HVE_QUERY_ERROR) return "Query Error";
+    if (code == HVE_IO_ERROR) return "I/O Error";
+    if (code == HVE_EXTERNAL_ERROR) return "Server/Library Error";
+    if (code == HVE_INVALID_STATE) return "Invalid state for such action";
+    if (code == HVE_NOT_FOUND) return "The requested resource was not found";
+    if (code == HVE_NOT_ALLOWED) return "Access denied";
+    if (code == HVE_NOT_SUPPORTED) return "The requested action is not supported";
+    if (code == HVE_NOT_VALIDATED) return "Unable to validate the resource";
+    if (code == HVE_NOT_TRUSTED) return "The domain is not trusted";
+    if (code == HVE_USAGE_ERROR) return "Usage error";
+    if (code == HVE_NOT_IMPLEMENTED) return "The requested functionality is not implemented";
+    return "Unknown error #" + code;
+}
 _NS_.EventDispatcher = function(e) {
     this.events = { };
 };
@@ -151,6 +231,105 @@ _NS_.EventDispatcher.prototype.removeEventListener = function( name, listener ) 
     var i = this.events[name].indexOf(listener);
     if (i<0) return;
     this.events.splice(i,1);
+};
+
+var HVF_SYSTEM_64BIT = 1; 
+var HVF_DEPLOYMENT_HDD = 2; 
+var HVF_GUEST_ADDITIONS = 4;
+var HVF_FLOPPY_IO = 8;
+
+/**
+ * User-friendly interface to flags
+ */
+var parseSessionFlags = function( o ) {
+    var val=0;
+    if (o.use64bit) val |= HVF_SYSTEM_64BIT;
+    if (o.useBootDisk) val |= HVF_DEPLOYMENT_HDD;
+    if (o.useGuestAdditions) val |= HVF_GUEST_ADDITIONS;
+    if (o.useFloppyIO) val |= HVF_FLOPPY_IO;
+    if (o.HVF_HEADFUL) val |= HVF_HEADFUL;
+    return val;
+};
+var SessionFlags = function( o ) {
+    var vSet = function(v) { o.__config['flags']=v; o.setAsync("flags", v); },
+        vGet = function()  { return o.__config['flags']; };
+    Object.defineProperties(this, {
+        
+        /* If the value is updated, trigger callback */
+        "value":    {   get: function() {
+                            return vGet();
+                        },
+                        set: function(v) {
+                            vSet(v);
+                        }
+                    },
+                    
+        /* HVF_SYSTEM_64BIT: Use 64 bit CPU */
+        "use64bit": {   get: function () { 
+                            return ((vGet() & HVF_SYSTEM_64BIT) != 0);
+                        },
+                        set: function(v) {
+                            if (v) {
+                                vSet( vGet() | HVF_SYSTEM_64BIT );
+                            } else {
+                                vSet( vGet() & ~HVF_SYSTEM_64BIT );
+                            }
+                        }
+                    },
+                    
+        /* HVF_DEPLOYMENT_HDD: Use a bootable disk (specified by diskURL) instead of using micro-CernVM */
+        "useBootDisk":{  get: function () { 
+                            return ((vGet() & HVF_DEPLOYMENT_HDD) != 0);
+                        },
+                        set: function(v) {
+                            if (v) {
+                                vSet( vGet() | HVF_DEPLOYMENT_HDD );
+                            } else {
+                                vSet( vGet() & ~HVF_DEPLOYMENT_HDD );
+                            }
+                        }
+                    },
+
+        /* HVF_GUEST_ADDITIONS: Attach guest additions CD-ROM at boot */
+        "useGuestAdditions":{  get: function () { 
+                            return ((vGet() & HVF_GUEST_ADDITIONS) != 0);
+                        },
+                        set: function(v) {
+                            if (v) {
+                                vSet( vGet() | HVF_GUEST_ADDITIONS );
+                            } else {
+                                vSet( vGet() & ~HVF_GUEST_ADDITIONS );
+                            }
+                        }
+                    },
+
+        /* HVF_FLOPPY_IO: Use FloppyIO contextualization instead of CD-ROM contextualization */
+        "useFloppyIO":{  get: function () { 
+                            return ((vGet() & HVF_FLOPPY_IO) != 0);
+                        },
+                        set: function(v) {
+                            if (v) {
+                                vSet( vGet() | HVF_FLOPPY_IO );
+                            } else {
+                                vSet( vGet() & ~HVF_FLOPPY_IO );
+                            }
+                        }
+                    },
+        
+        /* HVF_HEADFUL: Use GUI window instead of headless */
+        "headful": {  get: function () { 
+                            return ((vGet() & HVF_HEADFUL) != 0);
+                        },
+                        set: function(v) {
+                            if (v) {
+                                vSet( vGet() | HVF_HEADFUL );
+                            } else {
+                                vSet( vGet() & ~HVF_HEADFUL );
+                            }
+                        }
+                    }
+
+    });
 };
 
 /**
@@ -1039,6 +1218,25 @@ _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
 
 };
 /**
+ * Return the textual representation of the specified state
+ */
+function _stateNameFor(state) {
+	var states = [
+		'missing',
+		'available',
+		'poweroff',
+		'saved',
+		'paused',
+		'running'
+	];
+
+	// Validate state range
+	if ((state < 0) || (state>=states.length))
+		return 'unknown';
+	return states[state];
+}
+
+/**
  * WebAPI Socket handler
  */
 _NS_.WebAPISession = function( socket, session_id ) {
@@ -1050,13 +1248,88 @@ _NS_.WebAPISession = function( socket, session_id ) {
 	this.socket = socket;
 	this.session_id = session_id;
 
+	// Local variables
+	this.__state = 0;
+	this.__properties = {};
+	this.__config = {};
+	this.__valid = true;
+
+    // Connect plugin properties with this object properties using getters/setters
     var u = undefined;
     Object.defineProperties(this, {
-        "state"         :   {   get: function () { return u; } },
-        "stateName"     :   {   get: function () { return u; } },
-        "ip"            :   {   get: function () { return u; } },
-        "ram"           :   {   get: function () { return u; } },
+        "state"         :   {   get: function () { if (!this.__valid) return u; return this.__state;                 		 } },
+        "stateName"     :   {   get: function () { if (!this.__valid) return u; return _stateNameFor(this.__state );  		 } },
+        "ip"            :   {   get: function () { if (!this.__valid) return u; return this.__config['ip'];                  } },
+        "ram"           :   {   get: function () { if (!this.__valid) return u; return this.__config['ram'];                 } },
+        "disk"          :   {   get: function () { if (!this.__valid) return u; return this.__config['disk'];                } },
+        "apiURL"        :   {   get: function () { if (!this.__valid) return u; return this.__config['apiURL'];              } },
+        "rdpURL"        :   {   get: function () { if (!this.__valid) return u; return this.__config['rdpURL'];              } },
+        "executionCap"  :   {   get: function () { if (!this.__valid) return u; return this.__config['executionCap'];          }, 
+                                set: function(v) { this.__config['executionCap']=v; this.setAsync('executionCap', v);        } },
+
+        /* Version/DiskURL switching */
+        "version"       :     {   get: function () {
+                                        if (!this.__valid) return u; 
+                                        return this.__config['cernvmVersion'];
+                                  },
+                                  set: function(v) {
+                                        if (!this.__valid) return; 
+                                        this.__config['cernvmVersion']=v;
+                                        this.setAsync('cernvmVersion', v);
+                                  }
+                              }, 
+        "flavor "       :     {   get: function () {
+                                        if (!this.__valid) return u; 
+                                        return this.__config['cernvmFlavor'];
+                                  },
+                                  set: function(v) {
+                                        if (!this.__valid) return; 
+                                        this.__config['cernvmFlavor']=v;
+                                        this.setAsync('cernvmFlavor', v);
+                                  }
+                              }, 
+        "diskURL"       :     {   get: function () {
+                                        if (!this.__valid) return u; 
+                                        return this.__config['diskURL'];
+                                  },
+                                  set: function(v) {
+                                        if (!this.__valid) return; 
+                                        this.__config['diskURL']=v;
+                                        this.setAsync('diskURL', v);
+                                  }
+                              }, 
+        "diskChecksum"       :     {   get: function () {
+                                        if (!this.__valid) return u; 
+                                        return this.__config['diskChecksum'];
+                                  },
+                                  set: function(v) {
+                                        if (!this.__valid) return; 
+                                        this.__config['diskChecksum']=v;
+                                        this.setAsync('diskChecksum', v);
+                                  }
+                              }, 
+        
+        /* A smarter way of accessing flags */
+          "flags"         :   {   get: function () {
+                                    // Return a smart object with properties that when changed
+                                    // they automatically update the session object.
+                                    if (!this.__valid) return u; 
+                                    return new SessionFlags(this);
+                                  },
+                                  set: function(v) {
+                                    // If the user is setting a number, update the flags object directly
+                                    if (typeof(v) == 'number') {
+                                        this.__config['flags'] = v;
+
+                                    // Otherwise parse the flags from an object
+                                    } else if (typeof(v) == 'object') {
+                                        this.__config['flags'] = parseSessionFlags(v);
+                                    }
+                                  } 
+                              }
+
     });
+
 }
 
 /**
@@ -1068,6 +1341,42 @@ _NS_.WebAPISession.prototype = Object.create( _NS_.EventDispatcher.prototype );
  * Handle incoming event
  */
 _NS_.WebAPISession.prototype.handleEvent = function(data) {
+
+	// Take this opportunity to update some of our local cached data
+	if (data['name'] == 'propertiesUpdated') {
+
+		// Convert JSON string to object
+		if (data['data'][0]) {
+			try {
+				data['data'][0] = JSON.parse(data['data'][0]);
+			} catch (e) {
+				data['data'][0] = {};
+			}
+		}
+
+		// Update properties
+		this.__properties = data['data'][0];
+
+	} else if (data['name'] == 'configurationUpdated') {
+
+		// Convert JSON string to object
+		if (data['data'][0]) {
+			try {
+				data['data'][0] = JSON.parse(data['data'][0]);
+			} catch (e) {
+				data['data'][0] = {};
+			}
+		}
+
+		// Update properties
+		this.__config = data['data'][0];
+
+	} else if (data['name'] == 'stateChanged') {
+		this.__state = data['data'][0];
+
+	}
+
+	// Also fire the raw event
 	this.__fire(data['name'], data['data']);
 }
 
@@ -1121,8 +1430,8 @@ _NS_.WebAPISession.prototype.close = function() {
 	})
 }
 
-_NS_.WebAPISession.prototype.get = function(parameter, cb) {
-	// Send a close message
+_NS_.WebAPISession.prototype.getAsync = function(parameter, cb) {
+	// Get a session parameter
 	this.socket.send("get", {
 		"session_id": this.session_id,
 		"key": parameter
@@ -1131,6 +1440,46 @@ _NS_.WebAPISession.prototype.get = function(parameter, cb) {
 			cb(value);
 		}
 	})
+}
+
+_NS_.WebAPISession.prototype.setAsync = function(parameter, value, cb) {
+	// Update a session parameter
+	this.socket.send("set", {
+		"session_id": this.session_id,
+		"key": parameter,
+		"value": value
+	},{
+		onSucceed : function() {
+			cb();
+		}
+	})
+}
+
+/**
+ * Return the cached value of the property specified
+ */
+_NS_.WebAPISession.prototype.getProperty = function(name) {
+    if (!name) return "";
+    if (this.__properties[name] == undefined) return "";
+    return this.__properties[name];
+}
+
+/**
+ * Update local and remote properties
+ */
+_NS_.WebAPISession.prototype.setProperty = function(name, value) {
+    if (!name) return "";
+
+    // Update cache
+    this.__properties[name] = value;
+
+	// Send update event (without feedback)
+	this.socket.send("set_property", {
+		"session_id": this.session_id,
+		"key": name,
+		"value": value
+	});
+
 }
 
 _NS_.WebAPISession.prototype.openRDPWindow = function(parameter, cb) {

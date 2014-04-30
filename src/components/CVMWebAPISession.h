@@ -79,6 +79,16 @@ public:
 	void processPeriodicJobs( );
 
 	/**
+	 * Return all properties as a json string
+	 */
+	std::string propertiesAsJSON();
+
+	/**
+	 * Return configuration as JSON
+	 */
+	std::string configAsJSON();
+
+	/**
 	 * The session ID
 	 */
 	int					uuid;
