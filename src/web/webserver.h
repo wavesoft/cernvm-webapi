@@ -178,12 +178,17 @@ private:
 	/**
 	 * Iterator over the websocket connections
 	 */
-	static int 	iterate_callback(struct mg_connection *conn);
+	static int 	iterate_callback(struct mg_connection *c, enum mg_event ev);
 
 	/**
 	 * This is the entry point for the CernVM Web API I/O
 	 */
 	static int 	api_handler(struct mg_connection *conn);
+
+	/**
+	 * Raw event handler
+	 */
+	static int ev_handler(struct mg_connection *conn, enum mg_event ev);
 
 };
 

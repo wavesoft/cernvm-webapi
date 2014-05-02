@@ -3,7 +3,7 @@ set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS ON)
 project(mongoose C)
 
 # Download information for OpenSSL
-set(MONGOOSE_VERSION 5.2)
+set(MONGOOSE_VERSION master)
 
 #############################################################
 # DOWNLOAD BOOTSTRAP 

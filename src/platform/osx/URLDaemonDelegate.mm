@@ -16,7 +16,7 @@
 - (void)applicationDidBecomeActive:(NSNotification *)aNotification
 {
 	// Launch URL on focus only when allowed
-	if (enableFocus) {
+	if (focusOnActiate) {
 		NSLog(@"Focusing!");
 		[self launchURL];
 	}
@@ -43,7 +43,8 @@
 
 	// Reset variables
 	launchedByURL = false;
-	enableFocus = false;
+	focusOnActiate = false;
+	usedLauchURL = false;
 
 	// Handle URL
 	NSAppleEventManager *em = [NSAppleEventManager sharedAppleEventManager];
@@ -92,6 +93,14 @@
 		// Otherwise, immediately tart the reap timer
 		[self startReap];
 
+		// Enable focusOnActiate a while later
+		delayLaunch = [NSTimer 
+			scheduledTimerWithTimeInterval:0.5
+			target:self
+			selector:@selector(activateFocusLaunch)
+			userInfo:nil
+			repeats:NO];
+
 	}
 
 	NSLog(@"Timer started");
@@ -106,10 +115,6 @@
 	
 	// Trigger the scheduled jobs loop
 	core->processPeriodicJobs();
-
-	// Since it's called after 1 sec, enable focus
-	if (!enableFocus)
-		enableFocus = true;
 	
 }
 
@@ -122,13 +127,16 @@
 	webserver->poll(500);
 
 	// Check if we should launch the URL
-	if (!launchedByURL) {
+	if (!launchedByURL && !usedLauchURL) {
 
 		// Launch URL right after the server started polling
+		[self launchURL];
+
+		// Enable focusOnActiate a while later
 		delayLaunch = [NSTimer 
-			scheduledTimerWithTimeInterval:0.1
+			scheduledTimerWithTimeInterval:0.5
 			target:self
-			selector:@selector(launchURL)
+			selector:@selector(activateFocusLaunch)
 			userInfo:nil
 			repeats:NO];
 
@@ -141,8 +149,8 @@
 			userInfo:nil
 			repeats:NO];
 
-		// Reset flag so we are not fired again
-		launchedByURL = true;
+		// We used LaunchURL
+		usedLauchURL = true;
 
 	}
 
@@ -171,6 +179,14 @@
 		NSLog(@"Reaping server");
 		[NSApp terminate: nil];
 	}
+}
+
+/**
+ * Launch URL
+ */
+- (void)activateFocusLaunch
+{
+	focusOnActiate = true;
 }
 
 /**

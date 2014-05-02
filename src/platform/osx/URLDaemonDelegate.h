@@ -38,7 +38,9 @@
     // Flags regarding launch type
     @private bool           launchedByURL;
     // Fag for allowing focus on activate
-    @private bool           enableFocus;
+    @private bool           focusOnActiate;
+    // Flag that defines if the URL was launched once
+    @private bool           usedLauchURL;
 
 }
 

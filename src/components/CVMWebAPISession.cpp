@@ -223,7 +223,7 @@ void CVMWebAPISession::periodicJobsThread() {
     		// Check if API port has gone online
     		bool newState = hvSession->isAPIAlive();
     		if (newState) {
-	    		connection.sendEvent( "apiStateChanged", ArgumentList(true)(apiURL) );
+	    		connection.sendEvent( "apiStateChanged", ArgumentList(true)(apiURL), uuid_str );
     			apiPortOnline = true;
     		}
 
@@ -234,7 +234,7 @@ void CVMWebAPISession::periodicJobsThread() {
 
     			// Check for offline port
 	    		if (!hvSession->isAPIAlive()) {
-		    		connection.sendEvent( "apiStateChanged", ArgumentList(false)(apiURL) );
+		    		connection.sendEvent( "apiStateChanged", ArgumentList(false)(apiURL), uuid_str );
 	    			apiPortOnline = true;
 	    		}
 
@@ -246,7 +246,7 @@ void CVMWebAPISession::periodicJobsThread() {
     } else {
     	if (apiPortOnline) {
     		// In any other state, the port is just offline
-    		connection.sendEvent( "apiStateChanged", ArgumentList(false)(apiURL) );
+    		connection.sendEvent( "apiStateChanged", ArgumentList(false)(apiURL), uuid_str );
     		apiPortOnline = false;
     	}
     }
@@ -270,7 +270,7 @@ void CVMWebAPISession::__cbStateChanged( VariantArgList& args ) {
 
 	if ((sessionState != SS_RUNNING) && apiPortOnline) {
 		// In any other state, the port is just offline
-		connection.sendEvent( "apiStateChanged", ArgumentList(false)(apiURL) );
+		connection.sendEvent( "apiStateChanged", ArgumentList(false)(apiURL), uuid_str );
 		apiPortOnline = false;
 	}
 

@@ -40,7 +40,7 @@ int send_error( struct mg_connection *conn, const char* message, const int code 
         "</html>", code, message );
 
     // Request processed
-    return MG_REQUEST_PROCESSED;
+    return MG_TRUE;
 
 }
 
@@ -94,7 +94,7 @@ int CVMWebserver::api_handler(struct mg_connection *conn) {
         }
 
         // Check if connection is closed
-        return c->h->isConnected() ? MG_CLIENT_CONTINUE : MG_CLIENT_CLOSE;
+        return c->h->isConnected() ? MG_TRUE : MG_FALSE;
 
     } else {
 
@@ -140,7 +140,7 @@ int CVMWebserver::api_handler(struct mg_connection *conn) {
             // Enable CORS (important for allowing every website to contact us)
             mg_send_header(conn, "Access-Control-Allow-Origin", "*" );
             mg_printf_data(conn, "{\"status\":\"ok\",\"request\":\"%s\",\"domain\":\"%s\"}", conn->uri, domain.c_str());
-            return MG_REQUEST_PROCESSED;
+            return MG_TRUE;
 
         } else {
 
@@ -158,19 +158,19 @@ int CVMWebserver::api_handler(struct mg_connection *conn) {
 /**
  * Iterator over the websocket connections
  */
-int CVMWebserver::iterate_callback(struct mg_connection *conn) {
+int CVMWebserver::iterate_callback(struct mg_connection *conn, enum mg_event ev) {
 
     // Fetch 'this' from the connection server object
     CVMWebserver* self = static_cast<CVMWebserver*>(conn->server_param);
 
     // Handle websockets
-    if (conn->is_websocket) {
+    if ((ev == MG_POLL) && conn->is_websocket) {
 
         // Check if a CVMWebserverConnection is active
         CVMWebserverConnection * c;
         if (self->connections.find(conn) == self->connections.end()) {
             // This connection is not handled by us!
-            return MG_REQUEST_PROCESSED;
+            return MG_TRUE;
 
         } else {
             c = self->connections[conn];
@@ -198,8 +198,21 @@ int CVMWebserver::iterate_callback(struct mg_connection *conn) {
     }
 
     // We are done with
-    return MG_REQUEST_PROCESSED;
+    return MG_TRUE;
 
+}
+
+/**
+ * RAW Request handler
+ */
+int CVMWebserver::ev_handler(struct mg_connection *conn, enum mg_event ev) {
+    if (ev == MG_REQUEST) {
+        return api_handler(conn);
+    } else if (ev == MG_AUTH) {
+        return MG_TRUE;
+    } else {
+        return MG_FALSE;
+    }
 }
 
 /**
@@ -210,14 +223,11 @@ CVMWebserver::CVMWebserver( CVMWebserverConnectionFactory& factory, const int po
 	// Create a mongoose server, passing the pointer
 	// of this class, in order for the C callbacks
 	// to have access to the class instance.
-	server = mg_create_server( this );
+	server = mg_create_server( this, CVMWebserver::ev_handler );
 
 	// Prepare the listening endpoint info
 	ostringstream ss; ss << "127.0.0.1:" << port;
     mg_set_option(server, "listening_port", ss.str().c_str());
-
-    // Bind default request handler
-    mg_set_request_handler(server, CVMWebserver::api_handler);
 
 }
 
