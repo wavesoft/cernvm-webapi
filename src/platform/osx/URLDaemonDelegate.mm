@@ -154,6 +154,12 @@
 
 	}
 
+	// If the server has exited, exit app
+	if (core->hasExited()) {
+		NSLog(@"Server exited");
+		[NSApp terminate: nil];
+	}
+
 }
 
 /**
@@ -175,8 +181,8 @@
  */
 - (void)serverReap
 {
-	if (!webserver->hasLiveConnections() || core->hasExited()) {
-		NSLog(@"Reaping server");
+	if (!webserver->hasLiveConnections()) {
+		NSLog(@"Reaping server because of no connections");
 		[NSApp terminate: nil];
 	}
 }

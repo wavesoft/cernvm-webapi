@@ -265,8 +265,23 @@ _NS_.WebAPISession.prototype.setProperty = function(name, value) {
 }
 
 _NS_.WebAPISession.prototype.openRDPWindow = function(parameter, cb) {
-	this.getAsync("rdpURL", function(info) {
-		var parts = info.split("@");
+
+	// If we have the rdpURL in proerties, prefer that
+	// because it's not going to trigger the pop-up blockers
+	if (this.__config['rdpURL']) {
+
+		// Open the RDP window
+		var parts = this.__config['rdpURL'].split("@");
 		_NS_.launchRDP( parts[0], parts[1] )
-	});
+
+	} else {
+
+		// Otherwise request asynchronously the rdpURL
+		this.getAsync("rdpURL", function(info) {
+			var parts = info.split("@");
+			_NS_.launchRDP( parts[0], parts[1] )
+		});		
+
+	}
+
 }

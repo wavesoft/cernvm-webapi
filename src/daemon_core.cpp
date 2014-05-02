@@ -123,6 +123,11 @@ std::string DaemonCore::newAuthKey() {
  */
 bool DaemonCore::authKeyValid( const std::string& key ) {
 
+    // If we are empty, forget about it
+    if (authKeys.empty()) {
+        return false;
+    }
+    
 	// Expire past keys
 	bool found = false;
 	unsigned long ts = getTimeInMs();

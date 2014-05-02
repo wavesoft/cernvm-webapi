@@ -157,6 +157,13 @@ var HVF_GUEST_ADDITIONS = 4;
 var HVF_FLOPPY_IO = 8;
 var HVF_HEADFUL = 16;
 
+var SS_MISSING = 0,
+    SS_AVAILABLE = 1,
+    SS_POWEROFF = 2,
+    SS_SAVED = 3,
+    SS_PAUSED = 4,
+    SS_RUNNING = 5;
+
 /* Daemon flags */
 var DF_SUSPEND = 1;
 var DF_AUTOSTART = 2;
@@ -1483,10 +1490,25 @@ _NS_.WebAPISession.prototype.setProperty = function(name, value) {
 }
 
 _NS_.WebAPISession.prototype.openRDPWindow = function(parameter, cb) {
-	this.get("rdpURL", function(info) {
-		var parts = info.split("@");
+
+	// If we have the rdpURL in proerties, prefer that
+	// because it's not going to trigger the pop-up blockers
+	if (this.__config['rdpURL']) {
+
+		// Open the RDP window
+		var parts = this.__config['rdpURL'].split("@");
 		_NS_.launchRDP( parts[0], parts[1] )
-	});
+
+	} else {
+
+		// Otherwise request asynchronously the rdpURL
+		this.getAsync("rdpURL", function(info) {
+			var parts = info.split("@");
+			_NS_.launchRDP( parts[0], parts[1] )
+		});		
+
+	}
+
 }
 
 /**

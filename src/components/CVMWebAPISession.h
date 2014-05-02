@@ -40,6 +40,9 @@ public:
 		  callbackForwarder( connection, uuid_str ), apiPortOnline(false), periodicsRunning(false), apiPortCounter(0)
 	{ 
 
+		// Disable by default periodic jobs
+		acceptPeriodicJobs = false;
+
 		// Handle state changes
         hStateChanged = hvSession->on( "stateChanged", boost::bind( &CVMWebAPISession::__cbStateChanged, this, _1 ) );
 
@@ -88,6 +91,11 @@ public:
 	 * Return configuration as JSON
 	 */
 	std::string configAsJSON();
+
+	/**
+	 * Set status of the periodic jobs thread
+	 */
+	 void 				enablePeriodicJobs( bool status );
 
 	/**
 	 * The session ID
@@ -150,6 +158,12 @@ private:
 	 * Polling counter of the API Port
 	 */
 	int 				apiPortCounter;
+
+	/**
+	 * Flag that defines if we should accept periodic
+	 * updates from the periodicJobsThread();
+	 */
+	bool				acceptPeriodicJobs;
 
 };
 

@@ -191,9 +191,17 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 }
 
 /**
+ * Enable or disable periodic jobs
+ */
+void CVMWebAPISession::enablePeriodicJobs( bool status ) {
+	acceptPeriodicJobs = status;
+}
+
+/**
  * Handle timed event
  */
 void CVMWebAPISession::processPeriodicJobs() {
+	if (!acceptPeriodicJobs) return;
 	if (periodicsRunning) return;
 	boost::thread( boost::bind( &CVMWebAPISession::periodicJobsThread, this ) );
 }

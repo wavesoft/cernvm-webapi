@@ -403,10 +403,10 @@ void DaemonConnection::requestSession_thread( boost::thread ** thread, const std
         } else {
             session->update();
         }
-
+        
         // Register session on store
         CVMWebAPISession* cvmSession = core.storeSession( *this, session );
-        
+
         // Completed
         cb.fire("succeed", ArgumentList("Session oppened successfully")(cvmSession->uuid));
 
@@ -416,7 +416,11 @@ void DaemonConnection::requestSession_thread( boost::thread ** thread, const std
 
         // Send status message
         sendEvent("stateChanged", ArgumentList(session->local->getNum<int>("state", 0)), cvmSession->uuid_str);
-    
+
+        // Enable periodic jobs thread after stateChanged is sent
+        // (This ensures that apiStateChanged is fired AFTER stateChanged event is sent)
+        cvmSession->enablePeriodicJobs(true);
+
     } catch (...) {
 
         CVMWA_LOG("Error", "Exception occured!");
