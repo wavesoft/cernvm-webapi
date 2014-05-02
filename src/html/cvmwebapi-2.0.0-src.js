@@ -80,7 +80,7 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 
 				// There is no API, ask the user to install the plug-in
 				var cFrame = document.createElement('iframe');
-				cFrame.src = "//cernvm-online.cern.ch";
+				cFrame.src = "http://cernvm.cern.ch/releases/webapi/install";
 				cFrame.width = "100%";
 				cFrame.height = 400;
 				cFrame.frameBorder = 0;
