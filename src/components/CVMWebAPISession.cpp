@@ -27,7 +27,10 @@
  */
 void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& action, ParameterMapPtr parameters ) {
 	int ret;
+
+	//////////////////////////////////
 	if (action == "start") {
+	//////////////////////////////////
 
 		ParameterMapPtr startParm = parameters->subgroup("parameters");
 		ret = hvSession->start( startParm );
@@ -37,7 +40,9 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 	        cb.fire("succeed", ArgumentList("Session started successfully"));
 		}
 
+	//////////////////////////////////
 	} else if (action == "stop") {
+	//////////////////////////////////
         
 		ret = hvSession->stop();
 		if (ret != HVE_OK) {
@@ -46,7 +51,9 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 	        cb.fire("succeed", ArgumentList("Session stopped successfully"));
 		}
 
+	//////////////////////////////////
 	} else if (action == "pause") {
+	//////////////////////////////////
         
 		ret = hvSession->pause();
 		if (ret != HVE_OK) {
@@ -55,7 +62,9 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 	        cb.fire("succeed", ArgumentList("Session paused successfully"));
 		}
 
+	//////////////////////////////////
 	} else if (action == "resume") {
+	//////////////////////////////////
         
 		ret = hvSession->resume();
 		if (ret != HVE_OK) {
@@ -64,7 +73,9 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 	        cb.fire("succeed", ArgumentList("Session resumed successfully"));
 		}
 
+	//////////////////////////////////
 	} else if (action == "hibernate") {
+	//////////////////////////////////
         
 		ret = hvSession->hibernate();
 		if (ret != HVE_OK) {
@@ -73,7 +84,9 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 	        cb.fire("succeed", ArgumentList("Session hibernated successfully"));
 		}
 
+	//////////////////////////////////
 	} else if (action == "reset") {
+	//////////////////////////////////
         
 		ret = hvSession->reset();
 		if (ret != HVE_OK) {
@@ -82,7 +95,9 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 	        cb.fire("succeed", ArgumentList("Session reseted successfully"));
 		}
 
+	//////////////////////////////////
 	} else if (action == "close") {
+	//////////////////////////////////
         
 		ret = hvSession->close();
 		if (ret != HVE_OK) {
@@ -91,7 +106,10 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 	        cb.fire("succeed", ArgumentList("Session closed successfully"));
 		}
 
+	//////////////////////////////////
 	} else if (action == "get") {
+	//////////////////////////////////
+
 		std::string keyName = parameters->get("key", ""),
 					keyValue = "";
 
@@ -129,7 +147,10 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 		// Return value
         cb.fire("succeed", ArgumentList(keyValue));
 
+	//////////////////////////////////
 	} else if (action == "set") {
+	//////////////////////////////////
+
 		std::string keyName = parameters->get("key", ""),
 					keyValue = parameters->get("value", "");
 
@@ -153,7 +174,10 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 		// Notify success
         cb.fire("succeed", ArgumentList(1));
 
+	//////////////////////////////////
 	} else if (action == "setProperty") {
+	//////////////////////////////////
+
 		std::string keyName = parameters->get("key", ""),
 					keyValue = parameters->get("value", "");
 
