@@ -76,10 +76,14 @@ int CVMWebserver::api_handler(struct mg_connection *conn) {
         // Check if a connection is active
         CVMWebserverConnection * c;
         if (self->connections.find(conn) == self->connections.end()) {
+
+            // Initialize a new connection if such connection
+            // does not exist.
             boost::mutex::scoped_lock lock(self->connMutex);
             c = new CVMWebserverConnection( self->factory.createHandler(domain, url) );
             c->isIterated = true;
             self->connections[conn] = c;
+            
         } else {
             c = self->connections[conn];
         }

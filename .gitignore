@@ -22,6 +22,7 @@
 
 # Exclude build dirs
 build
+test
 
 # Exclude archives from the extern
 extern/mongoose/mongoose-*

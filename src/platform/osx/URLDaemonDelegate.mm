@@ -15,8 +15,11 @@
  */
 - (void)applicationDidBecomeActive:(NSNotification *)aNotification
 {
-	NSLog(@"Focusing!");
-	[self launchURL];
+	// Launch URL on focus only when allowed
+	if (enableFocus) {
+		NSLog(@"Focusing!");
+		[self launchURL];
+	}
 
 }
 
@@ -40,6 +43,7 @@
 
 	// Reset variables
 	launchedByURL = false;
+	enableFocus = false;
 
 	// Handle URL
 	NSAppleEventManager *em = [NSAppleEventManager sharedAppleEventManager];
@@ -83,26 +87,7 @@
 
 	// If we were not launched by URL, open the management interface
 	// in the browser.
-	if (!launchedByURL) {
-
-		// Launch URL right after the server started polling
-		delayLaunch = [NSTimer 
-			scheduledTimerWithTimeInterval:0.5
-			target:self
-			selector:@selector(launchURL)
-			userInfo:nil
-			repeats:NO];
-
-		// Delay a bit the Reap loop, since
-		// it takes some time for the browser to open
-		delayStartTimer = [NSTimer 
-			scheduledTimerWithTimeInterval:5
-			target:self
-			selector:@selector(startReap)
-			userInfo:nil
-			repeats:NO];
-
-	} else {
+	if (launchedByURL) {
 
 		// Otherwise, immediately tart the reap timer
 		[self startReap];
@@ -118,8 +103,14 @@
  /*/
 - (void)forwardCronEvent
 {
+	
 	// Trigger the scheduled jobs loop
 	core->processPeriodicJobs();
+
+	// Since it's called after 1 sec, enable focus
+	if (!enableFocus)
+		enableFocus = true;
+	
 }
 
 /**
@@ -128,7 +119,33 @@
 - (void)serverLoop
 {
 	// Poll for 100ms
-	webserver->poll(100);
+	webserver->poll(500);
+
+	// Check if we should launch the URL
+	if (!launchedByURL) {
+
+		// Launch URL right after the server started polling
+		delayLaunch = [NSTimer 
+			scheduledTimerWithTimeInterval:0.1
+			target:self
+			selector:@selector(launchURL)
+			userInfo:nil
+			repeats:NO];
+
+		// Delay a bit the Reap loop, since
+		// it takes some time for the browser to open
+		delayStartTimer = [NSTimer 
+			scheduledTimerWithTimeInterval:10
+			target:self
+			selector:@selector(startReap)
+			userInfo:nil
+			repeats:NO];
+
+		// Reset flag so we are not fired again
+		launchedByURL = true;
+
+	}
+
 }
 
 /**
