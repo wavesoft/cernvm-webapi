@@ -53,6 +53,24 @@ int isEmpty(LPSTR string)
 }
 
 /**
+ * Open authenticated URL
+ */
+void openAuthenticatedURL()
+{
+  // Request a new auth token
+  std::string authToken = core->newAuthKey();
+
+  // Build URL
+  std::ostringstream oss;
+  oss << "http://127.0.0.1:5624/control.html#" << authToken;
+
+  // Get URL string
+  std::string url = oss.str();
+  ShellExecute(NULL,"open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+
+}
+
+/**
  * Windows entry point
  */
 int WINAPI WinMain(HINSTANCE hInstance,
@@ -68,7 +86,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
   		// Launch instance if we are not launched by URL
         if (isEmpty(lpCmdLine))
-            ShellExecute(NULL,"open","http://127.0.0.1:5624/control.html"  ,NULL,NULL,SW_SHOWNORMAL);
+            openAuthenticatedURL();
 
   		// Exit
   		return 0;
@@ -106,7 +124,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
         // If we have to launch a URL, do it after the first poll
         if (launchURL) {
-            ShellExecute(NULL,"open","http://127.0.0.1:5624/control.html"  ,NULL,NULL,SW_SHOWNORMAL);
+            openAuthenticatedURL();
             launchURL = false;
         }
 

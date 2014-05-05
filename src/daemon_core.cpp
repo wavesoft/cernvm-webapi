@@ -107,7 +107,7 @@ std::string DaemonCore::newAuthKey() {
 	AuthKey key;
 
 	// The key lasts 5 minutes
-	key.expireTime = getTimeInMs() + 300000;
+	key.expireTime = getMillis() + 300000;
 	// Allocate new UUID
 	key.key = newGUID();
 	// Store on list
@@ -130,11 +130,13 @@ bool DaemonCore::authKeyValid( const std::string& key ) {
     
 	// Expire past keys
 	bool found = false;
-	unsigned long ts = getTimeInMs();
+	unsigned long ts = getMillis();
 	for (std::list< AuthKey >::iterator it = authKeys.begin(); it != authKeys.end(); ++it) {
 		AuthKey k = *it;
 		if (ts >= k.expireTime) {
 			authKeys.erase(it);
+            if (authKeys.empty())
+                break;
 			if (it != authKeys.end())
 				++it;
 		} else if (k.key == key) {
