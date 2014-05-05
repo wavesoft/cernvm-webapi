@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Product Id="*" Name="CernVM WebAPI" Language="1033" Version="2.0.0.0" Manufacturer="PH/SFT Group, CERN" UpgradeCode="70DAC5E8-46A4-4EF3-80B3-A103AE948436">
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+		<MediaTemplate />
+
+		<Feature Id="ProductFeature" Title="CernVM WebAPI" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+			<ComponentGroupRef Id="ProductShortcuts" />
+		</Feature>
+  
+	</Product>
+  
+	<Fragment>
+    
+    <!-- Directories for the project -->
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="CERNFOLDER" Name="CERN">
+  				<Directory Id="INSTALLFOLDER" Name="CernVMWebAPI" />
+        </Directory>
+			</Directory>
+      
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="MENUFOLDER" Name="CernVM WebAPI" />
+      </Directory>
+  
+		</Directory>
+
+	</Fragment>
+  
+	<Fragment>
+    
+    <!-- ============================ -->
+    <!--    Application Components    -->
+    <!-- ============================ -->
+		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+
+      <!-- CernVM WebAPI Component -->
+      <Component Id="CernVMWebAPI" Guid="7D61F9E4-BB23-4D39-BD3E-948FE16D8E0F">
+        
+        <File Id="cernvm_webapi.exe" 
+              Source="..\..\..\..\build\Debug\cernvm-webapi.exe" 
+              KeyPath="yes" 
+              Checksum="yes" />
+        
+        <File Id="cernvm_webapi.pdb" 
+              Source="..\..\..\..\build\Debug\cernvm-webapi.pdb" />
+        
+      </Component>
+      
+      <!-- CernVM WebAPI association with the URI protocol -->
+      <Component Id="CernVMWebAPI_URI" Guid="A26E8A26-AAE3-40AB-A970-F54DDDFA723C">
+        
+        <!-- Root folder -->
+        <RegistryKey Root="HKCR" 
+                     Key="cernvm-webapi" 
+                     Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string" 
+                         Value="URL:CernVM WebAPI Protocol" />
+          <RegistryValue Type="string" 
+                         Name="URL Protocol" 
+                         Value="" />
+        </RegistryKey>
+        
+        <!-- Shell folder -->
+        <RegistryKey Root="HKCR"
+                     Key="cernvm-webapi\shell\open\command"
+                     Action="createAndRemoveOnUninstall">
+          
+          <!-- Open action -->
+          <RegistryValue Type="string" 
+                         Value="&quot;[#cernvm_webapi.exe]&quot; &quot;%1&quot;"
+                         KeyPath="yes" />
+        
+        </RegistryKey>
+      
+      </Component>
+
+		</ComponentGroup>
+  
+    <!-- ============================ -->
+    <!--          Menu Shortcuts      -->
+    <!-- ============================ -->
+    <ComponentGroup Id="ProductShortcuts" Directory="MENUFOLDER">
+
+      <!-- Shortcut icon -->
+      <Component Id="CernVMWebAPI_Shortcut" Guid="042EA080-B0D5-44BB-8443-03900D7F592B">
+
+        <!-- Dashboard and uninstall icon -->
+        <Shortcut Id="OpenControlPanel" 
+                  Name="CernVM WebAPI Dashboard" 
+                  Target="[#cernvm_webapi.exe]" 
+                  Description="Open the CernVM WebAPI Dashboard"
+                  WorkingDirectory="APPLICATIONROOTDIRECTORY" />
+        <Shortcut Id="UninstallProduct"
+                  Name="Uninstall CernVM WebAPI"
+                  Target="[System64Folder]msiexec.exe"
+                  Arguments="/x [ProductCode]"
+                  Description="Uninstall CernVM WebAPI" /> 
+        
+        <!-- Cleanup and ICE36 regex fix -->
+        <RemoveFolder Id="MENUFOLDER" On="uninstall" />
+        <RegistryValue Root="HKCU" 
+                       Key="Software\CERN\CernVMWebAPI" 
+                       Name="installed" 
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes" />
+      
+      </Component>
+    
+    </ComponentGroup>
+    
+	</Fragment>
+
+</Wix>
