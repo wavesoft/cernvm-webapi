@@ -89,6 +89,7 @@ set( PROJECT_INCLUDES
 set( PROJECT_LIBRARIES 
 	${MONGOOSE_LIBRARIES}
 )
+	
 
 #############################################################
 # SOURCES 
@@ -105,7 +106,7 @@ endif(WIN32)
 # Locate platform-dependant sources
 if (WIN32)
 	set ( PLATFORM_DIR ${PROJECT_SOURCE_DIR}/src/platform/win )
-	file ( GLOB PLATFORM_SOURCES ${PLATFORM_DIR}/*.cpp  )
+	file ( GLOB PLATFORM_SOURCES ${PLATFORM_DIR}/*.cpp ${PLATFORM_DIR}/*.rc )
 elseif (APPLE)
 	set ( PLATFORM_DIR ${PROJECT_SOURCE_DIR}/src/platform/osx )
 	file ( GLOB PLATFORM_SOURCES ${PLATFORM_DIR}/*.mm  )
@@ -123,17 +124,40 @@ file ( GLOB WEBAPI_SOURCES
 
 # Collect resources
 file ( GLOB WEBAPI_RESOURCES
+		RELATIVE ${PROJECT_SOURCE_DIR}/src/html
 		# Get HTML Websites
 		${PROJECT_SOURCE_DIR}/src/html/*.html
 		${PROJECT_SOURCE_DIR}/src/html/*.js
-		# Get Icon
-		${PLATFORM_DIR}/icon.*
 	)
 
 # Setup includes
 include_directories( ${PROJECT_SOURCE_DIR}/src )
 include_directories( ${CERNVM_INCLUDE_DIRS} )
 include_directories( ${PROJECT_INCLUDES} )
+
+#############################################################
+# GENERATED SOURCES
+#############################################################
+
+# Lookup perl, we need it 
+find_package(Perl)
+if(NOT PERL_FOUND)
+    message( FATAL_ERROR "CernVM-WebAPI requires perl for building. On windows try ActivePerl (http://www.activestate.com/activeperl)" )
+endif()
+
+# Pick a filename where to place the embedded file contents
+set( GEN_RESOURCES_C "${PROJECT_BINARY_DIR}/generated_data.cpp" )
+
+# Collect resources and build executable
+execute_process(
+	COMMAND ${PERL_EXECUTABLE} "${PROJECT_SOURCE_DIR}/tools/mkdata.pl" ${WEBAPI_RESOURCES}
+	OUTPUT_FILE ${GEN_RESOURCES_C}
+	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/html
+	)
+
+#############################################################
+# TARGET & LINK
+#############################################################
 
 # Add executable, depending on the platform
 if (APPLE)
@@ -146,13 +170,25 @@ if (APPLE)
 	add_executable( ${PROJECT_NAME} MACOSX_BUNDLE
 		${PLATFORM_SOURCES}
 		${WEBAPI_SOURCES}
-		${WEBAPI_RESOURCES}
+		${GEN_RESOURCES_C}
+		${PLATFORM_DIR}/icon.icns
 		)
+
+elseif (WIN32)
+
+	# Sources
+	add_executable( ${PROJECT_NAME} WIN32
+		${PLATFORM_SOURCES}
+		${GEN_RESOURCES_C}
+		${WEBAPI_SOURCES}
+		)
+
 else()
 
 	# Sources
 	add_executable( ${PROJECT_NAME}
 		${PLATFORM_SOURCES}
+		${GEN_RESOURCES_C}
 		${WEBAPI_SOURCES}
 		)
 
@@ -173,11 +209,6 @@ if (WIN32)
 	# Fix: OpenSSL builds are not built with safe exception handlers
 	add_link_flags( ${PROJECT_NAME} "/SAFESEH:NO" )
 
-	if(MSVC) # Check if we are using the Visual Studio compiler
-		# Build for windows subsystem (does not display a console window)
-		add_link_flags( ${PROJECT_NAME} "/SUBSYSTEM:WINDOWS" )
-	endif()
-
 endif(WIN32)
 
 # Libraries
@@ -191,8 +222,11 @@ if (APPLE)
 	set_target_properties( ${PROJECT_NAME} PROPERTIES 
 		MACOSX_BUNDLE_INFO_PLIST ${PLATFORM_DIR}/Info.plist
 	)
-	set_source_files_properties(
-		${WEBAPI_RESOURCES} PROPERTIES
-		MACOSX_PACKAGE_LOCATION Resources
-	)
+
+	# OBSOLETE: Embedded in the executable
+	#set_source_files_properties(
+	#	${WEBAPI_RESOURCES} PROPERTIES
+	#	MACOSX_PACKAGE_LOCATION Resources
+	#)
+
 endif()

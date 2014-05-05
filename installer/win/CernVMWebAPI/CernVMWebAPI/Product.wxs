@@ -20,7 +20,9 @@
 			
       <Directory Id="ProgramFilesFolder">
         <Directory Id="CERNFOLDER" Name="CERN">
-  				<Directory Id="INSTALLFOLDER" Name="CernVMWebAPI" />
+  				<Directory Id="INSTALLFOLDER" Name="CernVMWebAPI">
+            <Directory Id="RESFOLDER" Name="res" />
+          </Directory>
         </Directory>
 			</Directory>
       
@@ -43,12 +45,21 @@
       <Component Id="CernVMWebAPI" Guid="7D61F9E4-BB23-4D39-BD3E-948FE16D8E0F">
         
         <File Id="cernvm_webapi.exe" 
-              Source="..\..\..\..\build\Debug\cernvm-webapi.exe" 
+              Source="..\..\..\..\build\Release\cernvm-webapi.exe" 
               KeyPath="yes" 
               Checksum="yes" />
         
-        <File Id="cernvm_webapi.pdb" 
-              Source="..\..\..\..\build\Debug\cernvm-webapi.pdb" />
+      </Component>
+
+      <!-- CernVM WebAPI Resources -->
+      <Component Id="CernVMWebAPI_Res" Guid="1D0962EC-65C4-45F6-9DCC-5F4CAACC19AA">
+        
+        <File Id="control.html" 
+              Source="..\..\..\..\src\html\control.html" 
+              KeyPath="yes" 
+              Checksum="yes" />
+        <File Id="cvmwebapi_2.0.0.js" 
+              Source="..\..\..\..\src\html\cvmwebapi-2.0.0.js" />
         
       </Component>
       
@@ -91,7 +102,7 @@
       <Component Id="CernVMWebAPI_Shortcut" Guid="042EA080-B0D5-44BB-8443-03900D7F592B">
 
         <!-- Dashboard and uninstall icon -->
-        <Shortcut Id="OpenControlPanel" 
+        <Shortcut Id="OpenDashboard" 
                   Name="CernVM WebAPI Dashboard" 
                   Target="[#cernvm_webapi.exe]" 
                   Description="Open the CernVM WebAPI Dashboard"

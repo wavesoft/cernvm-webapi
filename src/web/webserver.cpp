@@ -19,11 +19,18 @@
  */
 
 #include "webserver.h"
+#include "cernvm\Config.h"
+
 #include <iostream>
 #include <sstream>
 #include <fstream>
 
 using namespace std;
+
+/**
+ * This function is generated from source
+ */
+extern const char *find_embedded_file(const string&, size_t *);
 
 /**
  * Send an error message
@@ -98,54 +105,36 @@ int CVMWebserver::api_handler(struct mg_connection *conn) {
 
     } else {
 
-        // Trim trailing slash from URL
+        // Trim trailing & heading slash from URL
         if (url[url.length()-1] == '/')
             url = url.substr(0, url.length()-1);
+        if (url[0] == '/')
+            url = url.substr(1, url.length()-1);
 
-        cout << "Handing URL: " << url << endl;
-
-        // Check for static URLs
-        if (self->staticResources.find(url) != self->staticResources.end()) {
-
-            // TODO: Windows (http://blog.kowalczyk.info/article/zy/Embedding-binary-resources-on-Windows.html)
-
-            // Get the name of the file to serve
-            string file = self->staticResources[url];
-
-            // Start reading file
-            ifstream ifs( file.c_str() );
-            if (!ifs.good()) {
-                return send_error( conn, "Unable to open the requested resource!" );
-            }
-
-            // Get MIME type of the file to send and send header
-            const char * mimeType = mg_get_mime_type( file.c_str(), "text/plain" );
-            mg_send_header(conn, "Content-Type", mimeType );
-
-            // Start reading and sending
-            char inBuffer[4096];
-            while (!ifs.eof()) {
-                ifs.read( inBuffer, 4096 );
-                if (ifs.bad()) {
-                    return send_error( conn, "Error while reading resource!" );
-                }
-                mg_send_data( conn, inBuffer, ifs.gcount() );
-            }
-
-            // Close file
-            ifs.close();
-
-        } else if ( url == "info" ) {
+        // Check for embedded resources
+        size_t res_size;
+        const char *res_buffer = find_embedded_file( url, &res_size);
+        if ( url == "info" ) {
 
             // Enable CORS (important for allowing every website to contact us)
             mg_send_header(conn, "Access-Control-Allow-Origin", "*" );
-            mg_printf_data(conn, "{\"status\":\"ok\",\"request\":\"%s\",\"domain\":\"%s\"}", conn->uri, domain.c_str());
+            mg_printf_data(conn, "{\"status\":\"ok\",\"request\":\"%s\",\"domain\":\"%s\",\"version\":\"%s\"}", conn->uri, domain.c_str(), CERNVM_WEBAPI_VERSION);
             return MG_TRUE;
+
+        } else if (res_buffer == NULL) {
+            
+            // File not found
+            return send_error( conn, "File not found", 404);
 
         } else {
 
-            // File not found
-            return send_error( conn, "File not found", 404);
+            // Get MIME type of the file to send and send header
+            const char * mimeType = mg_get_mime_type( url.c_str(), "text/plain" );
+            mg_send_header(conn, "Content-Type", mimeType );
+
+            // Send data
+            mg_send_data( conn, res_buffer, res_size );
+            return MG_TRUE;
 
         }
 
