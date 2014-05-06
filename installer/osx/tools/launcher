@@ -1,3 +1,3 @@
 #!/bin/bash
-/Applications/CernVM\ WebAPI.app/Contents/MacOS/cernvm-webapi setup&
-
+open /Applications/CernVM\ WebAPI.app --args setup
+exit 0
