@@ -10,8 +10,19 @@
 			<ComponentGroupRef Id="ProductComponents" />
 			<ComponentGroupRef Id="ProductShortcuts" />
 		</Feature>
-  
-	</Product>
+                    
+    <!-- Launch WebAPI When it's finished -->
+    <CustomAction Id="RunWebAPI"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="[#cernvm_webapi.exe] setup"
+                  Execute="commit"
+                  Return="asyncNoWait"
+                  />
+    <InstallExecuteSequence>
+      <Custom Action="RunWebAPI" Before="InstallFinalize" />
+    </InstallExecuteSequence>
+
+  </Product>
   
 	<Fragment>
     
