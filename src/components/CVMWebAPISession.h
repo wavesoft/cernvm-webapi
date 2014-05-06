@@ -83,19 +83,15 @@ public:
 	void processPeriodicJobs( );
 
 	/**
-	 * Return all properties as a json string
-	 */
-	std::string propertiesAsJSON();
-
-	/**
-	 * Return configuration as JSON
-	 */
-	std::string configAsJSON();
-
-	/**
 	 * Set status of the periodic jobs thread
 	 */
 	 void 				enablePeriodicJobs( bool status );
+
+	/**
+	 * Send the configuration variable values (not to use polling for some
+	 * time-critical operations)
+	 */
+	void 				sendStateVariables();
 
 	/**
 	 * The session ID

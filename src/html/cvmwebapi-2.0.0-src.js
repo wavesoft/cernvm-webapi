@@ -85,25 +85,30 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 				cFrame.height = 400;
 				cFrame.frameBorder = 0;
 
-				// Prepare the retry frame
-				var cControls = document.createElement('div'),
-					linkRetry = UserInteraction.createButton('Click here to try again', '#E1E1E1');
-
 				// Show frame
-				cControls.appendChild(linkRetry);
-				UserInteraction.createFramedWindow( cFrame, false, cControls, ICON_INSTALL );
+				UserInteraction.createFramedWindow({
+					'body' 		 : cFrame,
+					'icon' 		 : ICON_INSTALL,
+					'disposable' : false
+				});
 
-				// User has to click on linkRetry to try again
-				linkRetry.onclick = function() {
+				// Periodic polling, waiting for the installation to complete
+				var pollFunction = function() {
 					// Check if we have API now
 					instance = new _NS_.WebAPIPlugin();
 					instance.connect(function(hasAPI) {
 						if (hasAPI) {
 							cbOK( instance );
 							UserInteraction.hideInteraction();
+						} else {
+							// Infinite loop on polling for the socket
+							pollFunction();
 						}
 					});		
 				};
+
+				// Start infinite poll
+				pollFunction();
 
 			}
 		});
@@ -803,7 +808,16 @@ UserInteraction.createButton = function( title, baseColor ) {
 /**
  * Create a framed window, used for various reasons
  */
-UserInteraction.createFramedWindow = function( body, header, footer, icon, cbClose ) {
+UserInteraction.createFramedWindow = function( config ) {
+
+	if (!config) config={};
+	var body    	= config['body']    || "", 
+		header  	= config['header']  || false, 
+		footer  	= config['footer']  || false, 
+		icon    	= config['icon']    || false, 
+		cbClose 	= config['onClose'] || false,
+		disposable  = (config['disposable'] != undefined) ? config['disposable'] : true;
+
 	var floater = document.createElement('div'),
 		content = document.createElement('div'),
 		cHeader = document.createElement('div'),
@@ -817,7 +831,7 @@ UserInteraction.createFramedWindow = function( body, header, footer, icon, cbClo
 	floater.style.right = "0";
 	floater.style.bottom = "0";
 	floater.style.zIndex = 60000;
-	floater.style.backgroundColor = "rgba(255,255,255,0.8)";
+	floater.style.backgroundColor = "rgba(255,255,255,0.5)";
 	floater.appendChild(content);
 
 	// Prepare vertical-centering
@@ -921,6 +935,7 @@ UserInteraction.createFramedWindow = function( body, header, footer, icon, cbClo
 
 	// Close when clicking the floater
 	floater.onclick = function() {
+		if (!disposable) return;
 		if (cbClose) {
 			cbClose();
 		} else {
@@ -987,9 +1002,15 @@ UserInteraction.displayLicenseWindow = function( title, body, isURL, cbAccept, c
 
 	// Create framed window
 	var elm;
-	elm = UserInteraction.createFramedWindow( cBody, title, cControls, ICON_LICENSE, function() {
-	   document.body.removeChild(elm);
-	   if (cbDecline) cbDecline();
+	elm = UserInteraction.createFramedWindow({
+		'body'  : cBody, 
+		'header': title, 
+		'footer': cControls, 
+		'icon'  : ICON_LICENSE, 
+		onClose : function() {
+		   document.body.removeChild(elm);
+		   if (cbDecline) cbDecline();
+		}
 	});
 
 	// Bind link callbacks
@@ -1034,9 +1055,15 @@ UserInteraction.confirm = function( title, body, callback ) {
 	cButtons.appendChild(lnkCancel);
 
 	// Display window
-	win = UserInteraction.createFramedWindow( cBody, title, cButtons, ICON_CONFIRM, function() {
-		document.body.removeChild(win);
-		callback(false);
+	win = UserInteraction.createFramedWindow({
+		'body'  : cBody, 
+		'header': title, 
+		'footer': cButtons, 
+		'icon'  : ICON_CONFIRM, 
+		onClose : function() {
+			document.body.removeChild(win);
+			callback(false);
+		}
 	});
 
 }
@@ -1060,7 +1087,12 @@ UserInteraction.alert = function( title, body, callback ) {
 	cButtons.appendChild(lnkOk);
 
 	// Display window
-	win = UserInteraction.createFramedWindow( cBody, title, cButtons, ICON_ALERT );
+	win = UserInteraction.createFramedWindow({
+		'body'  : cBody, 
+		'header': title, 
+		'footer': cButtons, 
+		'icon'  : ICON_ALERT
+	});
 
 }
 
@@ -1350,35 +1382,21 @@ _NS_.WebAPISession.prototype = Object.create( _NS_.EventDispatcher.prototype );
 _NS_.WebAPISession.prototype.handleEvent = function(data) {
 
 	// Take this opportunity to update some of our local cached data
-	if (data['name'] == 'propertiesUpdated') {
+	if (data['name'] == 'stateVariables') {
 
 		// Convert JSON string to object
-		if (data['data'][0]) {
-			try {
-				data['data'][0] = JSON.parse(data['data'][0]);
-			} catch (e) {
-				data['data'][0] = {};
-			}
+		data = data['data'];
+		if (!data) {
+			return; // Invalid
+		} else {
+			if (data.length > 1)
+				this.__config = data[0] || { };
+			if (data.length > 2)
+				this.__properties = data[0] || { };
 		}
-
-		// Update properties
-		this.__properties = data['data'][0];
-
-	} else if (data['name'] == 'configurationUpdated') {
-
-		// Convert JSON string to object
-		if (data['data'][0]) {
-			try {
-				data['data'][0] = JSON.parse(data['data'][0]);
-			} catch (e) {
-				data['data'][0] = {};
-			}
-		}
-
-		// Update properties
-		this.__config = data['data'][0];
 
 	} else if (data['name'] == 'stateChanged') {
+
 		this.__state = data['data'][0];
 
 	}
@@ -1481,7 +1499,7 @@ _NS_.WebAPISession.prototype.setProperty = function(name, value) {
     this.__properties[name] = value;
 
 	// Send update event (without feedback)
-	this.socket.send("set_property", {
+	this.socket.send("setProperty", {
 		"session_id": this.session_id,
 		"key": name,
 		"value": value

@@ -11,6 +11,19 @@
 @implementation URLDaemonDelegate
 
 /**
+ * Initialize variables
+ */
+- (id)init {
+    self = [super init];
+    if (self) {
+    	self->launchedByURL = false;
+    	self->focusOnActiate = false;
+    	self->usedLauchURL = false;
+    }
+    return self;
+}
+
+/**
  * Open browser when focued
  */
 - (void)applicationDidBecomeActive:(NSNotification *)aNotification
@@ -34,17 +47,6 @@
 	factory = new DaemonFactory(*core);
 	// Create the webserver instance
 	webserver = new CVMWebserver(*factory);
-
-	// Serve some static resources
-	NSBundle* bundle = [NSBundle mainBundle];
-	webserver->serve_static( "/control.html", 			[[bundle pathForResource:@"control" ofType:@"html"] cStringUsingEncoding:NSASCIIStringEncoding] );
-	webserver->serve_static( "/cvmwebapi-2.0.0.js", 	[[bundle pathForResource:@"cvmwebapi-2.0.0" ofType:@"js"] cStringUsingEncoding:NSASCIIStringEncoding] );
-	webserver->serve_static( "/cvmwebapi-2.0.0-src.js", [[bundle pathForResource:@"cvmwebapi-2.0.0-src" ofType:@"js"] cStringUsingEncoding:NSASCIIStringEncoding] );
-
-	// Reset variables
-	launchedByURL = false;
-	focusOnActiate = false;
-	usedLauchURL = false;
 
 	// Handle URL
 	NSAppleEventManager *em = [NSAppleEventManager sharedAppleEventManager];
@@ -160,6 +162,15 @@
 		[NSApp terminate: nil];
 	}
 
+}
+
+/**
+ * Disable launching URL (same effect as launchedByURL)
+ */
+- (void)dontLaunchURL
+{
+	// Mark as launched by URL (therefore we don't have to launch the URL again)
+	launchedByURL = true;
 }
 
 /**

@@ -125,35 +125,21 @@ _NS_.WebAPISession.prototype = Object.create( _NS_.EventDispatcher.prototype );
 _NS_.WebAPISession.prototype.handleEvent = function(data) {
 
 	// Take this opportunity to update some of our local cached data
-	if (data['name'] == 'propertiesUpdated') {
+	if (data['name'] == 'stateVariables') {
 
 		// Convert JSON string to object
-		if (data['data'][0]) {
-			try {
-				data['data'][0] = JSON.parse(data['data'][0]);
-			} catch (e) {
-				data['data'][0] = {};
-			}
+		data = data['data'];
+		if (!data) {
+			return; // Invalid
+		} else {
+			if (data.length > 1)
+				this.__config = data[0] || { };
+			if (data.length > 2)
+				this.__properties = data[0] || { };
 		}
-
-		// Update properties
-		this.__properties = data['data'][0];
-
-	} else if (data['name'] == 'configurationUpdated') {
-
-		// Convert JSON string to object
-		if (data['data'][0]) {
-			try {
-				data['data'][0] = JSON.parse(data['data'][0]);
-			} catch (e) {
-				data['data'][0] = {};
-			}
-		}
-
-		// Update properties
-		this.__config = data['data'][0];
 
 	} else if (data['name'] == 'stateChanged') {
+
 		this.__state = data['data'][0];
 
 	}
@@ -256,7 +242,7 @@ _NS_.WebAPISession.prototype.setProperty = function(name, value) {
     this.__properties[name] = value;
 
 	// Send update event (without feedback)
-	this.socket.send("set_property", {
+	this.socket.send("setProperty", {
 		"session_id": this.session_id,
 		"key": name,
 		"value": value

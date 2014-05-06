@@ -178,11 +178,12 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 	} else if (action == "setProperty") {
 	//////////////////////////////////
 
+		ParameterMapPtr properties = hvSession->parameters->subgroup("properties");
 		std::string keyName = parameters->get("key", ""),
 					keyValue = parameters->get("value", "");
 
 		// Update property
-		hvSession->properties->set(keyName, keyValue);
+		properties->set(keyName, keyValue);
 
 		// Notify success
         cb.fire("succeed", ArgumentList(1));
@@ -268,6 +269,9 @@ void CVMWebAPISession::periodicJobsThread() {
  * Handle state changed events and forward them if needed to the UI
  */
 void CVMWebAPISession::__cbStateChanged( VariantArgList& args ) {
+
+	// Before sending stateChanged, send the updated state variables
+	sendStateVariables();
 	connection.sendEvent( "stateChanged", args, uuid_str );
 
 	// Check if we switched to a state where API is not available any more
@@ -285,49 +289,54 @@ void CVMWebAPISession::__cbStateChanged( VariantArgList& args ) {
 }
 
 /**
- * Return all the properties of the current session as JSON
+ * Compile and send all the required properties to the
+ * remote endpoint. 
  */
-std::string CVMWebAPISession::propertiesAsJSON() {
+void CVMWebAPISession::sendStateVariables() {
 	Json::FastWriter writer;
-	Json::Value data;
+	Json::Value root, data, properties, config;
 
-    // Loop over the entries in the record
-    for ( std::map<std::string, std::string>::iterator it = hvSession->parameters->parameters->begin(); it != hvSession->parameters->parameters->end(); ++it ) {
-    	// Convert to json
-        data[it->first] = it->second;
+	// Populate core protocol fields
+	root["type"] = "event";
+	root["name"] = "stateVariables";
+	root["id"] = uuid_str;
+
+	// --- Populate properties field ---
+
+	ParameterMapPtr propMap = hvSession->parameters->subgroup("properties");
+    for ( std::map<std::string, std::string>::iterator it = propMap->parameters->begin(); it != propMap->parameters->end(); ++it ) {
+        properties[it->first] = it->second;
   	}
 
-  	// Return JSON string
-  	return writer.write(data);
-}
-
-/**
- * Return all the config parameters of the current session as JSON
- */
-std::string CVMWebAPISession::configAsJSON() {
-	Json::FastWriter writer;
-	Json::Value data;
+  	// --- Populate config field ---
 
 	// Calculate api URL
     std::string apiHost = hvSession->local->get("apiHost", "127.0.0.1");
     std::string apiPort = hvSession->local->get("apiPort", "80");
     std::string apiURL = "http://" + apiHost + ":" + apiPort;
-    data["apiURL"] = apiURL;
+    config["apiURL"] = apiURL;
 
     // Calculate RDP URl
 	std::string resolution = hvSession->getExtraInfo(EXIF_VIDEO_MODE);
-	data["rdpURL"] = hvSession->getRDPAddress() + "@" + resolution;
+	config["rdpURL"] = hvSession->getRDPAddress() + "@" + resolution;
 
 	// Return only particular configuration variables
-	data["ip"] = hvSession->parameters->get("ip", "");
-	data["cpus"] = hvSession->parameters->getNum<int>("cpus", 1);
-	data["disk"] = hvSession->parameters->getNum<int>("disk", 1024);
-	data["ram"] = hvSession->parameters->getNum<int>("ram", 512);
-	data["cernvmVersion"] = hvSession->parameters->get("cernvmVersion", "1.17-8");
-	data["cernvmFlavor"] = hvSession->parameters->get("cernvmFlavor", "prod");
-	data["executionCap"] = hvSession->parameters->getNum<int>("executionCap", 100);
-	data["flags"] = hvSession->parameters->getNum<int>("flags", 0);
+	config["ip"] = hvSession->parameters->get("ip", "");
+	config["cpus"] = hvSession->parameters->getNum<int>("cpus", 1);
+	config["disk"] = hvSession->parameters->getNum<int>("disk", 1024);
+	config["ram"] = hvSession->parameters->getNum<int>("ram", 512);
+	config["cernvmVersion"] = hvSession->parameters->get("cernvmVersion", "1.17-8");
+	config["cernvmFlavor"] = hvSession->parameters->get("cernvmFlavor", "prod");
+	config["executionCap"] = hvSession->parameters->getNum<int>("executionCap", 100);
+	config["flags"] = hvSession->parameters->getNum<int>("flags", 0);
 
-  	// Return JSON string
-  	return writer.write(data);
+
+	// Update data field
+	data.append(config);
+	data.append(properties);
+	root["data"] = data;
+
+	// Send JSON response
+	connection.sendRawData( writer.write(root) );
+
 }

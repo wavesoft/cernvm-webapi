@@ -223,10 +223,10 @@ if (APPLE)
 		MACOSX_BUNDLE_INFO_PLIST ${PLATFORM_DIR}/Info.plist
 	)
 
-	# OBSOLETE: Embedded in the executable
-	#set_source_files_properties(
-	#	${WEBAPI_RESOURCES} PROPERTIES
-	#	MACOSX_PACKAGE_LOCATION Resources
-	#)
+	# Embed icon in the archive
+	set_source_files_properties(
+		${PLATFORM_DIR}/icon.icns PROPERTIES
+		MACOSX_PACKAGE_LOCATION Resources
+	)
 
 endif()

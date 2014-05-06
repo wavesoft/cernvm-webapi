@@ -70,6 +70,11 @@
 - (void)launchURL;
 
 /**
+ * Prohibit launching a URL At open
+ */
+- (void)dontLaunchURL;
+
+/**
  * Callback when a URL is requested
  */
 - (void)getUrl:(NSAppleEventDescriptor *)event 

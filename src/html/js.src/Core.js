@@ -80,25 +80,30 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 				cFrame.height = 400;
 				cFrame.frameBorder = 0;
 
-				// Prepare the retry frame
-				var cControls = document.createElement('div'),
-					linkRetry = UserInteraction.createButton('Click here to try again', '#E1E1E1');
-
 				// Show frame
-				cControls.appendChild(linkRetry);
-				UserInteraction.createFramedWindow( cFrame, false, cControls, ICON_INSTALL );
+				UserInteraction.createFramedWindow({
+					'body' 		 : cFrame,
+					'icon' 		 : ICON_INSTALL,
+					'disposable' : false
+				});
 
-				// User has to click on linkRetry to try again
-				linkRetry.onclick = function() {
+				// Periodic polling, waiting for the installation to complete
+				var pollFunction = function() {
 					// Check if we have API now
 					instance = new _NS_.WebAPIPlugin();
 					instance.connect(function(hasAPI) {
 						if (hasAPI) {
 							cbOK( instance );
 							UserInteraction.hideInteraction();
+						} else {
+							// Infinite loop on polling for the socket
+							pollFunction();
 						}
 					});		
 				};
+
+				// Start infinite poll
+				pollFunction();
 
 			}
 		});

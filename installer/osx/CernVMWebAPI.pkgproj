@@ -19,17 +19,17 @@
 								<key>CHILDREN</key>
 								<array/>
 								<key>GID</key>
-								<integer>80</integer>
+								<integer>20</integer>
 								<key>PATH</key>
-								<string>/Users/icharala/Develop/cernvm-webapi/installer/osx/build/CernVM WebAPI.app</string>
+								<string>../../build/Release/CernVM WebAPI.app</string>
 								<key>PATH_TYPE</key>
-								<integer>0</integer>
+								<integer>1</integer>
 								<key>PERMISSIONS</key>
 								<integer>493</integer>
 								<key>TYPE</key>
 								<integer>3</integer>
 								<key>UID</key>
-								<integer>0</integer>
+								<integer>501</integer>
 							</dict>
 							<dict>
 								<key>CHILDREN</key>
@@ -471,7 +471,12 @@
 		<key>PACKAGE_SCRIPTS</key>
 		<dict>
 			<key>POSTINSTALL_PATH</key>
-			<dict/>
+			<dict>
+				<key>PATH</key>
+				<string>../installer/osx/tools/launcher</string>
+				<key>PATH_TYPE</key>
+				<integer>3</integer>
+			</dict>
 			<key>PREINSTALL_PATH</key>
 			<dict/>
 			<key>RESOURCES</key>
@@ -486,6 +491,8 @@
 			<key>IDENTIFIER</key>
 			<string>ch.cern.cernvm.webapi</string>
 			<key>OVERWRITE_PERMISSIONS</key>
+			<false/>
+			<key>RELOCATABLE</key>
 			<false/>
 			<key>VERSION</key>
 			<string>2.0.0</string>
@@ -512,9 +519,9 @@
 			<key>BUILD_PATH</key>
 			<dict>
 				<key>PATH</key>
-				<string>build</string>
+				<string>../installer/osx/build</string>
 				<key>PATH_TYPE</key>
-				<integer>1</integer>
+				<integer>3</integer>
 			</dict>
 			<key>EXCLUDED_FILES</key>
 			<array>
@@ -688,6 +695,8 @@
 			<string>cvmwebapi-2.0.0</string>
 			<key>PAYLOAD_ONLY</key>
 			<false/>
+			<key>REFERENCE_FOLDER_PATH</key>
+			<string>/Users/icharala/Develop/cernvm-webapi/build</string>
 		</dict>
 	</dict>
 	<key>TYPE</key>

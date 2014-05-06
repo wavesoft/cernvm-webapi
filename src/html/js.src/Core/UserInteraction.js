@@ -96,7 +96,16 @@ UserInteraction.createButton = function( title, baseColor ) {
 /**
  * Create a framed window, used for various reasons
  */
-UserInteraction.createFramedWindow = function( body, header, footer, icon, cbClose ) {
+UserInteraction.createFramedWindow = function( config ) {
+
+	if (!config) config={};
+	var body    	= config['body']    || "", 
+		header  	= config['header']  || false, 
+		footer  	= config['footer']  || false, 
+		icon    	= config['icon']    || false, 
+		cbClose 	= config['onClose'] || false,
+		disposable  = (config['disposable'] != undefined) ? config['disposable'] : true;
+
 	var floater = document.createElement('div'),
 		content = document.createElement('div'),
 		cHeader = document.createElement('div'),
@@ -110,7 +119,7 @@ UserInteraction.createFramedWindow = function( body, header, footer, icon, cbClo
 	floater.style.right = "0";
 	floater.style.bottom = "0";
 	floater.style.zIndex = 60000;
-	floater.style.backgroundColor = "rgba(255,255,255,0.8)";
+	floater.style.backgroundColor = "rgba(255,255,255,0.5)";
 	floater.appendChild(content);
 
 	// Prepare vertical-centering
@@ -214,6 +223,7 @@ UserInteraction.createFramedWindow = function( body, header, footer, icon, cbClo
 
 	// Close when clicking the floater
 	floater.onclick = function() {
+		if (!disposable) return;
 		if (cbClose) {
 			cbClose();
 		} else {
@@ -280,9 +290,15 @@ UserInteraction.displayLicenseWindow = function( title, body, isURL, cbAccept, c
 
 	// Create framed window
 	var elm;
-	elm = UserInteraction.createFramedWindow( cBody, title, cControls, ICON_LICENSE, function() {
-	   document.body.removeChild(elm);
-	   if (cbDecline) cbDecline();
+	elm = UserInteraction.createFramedWindow({
+		'body'  : cBody, 
+		'header': title, 
+		'footer': cControls, 
+		'icon'  : ICON_LICENSE, 
+		onClose : function() {
+		   document.body.removeChild(elm);
+		   if (cbDecline) cbDecline();
+		}
 	});
 
 	// Bind link callbacks
@@ -327,9 +343,15 @@ UserInteraction.confirm = function( title, body, callback ) {
 	cButtons.appendChild(lnkCancel);
 
 	// Display window
-	win = UserInteraction.createFramedWindow( cBody, title, cButtons, ICON_CONFIRM, function() {
-		document.body.removeChild(win);
-		callback(false);
+	win = UserInteraction.createFramedWindow({
+		'body'  : cBody, 
+		'header': title, 
+		'footer': cButtons, 
+		'icon'  : ICON_CONFIRM, 
+		onClose : function() {
+			document.body.removeChild(win);
+			callback(false);
+		}
 	});
 
 }
@@ -353,7 +375,12 @@ UserInteraction.alert = function( title, body, callback ) {
 	cButtons.appendChild(lnkOk);
 
 	// Display window
-	win = UserInteraction.createFramedWindow( cBody, title, cButtons, ICON_ALERT );
+	win = UserInteraction.createFramedWindow({
+		'body'  : cBody, 
+		'header': title, 
+		'footer': cButtons, 
+		'icon'  : ICON_ALERT
+	});
 
 }
 

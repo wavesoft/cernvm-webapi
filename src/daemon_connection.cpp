@@ -410,11 +410,10 @@ void DaemonConnection::requestSession_thread( boost::thread ** thread, const std
         // Completed
         cb.fire("succeed", ArgumentList("Session oppened successfully")(cvmSession->uuid));
 
-        // Set properties
-        sendEvent("propertiesUpdated", ArgumentList( cvmSession->propertiesAsJSON() ), cvmSession->uuid_str);
-        sendEvent("configurationUpdated", ArgumentList( cvmSession->configAsJSON() ), cvmSession->uuid_str);
+        // Send state variables
+        cvmSession->sendStateVariables();
 
-        // Send status message
+        // Send state changed message
         sendEvent("stateChanged", ArgumentList(session->local->getNum<int>("state", 0)), cvmSession->uuid_str);
 
         // Enable periodic jobs thread after stateChanged is sent
