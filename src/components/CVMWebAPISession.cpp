@@ -134,7 +134,7 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 		} else if (keyName == "ram") {
 			keyValue = hvSession->parameters->get("ram", "512");
 		} else if (keyName == "cernvmVersion") {
-			keyValue = hvSession->parameters->get("cernvmVersion", "1.17-8");
+			keyValue = hvSession->parameters->get("cernvmVersion", "1.17-11");
 		} else if (keyName == "cernvmFlavor") {
 			keyValue = hvSession->parameters->get("cernvmFlavor", "prod");
 		} else if (keyName == "executionCap") {
@@ -325,7 +325,7 @@ void CVMWebAPISession::sendStateVariables() {
 	config["cpus"] = hvSession->parameters->getNum<int>("cpus", 1);
 	config["disk"] = hvSession->parameters->getNum<int>("disk", 1024);
 	config["ram"] = hvSession->parameters->getNum<int>("ram", 512);
-	config["cernvmVersion"] = hvSession->parameters->get("cernvmVersion", "1.17-8");
+	config["cernvmVersion"] = hvSession->parameters->get("cernvmVersion", "1.17-11");
 	config["cernvmFlavor"] = hvSession->parameters->get("cernvmFlavor", "prod");
 	config["executionCap"] = hvSession->parameters->getNum<int>("executionCap", 100);
 	config["flags"] = hvSession->parameters->getNum<int>("flags", 0);

@@ -19,7 +19,7 @@
  */
 
 #include "webserver.h"
-#include <CernVM/Config.h>
+#include <config.h>
 
 #include <iostream>
 #include <sstream>
