@@ -21,7 +21,7 @@
 *.app
 
 # Exclude build dirs
-build
+build*
 test
 
 # Exclude archives from the extern
