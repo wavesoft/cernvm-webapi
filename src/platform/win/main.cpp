@@ -99,26 +99,23 @@ int WINAPI WinMain(HINSTANCE hInstance,
     // Create the webserver instance
     webserver = new CVMWebserver(*factory);
 
-    // Serve static content
-    webserver->serve_static( "/control.html",           "../src/html/control.html");
-    webserver->serve_static( "/cvmwebapi-2.0.0.js",     "../src/html/cvmwebapi-2.0.0.js" );
-    webserver->serve_static( "/cvmwebapi-2.0.0-src.js", "../src/html/cvmwebapi-2.0.0-src.js" );
-
     // Check if we should launch a URL
     bool launchURL = isEmpty(lpCmdLine);
 
     // Start server
     long lastIdle = getMillis();
+    long lastCronTime = lastIdle;
     while (!core->hasExited()) {
+        long now = getMillis();
         webserver->poll();
 
         // Update idle timer when we have connections
         if (webserver->hasLiveConnections()) {
-            lastIdle = getMillis();
+            lastIdle = now;
         }
 
         // Exit if we are idle for 10 seconds
-        else if (getMillis() - lastIdle > 10000) {
+        else if (now - lastIdle > 10000) {
             break;
         }
 
@@ -126,6 +123,12 @@ int WINAPI WinMain(HINSTANCE hInstance,
         if (launchURL) {
             openAuthenticatedURL();
             launchURL = false;
+        }
+
+        // Check and forward cron jobs
+        if (now > lastCronTime) {
+            core->processPeriodicJobs();
+            lastCronTime = now + 1000;
         }
 
     }

@@ -56,7 +56,7 @@
       <Component Id="CernVMWebAPI" Guid="7D61F9E4-BB23-4D39-BD3E-948FE16D8E0F">
         
         <File Id="cernvm_webapi.exe" 
-              Source="..\..\..\..\build\Release\cernvm-webapi.exe" 
+              Source="..\..\..\..\build_vs2012_t100_xp\Release\cernvm-webapi.exe" 
               KeyPath="yes" 
               Checksum="yes" />
         

@@ -7,7 +7,7 @@
     <ProjectGuid>e03b2707-f301-43b3-a449-0f9a2304cdf8</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
     <OutputName>CernVMWebAPI</OutputName>
-    <OutputType>Bundle</OutputType>
+    <OutputType>Package</OutputType>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
   </PropertyGroup>
