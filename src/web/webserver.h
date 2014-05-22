@@ -36,9 +36,9 @@ class CVMWebserverConnectionHandler {
 public:
 
 	/**
-	 * Abstract destructor
+	 * Abstract function to cleanup before destruction
 	 */
-	virtual ~CVMWebserverConnectionHandler() { };
+	virtual void 			cleanup() = 0;
 
 	/**
 	 * This function is called when there is an incoming data frame 
@@ -86,10 +86,11 @@ public:
 	 : h(handler), isIterated(false) { };
 
 	/**
-	 * Destruct handler when destructing connection record
+	 * Cleanup function before destruction
 	 */
-	virtual ~CVMWebserverConnection() {
+	void cleanup() {
 		if (h != NULL) {
+			h->cleanup();
 			delete h;
 		 }
 	}

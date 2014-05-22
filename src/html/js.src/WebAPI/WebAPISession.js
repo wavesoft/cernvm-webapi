@@ -21,7 +21,7 @@ function _stateNameFor(state) {
 /**
  * WebAPI Socket handler
  */
-_NS_.WebAPISession = function( socket, session_id ) {
+_NS_.WebAPISession = function( socket, session_id, init_callback ) {
 
 	// Superclass initialize
 	_NS_.EventDispatcher.call(this);
@@ -35,6 +35,9 @@ _NS_.WebAPISession = function( socket, session_id ) {
 	this.__properties = {};
 	this.__config = {};
 	this.__valid = true;
+
+	// Init handler
+	this.__initCallback = init_callback;
 
     // Connect plugin properties with this object properties using getters/setters
     var u = undefined;
@@ -132,10 +135,16 @@ _NS_.WebAPISession.prototype.handleEvent = function(data) {
 		if (!data) {
 			return; // Invalid
 		} else {
-			if (data.length > 1)
+			if (data.length >= 1)
 				this.__config = data[0] || { };
-			if (data.length > 2)
-				this.__properties = data[0] || { };
+			if (data.length >= 2)
+				this.__properties = data[1] || { };
+		}
+
+		// Fire init callback
+		if (this.__initCallback) {
+			this.__initCallback();
+			this.__initCallback = null;
 		}
 
 	} else if (data['name'] == 'stateChanged') {

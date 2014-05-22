@@ -30,6 +30,20 @@
 #include <CernVM/ProgressFeedback.h>
 
 /**
+ * Cleanup before destuction
+ */
+void DaemonConnection::cleanup() {
+
+    // Abort and join all threads
+    runningThreads.interrupt_all();
+    runningThreads.join_all();
+
+    // Release all sessions by this connection
+    core.releaseConnectionSessions( *this );
+    
+}
+
+/**
  * Handle incoming websocket action
  */
 void DaemonConnection::handleAction( const std::string& id, const std::string& action, ParameterMapPtr parameters ) {

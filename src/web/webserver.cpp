@@ -235,6 +235,7 @@ CVMWebserver::~CVMWebserver() {
         std::map<mg_connection*, CVMWebserverConnection*>::iterator it;
         for (it=connections.begin(); it!=connections.end(); ++it) {
             CVMWebserverConnection * c = it->second;
+            c->cleanup();
             delete c;
         }
 
@@ -288,6 +289,7 @@ void CVMWebserver::poll( const int timeout) {
             if (!c->isIterated) {
 
                 // Release connection object
+                c->cleanup();
                 delete c;
 
                 // Delete element

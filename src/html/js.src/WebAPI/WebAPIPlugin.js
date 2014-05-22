@@ -35,15 +35,17 @@ _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
 		onSucceed : function( msg, session_id ) {
 
 			// Create a new session object
-			var session = new _NS_.WebAPISession( self, session_id );
+			var session = new _NS_.WebAPISession( self, session_id, function() {
+				
+				// Fire the ok callback only when we are initialized
+				if (cbOk) cbOk(session);
+
+			});
 
 			// Receive events with id=session_id
 			self.responseCallbacks[session_id] = function(data) {
 				session.handleEvent(data);
 			}
-
-			// Fire the ok callback
-			if (cbOk) cbOk(session);
 
 		},
 		onFailed: function( msg, code ) {

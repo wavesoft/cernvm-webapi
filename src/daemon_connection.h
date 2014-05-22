@@ -59,18 +59,9 @@ public:
 	};
 
 	/**
-	 * Destructor
+	 * Cleanup before destruction
 	 */
-	~DaemonConnection() {
-
-		// Abort and join all threads
-		runningThreads.interrupt_all();
-		runningThreads.join_all();
-
-		// Release all sessions by this connection
-		core.releaseConnectionSessions( *this );
-
-	}
+	virtual void cleanup();
 
 protected:
 

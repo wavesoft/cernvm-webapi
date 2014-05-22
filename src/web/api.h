@@ -43,9 +43,9 @@ public:
 	WebsocketAPI( const std::string& domain, const std::string& uri ) : domain(domain), uri(uri), egress(), connected(true), CVMWebserverConnectionHandler() { };
 
 	/**
-	 * Virtual destructor
+	 * Virtual cleanup function
 	 */
-	virtual ~WebsocketAPI() { };
+	virtual void 			cleanup() { };
 
 	/**
 	 * This function is called when there is an incoming data frame 

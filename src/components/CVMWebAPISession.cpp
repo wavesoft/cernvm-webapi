@@ -302,9 +302,10 @@ void CVMWebAPISession::sendStateVariables() {
 
 	// --- Populate properties field ---
 
-	ParameterMapPtr propMap = hvSession->parameters->subgroup("properties");
-    for ( std::map<std::string, std::string>::iterator it = propMap->parameters->begin(); it != propMap->parameters->end(); ++it ) {
-        properties[it->first] = it->second;
+    std::vector<std::string> propKeys = hvSession->properties->enumKeys();
+    for ( std::vector<std::string>::iterator it = propKeys.begin(); it != propKeys.end(); ++it ) {
+    	std::string k = *it;
+        properties[k] = hvSession->properties->get(k, "");
   	}
 
   	// --- Populate config field ---

@@ -207,18 +207,22 @@ CVMWebAPISession* DaemonCore::storeSession( DaemonConnection& connection, HVSess
  */
 void DaemonCore::releaseConnectionSessions( DaemonConnection& connection ) {
     CVMWA_LOG("Debug", "Releasing connection sessions");
-    for (std::map<int, CVMWebAPISession* >::iterator it = sessions.begin(); it != sessions.end(); ++it) {
+    std::map<int, CVMWebAPISession* >::iterator it = sessions.begin();
+    for (; it != sessions.end(); ++it) {
         CVMWebAPISession* sess = (*it).second;
         if (&sess->connection == &connection) {
 
-            // Remove from list
-            it = sessions.erase( it );
-
             // Dispose
             delete sess;
+            
+            // Remove from list
+            sessions.erase( it );
 
             // And break if we are done
             if (sessions.empty()) break;
+            
+            // Rewind iterator
+            it = sessions.begin();
 
         }
     }
