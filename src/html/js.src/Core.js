@@ -97,9 +97,11 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 							UserInteraction.hideInteraction();
 						} else {
 							// Infinite loop on polling for the socket
-							pollFunction();
+							setTimeout(function() {
+								pollFunction();
+							}, 250);
 						}
-					});		
+					}, false);		
 				};
 
 				// Start infinite poll

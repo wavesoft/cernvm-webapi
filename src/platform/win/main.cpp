@@ -133,6 +133,9 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
     }
 
+    // Abory any lingering sysExec commands
+    abortSysExec();
+
     // Destruct webserver components
     delete webserver;
     delete factory;

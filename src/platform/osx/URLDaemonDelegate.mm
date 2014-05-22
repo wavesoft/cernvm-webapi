@@ -250,6 +250,9 @@
 	[timer invalidate];
 	[reapTimer invalidate];
 
+    // Abory any lingering sysExec commands
+    abortSysExec();
+
 	// Destruct webserver components
 	delete webserver;
 	delete factory;

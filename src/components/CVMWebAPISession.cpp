@@ -32,8 +32,7 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 	if (action == "start") {
 	//////////////////////////////////
 
-		ParameterMapPtr startParm = parameters->subgroup("parameters");
-		ret = hvSession->start( startParm );
+		ret = hvSession->start( parameters );
 		if (ret != HVE_OK) {
 	        cb.fire("failed", ArgumentList( "Unable to start session" )( ret ) );
 		} else {

@@ -24,6 +24,7 @@
 
 #include <mongoose.h>
 #include <boost/thread/mutex.hpp>
+#include <config.h>
 
 #include <string>
 #include <map>
@@ -115,7 +116,7 @@ public:
 	/**
 	 * Create a webserver and setup listening port
 	 */
-	CVMWebserver( CVMWebserverConnectionFactory& factory, const int port = 5624 );
+	CVMWebserver( CVMWebserverConnectionFactory& factory, const int port = CERNVM_WEBAPI_PORT );
 
 	/**
 	 * Cleanup and destroy server

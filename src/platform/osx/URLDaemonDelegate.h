@@ -72,7 +72,7 @@
 /**
  * Prohibit launching a URL At open
  */
-- (void)markLaunchedBySetup;
+- (void)dontLaunchURL;
 
 /**
  * Callback when a URL is requested

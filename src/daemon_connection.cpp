@@ -101,6 +101,8 @@ void DaemonConnection::handleAction( const std::string& id, const std::string& a
 
         // Lookup session pointer
         int session_id = parameters->getNum<int>("session_id");
+        parameters->erase("session_id");
+
         if (core.sessions.find(session_id) == core.sessions.end()) {
             sendError("Unable to find a session with the specified session id!", id);
         } else {

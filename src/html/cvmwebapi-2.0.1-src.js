@@ -102,9 +102,11 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 							UserInteraction.hideInteraction();
 						} else {
 							// Infinite loop on polling for the socket
-							pollFunction();
+							setTimeout(function() {
+								pollFunction();
+							}, 250);
 						}
-					});		
+					}, false);		
 				};
 
 				// Start infinite poll
@@ -523,9 +525,13 @@ _NS_.Socket.prototype.close = function() {
 /**
  * Establish connection
  */
-_NS_.Socket.prototype.connect = function( cbAPIState ) {
+_NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 	var self = this;
 	if (this.connected) return;
+
+	// Defaults
+	if (autoLaunch == undefined)
+		autoLaunch = true;
 
 	// Concurrency-check
 	if (this.connecting) return;
@@ -583,7 +589,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState ) {
 		// Get current time
 		var time = new Date().getTime();
 		if (!_startTime) _startTime=time;
-		if (!_retryDelay) _retryDelay=50;
+		if (!_retryDelay) _retryDelay=500;
 
 		// Calculate how many milliseconds are left until we 
 		// reach the timeout.
@@ -700,13 +706,24 @@ _NS_.Socket.prototype.connect = function( cbAPIState ) {
 		} else {
 
 			// We ned to do a URL launch
-			var e = document.createElement('iframe'); 
-			e.src = WS_URI + "launch";
-			e.style.display="none"; 
-			document.body.appendChild(e);
+			if (autoLaunch) {
 
-			// And start loop for 5 sec
-			check_loop(checkloop_cb, 5000);
+				// Create a tiny iframe for triggering the launch
+				var e = document.createElement('iframe'); 
+				e.src = WS_URI + "launch";
+				e.style.display="none"; 
+				document.body.appendChild(e);
+
+				// And start loop for 5 sec
+				check_loop(checkloop_cb, 5000);
+
+			} else {
+
+				// Otherwise just fail
+				socket_failure();
+
+			}
+
 		}
 	});	
 
