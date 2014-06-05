@@ -303,6 +303,22 @@ void CVMWebAPISession::__cbStateChanged( VariantArgList& args ) {
 }
 
 /**
+ * Handle resolution change
+ */
+void CVMWebAPISession::__cbResolutionChanged( VariantArgList& args ) {
+
+	// Get resolution information
+	int width = boost::get<int>(args[0]),
+		height = boost::get<int>(args[1]),
+		bpp = boost::get<int>(args[2]);
+
+	// Send state variables
+	connection.sendEvent( "resolutionChanged", ArgumentList(width)(height)(bpp), uuid_str );
+
+}
+
+
+/**
  * Compile and send all the required properties to the
  * remote endpoint. 
  */

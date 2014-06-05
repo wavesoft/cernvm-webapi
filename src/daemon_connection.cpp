@@ -496,24 +496,20 @@ void DaemonConnection::requestSession_thread( boost::thread ** thread, const std
             return;
         }
 
+        // Wait until session FSM has routet itself accordingly
+        session->wait();
+
         // We have everything. Prepare CVMWebAPI Session and fire success
-        pTasks->complete( "Session oppened successfully" );
+        pTasks->complete( "Session open successfully" );
 
         // Check if we need a daemon for our current services
         hv->checkDaemonNeed();
-
-        // If session is new, place it on stopped state (created on the VM)
-        if (res == 0) {
-            session->stop();
-        } else {
-            session->update();
-        }
         
         // Register session on store
         CVMWebAPISession* cvmSession = core.storeSession( *this, session );
 
         // Completed
-        cb.fire("succeed", ArgumentList("Session oppened successfully")(cvmSession->uuid));
+        cb.fire("succeed", ArgumentList("Session open successfully")(cvmSession->uuid));
 
         // Send state variables
         cvmSession->sendStateVariables();

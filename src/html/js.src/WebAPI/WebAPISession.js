@@ -151,6 +151,18 @@ _NS_.WebAPISession.prototype.handleEvent = function(data) {
 
 		this.__state = data['data'][0];
 
+	} else if (data['name'] == 'resolutionChanged') {
+
+		// Update resolution in the RDP URL
+		if (this.__config["rdpURL"] != undefined) {
+			var parts = this.__config["rdpURL"].split("@");
+
+			// Update the RDP URL compnents
+			this.__config["rdpURL"] = 
+				parts[0] + "@" + 
+				data['data'][0] + "x" + data['data'][1] + "x" + data['data'][2];
+		}
+
 	}
 
 	// Also fire the raw event
