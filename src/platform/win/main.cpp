@@ -79,7 +79,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
                    int nCmdShow) 
 {
 
-	// Check if the instance is already running
+  	// Check if the instance is already running
   	HANDLE instMutex = CreateMutex( NULL, true, "CernVM_WebAPI_Instance_Mutex" ); 
   	if ((instMutex = 0) || (GetLastError() == ERROR_ALREADY_EXISTS)) {
   		// Already runs
@@ -91,7 +91,9 @@ int WINAPI WinMain(HINSTANCE hInstance,
   		// Exit
   		return 0;
   	}
-
+    
+    // Initialize sysExec
+    initSysExec();
     // Create the C++ daemon core
     core = new DaemonCore();
     // Create a factory which is going to create the instances

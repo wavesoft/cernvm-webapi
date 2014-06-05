@@ -37,7 +37,8 @@ public:
 	 */
 	CVMWebAPISession( DaemonCore* core, DaemonConnection& connection, HVSessionPtr hvSession, int uuid  )
 		: core(core), connection(connection), hvSession(hvSession), uuid(uuid), uuid_str(ntos<int>(uuid)), 
-		  callbackForwarder( connection, uuid_str ), apiPortOnline(false), periodicsRunning(false), apiPortCounter(0)
+		  callbackForwarder( connection, uuid_str ), apiPortOnline(false), periodicsRunning(false), apiPortCounter(0),
+		  periodicJobsThreadPtr(NULL)
 	{ 
 
 		// Disable by default periodic jobs
@@ -67,9 +68,26 @@ public:
 	 */
 	~CVMWebAPISession() {
 		CVMWA_LOG("Debug", "Destructing CVMWebAPISession");
+
+		// Wait for periodic jobs thread to complete
+		if (periodicJobsThreadPtr != NULL) {
+
+			// Join periodic threads
+			if (periodicsRunning)
+				periodicJobsThreadPtr->join();
+
+			// Delete pointer
+			delete periodicJobsThreadPtr;
+
+		}
+
+		// Cleanup & abort libcernvm session threads
 		hvSession->off( "stateChanged", hStateChanged );
 		hvSession->abort();
+
+		// Close session
 		core->hypervisor->sessionClose( hvSession );
+
 	}
 
 	/**
@@ -129,6 +147,11 @@ private:
 	 * Flab which indicates that the periodic job thread is running
 	 */
 	bool 				periodicsRunning;
+
+	/**
+	 * The pointer to the thread that runs the periodic job
+	 */
+	 boost::thread* 	periodicJobsThreadPtr;
 
 	/**
 	 * The daemon's core state manager

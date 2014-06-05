@@ -203,7 +203,14 @@ void CVMWebAPISession::enablePeriodicJobs( bool status ) {
 void CVMWebAPISession::processPeriodicJobs() {
 	if (!acceptPeriodicJobs) return;
 	if (periodicsRunning) return;
-	boost::thread( boost::bind( &CVMWebAPISession::periodicJobsThread, this ) );
+
+	// Delete previous thread instance
+	if (periodicJobsThreadPtr != NULL)
+		delete periodicJobsThreadPtr;
+
+	// Create new periodic jobs thread
+	periodicJobsThreadPtr = new boost::thread( boost::bind( &CVMWebAPISession::periodicJobsThread, this ) );
+
 }
 
 /**

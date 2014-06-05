@@ -41,6 +41,10 @@
  */
 - (void)applicationWillFinishLaunching:(NSNotification *)aNotification
 {
+
+    // Initialize sysExec
+    initSysExec();
+
 	// Create the C++ daemon core
 	core = new DaemonCore();
 	// Create a factory which is going to create the instances

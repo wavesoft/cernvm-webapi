@@ -97,10 +97,41 @@ void DaemonConnection::handleAction( const std::string& id, const std::string& a
         // Schedule the new session request on a new thread
         if (parameters->contains("vmcp")) {
 
-            // Try to open session
-            boost::thread* t = NULL;
-            t = new boost::thread( boost::bind( &DaemonConnection::requestSession_thread, this, &t, id, parameters->get("vmcp") ) );
-            runningThreads.add_thread(t);
+            // Create the object where we can forward the events
+            CVMCallbackFw cb( *this, id );
+
+            // Block requests when reached throttled state
+            if (this->throttleBlock) {
+                cb.fire("failed", ArgumentList( "Request denied by throttle protection" )( HVE_ACCESS_DENIED ) );
+                return;
+            }
+
+            // Check if a hypervisor is installed. If not,
+            // use the installer thread.
+            if (core.hypervisor) {
+
+                // Try to open session
+                boost::thread* t = NULL;
+                t = new boost::thread( boost::bind( &DaemonConnection::requestSession_thread, this, &t, id, parameters->get("vmcp") ) );
+                runningThreads.add_thread(t);
+
+            } else {
+
+                // If we are already installing, warn the user
+                if (installInProgress) {
+                    cb.fire("failed", ArgumentList( "A hypervisor installation is in progress please wait until it's finished and try again." )( HVE_USAGE_ERROR ));
+                    return;
+                }
+
+                // Mark installation in progress
+                installInProgress = true;
+
+                // Try to install first and then open session
+                boost::thread* t = NULL;
+                t = new boost::thread( boost::bind( &DaemonConnection::installHV_andRequestSession_thread, this, &t, id, parameters->get("vmcp") ) );
+                runningThreads.add_thread(t);
+
+            }
 
         } else {
             sendError("Missing 'vmcp' parameter", id);
@@ -188,6 +219,64 @@ void DaemonConnection::handleAction_thread( boost::thread** thread, CVMWebAPISes
     session->handleAction(cb, action, parameters);
     // Remove this thread from the active threads
     runningThreads.remove_thread(thisThread);
+}
+
+/**
+ * [Thread] Install hypervisor first, request session later
+ */
+void DaemonConnection::installHV_andRequestSession_thread( boost::thread ** thread, const std::string& eventID, const std::string& vmcpURL ) {
+    CRASH_REPORT_BEGIN;
+    boost::thread *thisThread = *thread;
+
+    // Create a progress feedback
+    CVMCallbackFw cb( *this, eventID );
+    FiniteTaskPtr pTasks = boost::make_shared<FiniteTask>();
+    cb.listen( pTasks );
+
+    // Prompt the user first
+    if (userInteraction->confirm("Hypervisor required", "For this website to work you must have a hypervisor installed in your system. Would you like to install one automatically for you?") != UI_OK) {
+        cb.fire("failed", ArgumentList( "You must have a hypervisor installed in your system to continue." )( HVE_USAGE_ERROR ));
+        runningThreads.remove_thread(thisThread);
+        installInProgress = false;
+        return;
+    }
+
+    // Install hypervisor
+    int ans = installHypervisor(
+                core.downloadProvider,
+                userInteraction,
+                pTasks,
+                2
+            );
+
+    // Check for error cases
+    if (ans != HVE_OK) {
+        cb.fire("failed", ArgumentList( "We were unable to install a hypervisor in your system. Please try again manually." )( HVE_USAGE_ERROR ));
+        runningThreads.remove_thread(thisThread);
+        installInProgress = false;
+        return;
+    }
+
+    // Try to detecy hypervisor again
+    core.hypervisor = detectHypervisor();
+
+    // Was the installation successful? Start requestSession thread
+    if (core.hypervisor) {
+        boost::thread* t = NULL;
+        t = new boost::thread( boost::bind( &DaemonConnection::requestSession_thread, this, &t, eventID, vmcpURL ) );
+        runningThreads.add_thread(t);
+    } else {
+        cb.fire("failed", ArgumentList( "The hypervisor isntallation completed but we were not able to detect it! Please try again later or try to re-install it manually." )( HVE_USAGE_ERROR ));
+        runningThreads.remove_thread(thisThread);
+        installInProgress = false;
+        return;
+    }
+
+    // Remove this thread from the active threads
+    runningThreads.remove_thread(thisThread);
+    installInProgress = false;
+
+    CRASH_REPORT_END;
 }
 
 /**
@@ -392,12 +481,12 @@ void DaemonConnection::requestSession_thread( boost::thread ** thread, const std
         }
         pInit->done("Request validated");
 
-        CVMWA_LOG("Debug", "Oppening session");
+        CVMWA_LOG("Debug", "Open session");
 
         // =======================================================================
 
         // Prepare a progress task that will be used by sessionOpen    
-        FiniteTaskPtr pOpen = pTasks->begin<FiniteTask>( "Oppening session" );
+        FiniteTaskPtr pOpen = pTasks->begin<FiniteTask>( "Open session" );
 
         // Open/resume session
         HVSessionPtr session = hv->sessionOpen( vmcpData, pOpen );

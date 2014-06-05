@@ -56,6 +56,8 @@ public:
 	    throttleTimestamp = 0;
 	    throttleDenies = 0;
 	    throttleBlock = false;
+	    installInProgress = false;
+
 	};
 
 	/**
@@ -115,8 +117,14 @@ private:
 	/**
 	 * RequestSession Thread
 	 */
-	void requestSession_thread 	( boost::thread** t, const std::string& eventID, const std::string& vmcpURL );
-	void handleAction_thread 	( boost::thread** t, CVMWebAPISession* session, const std::string& id, const std::string& action, ParameterMapPtr parameters );
+	void requestSession_thread 					( boost::thread** t, const std::string& eventID, const std::string& vmcpURL );
+	void installHV_andRequestSession_thread 	( boost::thread ** thread, const std::string& eventID, const std::string& vmcpURL );
+	void handleAction_thread 					( boost::thread** t, CVMWebAPISession* session, const std::string& id, const std::string& action, ParameterMapPtr parameters );
+
+	/**
+	 * Flag to mark an installation in progress
+	 */
+	bool installInProgress;
 
 };
 
