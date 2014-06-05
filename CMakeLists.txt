@@ -30,7 +30,7 @@ set(LOGGING_ENABLED 0 CACHE STRING "Define the target architecture" )
 
 # CernVM Library
 project ( cernvm-webapi )
-set(VERSION "2.0.1")
+set(VERSION "2.0.3")
 
 # Include additional libraries
 include(cmake/AddCompileLinkFlags.cmake)

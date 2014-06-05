@@ -23,7 +23,7 @@
 #define CONFIG_H
 
 // The CernVM WebAPI Version
-#define CERNVM_WEBAPI_VERSION "2.0.2"
+#define CERNVM_WEBAPI_VERSION "2.0.3"
 
 // The port where the cernvm webapi is running
 #define CERNVM_WEBAPI_PORT 	  5624
