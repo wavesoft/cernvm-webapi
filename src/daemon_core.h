@@ -58,6 +58,11 @@ public:
 	bool 						hasExited();
 
 	/**
+	 * Start shutdown cleanups
+	 */
+	void 						shutdownCleanup();
+
+	/**
 	 * Allocate new authenticatino key
 	 */
 	std::string 				newAuthKey();

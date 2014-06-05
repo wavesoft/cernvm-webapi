@@ -254,6 +254,9 @@
 	[timer invalidate];
 	[reapTimer invalidate];
 
+	// Start core cleanups
+	core->shutdownCleanup();
+
     // Abory any lingering sysExec commands
     abortSysExec();
 

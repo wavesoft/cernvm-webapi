@@ -201,14 +201,22 @@ void CVMWebAPISession::enablePeriodicJobs( bool status ) {
  * Handle timed event
  */
 void CVMWebAPISession::processPeriodicJobs() {
-	if (!acceptPeriodicJobs) return;
-	if (periodicsRunning) return;
+	CVMWA_LOG("Debug", "Periodic: Going to try");
+	if (!acceptPeriodicJobs) {
+		CVMWA_LOG("Debug", "Periodic: Not accepting");
+		return;
+	}
+	if (periodicsRunning) {
+		CVMWA_LOG("Debug", "Periodic: Already running");
+		return;
+	}
 
 	// Delete previous thread instance
 	if (periodicJobsThreadPtr != NULL)
 		delete periodicJobsThreadPtr;
 
 	// Create new periodic jobs thread
+	CVMWA_LOG("Debug", "Periodic: Launching thread");
 	periodicJobsThreadPtr = new boost::thread( boost::bind( &CVMWebAPISession::periodicJobsThread, this ) );
 
 }
@@ -231,12 +239,11 @@ void CVMWebAPISession::periodicJobsThread() {
     std::string apiPort = hvSession->local->get("apiPort", "80");
     std::string apiURL = "http://" + apiHost + ":" + apiPort;
 
-	CVMWA_LOG("Debug", "Session state: " << sessionState);
     if (sessionState == SS_RUNNING) {
     	if (!apiPortOnline) {
 
     		// Check if API port has gone online
-    		bool newState = hvSession->isAPIAlive();
+    		bool newState = hvSession->isAPIAlive(HSK_HTTP, 1);
     		if (newState) {
 	    		connection.sendEvent( "apiStateChanged", ArgumentList(true)(apiURL), uuid_str );
     			apiPortOnline = true;
@@ -248,9 +255,10 @@ void CVMWebAPISession::periodicJobsThread() {
     		if (++apiPortCounter > 10) {
 
     			// Check for offline port
-	    		if (!hvSession->isAPIAlive()) {
+	    		if (!hvSession->isAPIAlive(HSK_HTTP, 10)) {
 		    		connection.sendEvent( "apiStateChanged", ArgumentList(false)(apiURL), uuid_str );
-	    			apiPortOnline = true;
+	    			apiPortOnline = false;
+	    		} else {
 	    		}
 
 	    		// Reset counter

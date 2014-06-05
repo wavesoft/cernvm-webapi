@@ -135,6 +135,9 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
     }
 
+    // Start core cleanups
+    core->shutdownCleanup();
+
     // Abory any lingering sysExec commands
     abortSysExec();
 

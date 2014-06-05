@@ -239,3 +239,10 @@ void DaemonCore::processPeriodicJobs() {
     }   
 }
 
+
+/**
+ * Start shutdown cleanups
+ */
+void DaemonCore::shutdownCleanup() {
+    downloadProvider->abortAll();
+}

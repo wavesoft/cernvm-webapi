@@ -234,7 +234,7 @@ void DaemonConnection::installHV_andRequestSession_thread( boost::thread ** thre
     cb.listen( pTasks );
 
     // Prompt the user first
-    if (userInteraction->confirm("Hypervisor required", "For this website to work you must have a hypervisor installed in your system. Would you like to install one automatically for you?") != UI_OK) {
+    if (userInteraction->confirm("Hypervisor required", "For this website to work you must have a hypervisor installed in your system. Would you like us to install VirtualBox for you?") != UI_OK) {
         cb.fire("failed", ArgumentList( "You must have a hypervisor installed in your system to continue." )( HVE_USAGE_ERROR ));
         runningThreads.remove_thread(thisThread);
         installInProgress = false;
