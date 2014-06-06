@@ -33,6 +33,7 @@
  * Cleanup before destuction
  */
 void DaemonConnection::cleanup() {
+    CRASH_REPORT_BEGIN;
 
     // Abort and join all threads
     runningThreads.interrupt_all();
@@ -41,13 +42,19 @@ void DaemonConnection::cleanup() {
     // Release all sessions by this connection
     core.releaseConnectionSessions( *this );
     
+    CRASH_REPORT_END;
 }
 
 /**
  * Handle incoming websocket action
  */
 void DaemonConnection::handleAction( const std::string& id, const std::string& action, ParameterMapPtr parameters ) {
+    CRASH_REPORT_BEGIN;
     Json::Value data;
+
+    // Useful information for crash reporting
+    crashReportAddInfo( "domain", domain );
+    crashReportAddInfo( "web-action", action );
 
     // =============================
     //  Common actions
@@ -175,50 +182,61 @@ void DaemonConnection::handleAction( const std::string& id, const std::string& a
         }
     }
 
+    CRASH_REPORT_END;
 }
 
 /**
  * Send confirm interaction event
  */
 void DaemonConnection::__callbackConfim (const std::string& title, const std::string& body, const callbackResult& cb) {
+    CRASH_REPORT_BEGIN;
     sendEvent("interact", ArgumentList("confirm")(title)(body));
     interactionCallback = cb;
+    CRASH_REPORT_END;
 }
 
 /**
  * Send alert interaction event
  */
 void DaemonConnection::__callbackAlert (const std::string& title, const std::string& body, const callbackResult& cb) {
+    CRASH_REPORT_BEGIN;
     sendEvent("interact", ArgumentList("confirm")(title)(body));
     interactionCallback = cb;
+    CRASH_REPORT_END;
 }
 
 /**
  * Send license interaction event
  */
 void DaemonConnection::__callbackLicense (const std::string& title, const std::string& body, const callbackResult& cb) {
+    CRASH_REPORT_BEGIN;
     sendEvent("interact", ArgumentList("confirm")(title)(body));
     interactionCallback = cb;
+    CRASH_REPORT_END;
 }
 
 /**
  * Send license by URL interaction event
  */
 void DaemonConnection::__callbackLicenseURL (const std::string& title, const std::string& url, const callbackResult& cb) {
+    CRASH_REPORT_BEGIN;
     sendEvent("interact", ArgumentList("confirm")(title)(url));
     interactionCallback = cb;
+    CRASH_REPORT_END;
 }
 
 /**
  * [Thread] Handle action for the given session in another thread
  */
 void DaemonConnection::handleAction_thread( boost::thread** thread, CVMWebAPISession* session, const std::string& eventID, const std::string& action, ParameterMapPtr parameters ) {
+    CRASH_REPORT_BEGIN;
     boost::thread *thisThread = *thread;
     CVMCallbackFw cb( *this, eventID );
     // Handle action
     session->handleAction(cb, action, parameters);
     // Remove this thread from the active threads
     runningThreads.remove_thread(thisThread);
+    CRASH_REPORT_END;
 }
 
 /**

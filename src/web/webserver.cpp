@@ -24,6 +24,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <CernVM/CrashReport.h>
 
 using namespace std;
 
@@ -36,6 +37,7 @@ extern const char *find_embedded_file(const string&, size_t *);
  * Send an error message
  */
 int send_error( struct mg_connection *conn, const char* message, const int code = 500 ) {
+    CRASH_REPORT_BEGIN;
 
     // Send error code
     mg_send_status(conn, code);
@@ -49,12 +51,14 @@ int send_error( struct mg_connection *conn, const char* message, const int code 
     // Request processed
     return MG_TRUE;
 
+    CRASH_REPORT_END;
 }
 
 /**
  * This is the entry point for the CernVM Web API I/O
  */
 int CVMWebserver::api_handler(struct mg_connection *conn) {
+    CRASH_REPORT_BEGIN;
 
 	// Fetch 'this' from the connection server object
 	CVMWebserver* self = static_cast<CVMWebserver*>(conn->server_param);
@@ -142,12 +146,14 @@ int CVMWebserver::api_handler(struct mg_connection *conn) {
     }
     return 1;
 
+    CRASH_REPORT_END;
 }
 
 /**
  * Iterator over the websocket connections
  */
 int CVMWebserver::iterate_callback(struct mg_connection *conn, enum mg_event ev) {
+    CRASH_REPORT_BEGIN;
 
     // Fetch 'this' from the connection server object
     CVMWebserver* self = static_cast<CVMWebserver*>(conn->server_param);
@@ -189,12 +195,14 @@ int CVMWebserver::iterate_callback(struct mg_connection *conn, enum mg_event ev)
     // We are done with
     return MG_TRUE;
 
+    CRASH_REPORT_END;
 }
 
 /**
  * RAW Request handler
  */
 int CVMWebserver::ev_handler(struct mg_connection *conn, enum mg_event ev) {
+    CRASH_REPORT_BEGIN;
     if (ev == MG_REQUEST) {
         return api_handler(conn);
     } else if (ev == MG_AUTH) {
@@ -202,12 +210,14 @@ int CVMWebserver::ev_handler(struct mg_connection *conn, enum mg_event ev) {
     } else {
         return MG_FALSE;
     }
+    CRASH_REPORT_END;
 }
 
 /**
  * Create a webserver and setup listening port
  */
 CVMWebserver::CVMWebserver( CVMWebserverConnectionFactory& factory, const int port ) : factory(factory), staticResources() {
+    CRASH_REPORT_BEGIN;
 
 	// Create a mongoose server, passing the pointer
 	// of this class, in order for the C callbacks
@@ -218,12 +228,14 @@ CVMWebserver::CVMWebserver( CVMWebserverConnectionFactory& factory, const int po
 	ostringstream ss; ss << "127.0.0.1:" << port;
     mg_set_option(server, "listening_port", ss.str().c_str());
 
+    CRASH_REPORT_END;
 }
 
 /**
  * WebServer destructor
  */
 CVMWebserver::~CVMWebserver() {
+    CRASH_REPORT_BEGIN;
 
     // Destroy mongoose server
     mg_destroy_server( &server );
@@ -244,16 +256,19 @@ CVMWebserver::~CVMWebserver() {
 
     }
 
+    CRASH_REPORT_END;
 }
 
 /**
  * Serve a static resource under the given URL
  */
 void CVMWebserver::serve_static( const std::string& url, const std::string& file ) {
+    CRASH_REPORT_BEGIN;
 
     // Store on staticResources
     staticResources[url] = file;
 
+    CRASH_REPORT_END;
 }
 
 /**
@@ -261,6 +276,7 @@ void CVMWebserver::serve_static( const std::string& url, const std::string& file
  * This function should be called periodically to receive events.
  */
 void CVMWebserver::poll( const int timeout) {
+    CRASH_REPORT_BEGIN;
 
     // Mark all the connections as 'not iterated'
     {
@@ -304,6 +320,7 @@ void CVMWebserver::poll( const int timeout) {
         }
     }
 
+    CRASH_REPORT_END;
 }
 
 /**
@@ -312,18 +329,22 @@ void CVMWebserver::poll( const int timeout) {
  * an interrupt signal or to call ``stop`` function from another thread.
  */
 void CVMWebserver::start() {
+    CRASH_REPORT_BEGIN;
 
 	// Infinite loop :P
 	for (;;) {
 		poll();
 	}
 
+    CRASH_REPORT_END;
 }
 
 /**
  * Check if there are live registered connections
  */
 bool CVMWebserver::hasLiveConnections() {
+    CRASH_REPORT_BEGIN;
     boost::mutex::scoped_lock lock(connMutex);
     return !connections.empty();
+    CRASH_REPORT_END;
 }

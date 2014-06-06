@@ -27,11 +27,13 @@
 #include <boost/make_shared.hpp>
  
 #include <CernVM/Utilities.h>
+#include <CernVM/CrashReport.h>
 
 /**
  * Initialize daemon code
  */
 DaemonCore::DaemonCore(): authKeys(), sessions(), keystore(), config() {
+    CRASH_REPORT_BEGIN;
 
 	// Initialize local config
     config = LocalConfig::global();
@@ -51,13 +53,16 @@ DaemonCore::DaemonCore(): authKeys(), sessions(), keystore(), config() {
 	// The daemon is running
 	running = true;
 
+    CRASH_REPORT_END;
 }
 
 /**
  * Check if daemon has exited
  */
 bool DaemonCore::hasExited() {
+    CRASH_REPORT_BEGIN;
 	return !running;
+    CRASH_REPORT_END;
 }
 
 
@@ -104,6 +109,7 @@ std::string DaemonCore::get_hv_version() {
  * Allocate new authenticatino key
  */
 std::string DaemonCore::newAuthKey() {
+    CRASH_REPORT_BEGIN;
 	AuthKey key;
 
 	// The key lasts 5 minutes
@@ -116,12 +122,14 @@ std::string DaemonCore::newAuthKey() {
 	// Return the key
 	return key.key;
 
+    CRASH_REPORT_END;
 }
 
 /**
  * Validate authentication key
  */
 bool DaemonCore::authKeyValid( const std::string& key ) {
+    CRASH_REPORT_BEGIN;
 
     // If we are empty, forget about it
     if (authKeys.empty()) {
@@ -147,6 +155,7 @@ bool DaemonCore::authKeyValid( const std::string& key ) {
 	// Check if we found it
 	return found;
 
+    CRASH_REPORT_END;
 }
 
 /**
@@ -178,6 +187,7 @@ std::string DaemonCore::calculateHostID( std::string& domain ) {
  * Store the given session and return it's unique ID
  */
 CVMWebAPISession* DaemonCore::storeSession( DaemonConnection& connection, HVSessionPtr hvSession ) {
+    CRASH_REPORT_BEGIN;
 
     // Create a random int that does not exist in the sessions
     int uuid;
@@ -200,12 +210,14 @@ CVMWebAPISession* DaemonCore::storeSession( DaemonConnection& connection, HVSess
     // Return session
     return cvmSession;
 
+    CRASH_REPORT_END;
 }
 
 /**
  * Unregister all sessions launched from the given connection
  */
 void DaemonCore::releaseConnectionSessions( DaemonConnection& connection ) {
+    CRASH_REPORT_BEGIN;
     CVMWA_LOG("Debug", "Releasing connection sessions");
     std::map<int, CVMWebAPISession* >::iterator it = sessions.begin();
     for (; it != sessions.end(); ++it) {
@@ -227,16 +239,19 @@ void DaemonCore::releaseConnectionSessions( DaemonConnection& connection ) {
         }
     }
 
+    CRASH_REPORT_END;
 }
 
 /**
  * Forward the tick event to all of the child nodes
  */
 void DaemonCore::processPeriodicJobs() {
+    CRASH_REPORT_BEGIN;
     for (std::map<int, CVMWebAPISession* >::iterator it = sessions.begin(); it != sessions.end(); ++it) {
         CVMWebAPISession* sess = (*it).second;
         sess->processPeriodicJobs();
     }   
+    CRASH_REPORT_END;
 }
 
 
@@ -244,5 +259,7 @@ void DaemonCore::processPeriodicJobs() {
  * Start shutdown cleanups
  */
 void DaemonCore::shutdownCleanup() {
+    CRASH_REPORT_BEGIN;
     downloadProvider->abortAll();
+    CRASH_REPORT_END;
 }

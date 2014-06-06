@@ -7,15 +7,12 @@
 //
 
 #import <Cocoa/Cocoa.h>
-#import <CernVM/DomainKeystore.h>
+
 #import "URLDaemonDelegate.h"
 #import <string.h>
 
 int main(int argc, const char * argv[])
 {
-
-	// Initialize subsystems
-	DomainKeystore::Initialize();
 
 	// Initialize delegate
 	URLDaemonDelegate * delegate = [[URLDaemonDelegate alloc] init];
@@ -32,7 +29,4 @@ int main(int argc, const char * argv[])
 	[NSApp run];
     [delegate release];
 
-	// Cleanup subsystems
-	DomainKeystore::Cleanup();
-	
 }

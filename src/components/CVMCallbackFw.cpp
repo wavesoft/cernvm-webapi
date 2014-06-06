@@ -26,6 +26,7 @@
  * Unregister everything upon destruction
  */
 CVMCallbackFw::~CVMCallbackFw() {
+	CRASH_REPORT_BEGIN;
 
 	// Unregister from all the objects that we are monitoring
 	for (std::vector< DisposableDelegate* >::iterator it = listening.begin(); it != listening.end(); ++it ) {
@@ -36,24 +37,28 @@ CVMCallbackFw::~CVMCallbackFw() {
 
 	// Remove all entries
 	listening.clear();
+	CRASH_REPORT_END;
 }
 
 /**
  * Listen the events of the specified callback object
  */
 void CVMCallbackFw::listen( FiniteTaskPtr cb ) {
+	CRASH_REPORT_BEGIN;
 
 	// Register an anyEvent receiver and keep the slot reference
 	listening.push_back(
 		new DisposableDelegate( cb, boost::bind( &CVMCallbackFw::fire, this, _1, _2 ) )
 	);
 		
+	CRASH_REPORT_END;
 }
 
 /**
  * Stop listening for events of the specified callback object
  */
 void CVMCallbackFw::stopListening( FiniteTaskPtr cb ) {
+	CRASH_REPORT_BEGIN;
 
 	// Register an anyEvent receiver and keep the slot reference
 	for (std::vector< DisposableDelegate* >::iterator it = listening.begin(); it != listening.end(); ++it ) {
@@ -75,12 +80,17 @@ void CVMCallbackFw::stopListening( FiniteTaskPtr cb ) {
 
 	}
 		
+	CRASH_REPORT_END;
 }
+
 /**
  * Fire an event to the javascript object
  */
 void CVMCallbackFw::fire( const std::string& name, VariantArgList& args ) {
+	CRASH_REPORT_BEGIN;
+
 	// Forward the event to the interface
 	api.sendEvent( name, args, sessionID );
 
+	CRASH_REPORT_END;
 }

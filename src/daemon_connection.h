@@ -27,6 +27,7 @@
 #include <CernVM/Config.h>
 #include <CernVM/UserInteraction.h>
 #include <CernVM/Callbacks.h>
+#include <CernVM/CrashReport.h>
 
 #include <boost/make_shared.hpp>
 #include <boost/bind.hpp>
@@ -44,6 +45,7 @@ public:
 	DaemonConnection( const std::string& domain, const std::string uri, DaemonCore& core )
 		: WebsocketAPI(domain, uri), core(core), privileged(false), userInteraction(), interactionCallback()
 	{
+	    CRASH_REPORT_BEGIN;
 
 		// Prepare user interaction
 		userInteraction = boost::make_shared<UserInteraction>();
@@ -58,6 +60,7 @@ public:
 	    throttleBlock = false;
 	    installInProgress = false;
 
+	    CRASH_REPORT_END;
 	};
 
 	/**

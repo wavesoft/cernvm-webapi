@@ -26,6 +26,7 @@
  * Handle session commands
  */
 void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& action, ParameterMapPtr parameters ) {
+	CRASH_REPORT_BEGIN;
 	int ret;
 
 	//////////////////////////////////
@@ -188,6 +189,7 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
         cb.fire("succeed", ArgumentList(1));
 
 	}
+	CRASH_REPORT_END;
 }
 
 /**
@@ -201,6 +203,7 @@ void CVMWebAPISession::enablePeriodicJobs( bool status ) {
  * Handle timed event
  */
 void CVMWebAPISession::processPeriodicJobs() {
+	CRASH_REPORT_BEGIN;
 	CVMWA_LOG("Debug", "Periodic: Going to try");
 	if (!acceptPeriodicJobs) {
 		CVMWA_LOG("Debug", "Periodic: Not accepting");
@@ -219,12 +222,14 @@ void CVMWebAPISession::processPeriodicJobs() {
 	CVMWA_LOG("Debug", "Periodic: Launching thread");
 	periodicJobsThreadPtr = new boost::thread( boost::bind( &CVMWebAPISession::periodicJobsThread, this ) );
 
+	CRASH_REPORT_END;
 }
 
 /**
  * Handle timed event
  */
 void CVMWebAPISession::periodicJobsThread() {
+	CRASH_REPORT_BEGIN;
 
 	// Mark the thread as running
 	periodicsRunning = true;
@@ -277,12 +282,14 @@ void CVMWebAPISession::periodicJobsThread() {
     // Mark the thread as completed
     periodicsRunning = false;
 
+	CRASH_REPORT_END;
 }
 
 /**
  * Handle state changed events and forward them if needed to the UI
  */
 void CVMWebAPISession::__cbStateChanged( VariantArgList& args ) {
+	CRASH_REPORT_BEGIN;
 
 	// Before sending stateChanged, send the updated state variables
 	sendStateVariables();
@@ -300,12 +307,14 @@ void CVMWebAPISession::__cbStateChanged( VariantArgList& args ) {
 		apiPortOnline = false;
 	}
 
+	CRASH_REPORT_END;
 }
 
 /**
  * Handle resolution change
  */
 void CVMWebAPISession::__cbResolutionChanged( VariantArgList& args ) {
+	CRASH_REPORT_BEGIN;
 
 	// Get resolution information
 	int width = boost::get<int>(args[0]),
@@ -315,6 +324,7 @@ void CVMWebAPISession::__cbResolutionChanged( VariantArgList& args ) {
 	// Send state variables
 	connection.sendEvent( "resolutionChanged", ArgumentList(width)(height)(bpp), uuid_str );
 
+	CRASH_REPORT_END;
 }
 
 
@@ -323,6 +333,8 @@ void CVMWebAPISession::__cbResolutionChanged( VariantArgList& args ) {
  * remote endpoint. 
  */
 void CVMWebAPISession::sendStateVariables() {
+	CRASH_REPORT_BEGIN;
+
 	Json::FastWriter writer;
 	Json::Value root, data, properties, config;
 
@@ -370,4 +382,5 @@ void CVMWebAPISession::sendStateVariables() {
 	// Send JSON response
 	connection.sendRawData( writer.write(root) );
 
+	CRASH_REPORT_END;
 }

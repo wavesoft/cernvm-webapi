@@ -6,6 +6,10 @@
 //  Copyright (c) 2014 CernVM. All rights reserved.
 //
 
+#import <config.h>
+#import <CernVM/DomainKeystore.h>
+#import <CernVM/CrashReport.h>
+
 #import "URLDaemonDelegate.h"
 
 @implementation URLDaemonDelegate
@@ -42,8 +46,13 @@
 - (void)applicationWillFinishLaunching:(NSNotification *)aNotification
 {
 
-    // Initialize sysExec
+	// Initialize subsystems
+	crashReportInit();
     initSysExec();
+	DomainKeystore::Initialize();
+
+	// Add some extra crash-report information
+	crashReportAddInfo("version", CERNVM_WEBAPI_VERSION);
 
 	// Create the C++ daemon core
 	core = new DaemonCore();
@@ -264,6 +273,11 @@
 	delete webserver;
 	delete factory;
 	delete core;
+
+	// Cleanup subsystems
+	DomainKeystore::Cleanup();
+	crashReportCleanup();
+	
 
 }
 

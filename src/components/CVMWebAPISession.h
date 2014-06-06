@@ -25,7 +25,8 @@
 #include <CernVM/Hypervisor.h>
 #include <CernVM/ProgressFeedback.h>
 #include <CernVM/Utilities.h>
- 
+#include <CernVM/CrashReport.h>
+
 #include <CernVM/Hypervisor/Virtualbox/VBoxSession.h>
 
 
@@ -40,6 +41,7 @@ public:
 		  callbackForwarder( connection, uuid_str ), apiPortOnline(false), periodicsRunning(false), apiPortCounter(0),
 		  periodicJobsThreadPtr(NULL)
 	{ 
+	    CRASH_REPORT_BEGIN;
 
 		// Disable by default periodic jobs
 		acceptPeriodicJobs = false;
@@ -62,12 +64,14 @@ public:
 
         CVMWA_LOG("Debug", "Session initialized with ID " << uuid << " (str:" << uuid_str << ")");
 
+	    CRASH_REPORT_END;
 	};
 
 	/**
 	 * Destructor
 	 */
 	~CVMWebAPISession() {
+	    CRASH_REPORT_BEGIN;
 		CVMWA_LOG("Debug", "Destructing CVMWebAPISession");
 
 		// Wait for periodic jobs thread to complete
@@ -90,6 +94,7 @@ public:
 		// Close session
 		core->hypervisor->sessionClose( hvSession );
 
+	    CRASH_REPORT_END;
 	}
 
 	/**

@@ -22,11 +22,13 @@
 #include <sstream>
  
 #include <CernVM/Utilities.h>
+#include <CernVM/CrashReport.h>
 
 /**
  * Handle incoming raw request from the browser
  */
 void WebsocketAPI::handleRawData( const char * buf, const size_t len ) {
+	CRASH_REPORT_BEGIN;
 
 	// Parse the incoming buffer as JSON
 	Json::Value root;
@@ -71,12 +73,14 @@ void WebsocketAPI::handleRawData( const char * buf, const size_t len ) {
 	// Handle action
 	handleAction( id, a, map );
 
+	CRASH_REPORT_END;
 }
 
 /**
  * Return the next available egress packet
  */
 std::string WebsocketAPI::getEgressRawData() {
+	CRASH_REPORT_BEGIN;
 
 	// Return empty string if the queue is empty
 	if (egress.empty())
@@ -87,24 +91,29 @@ std::string WebsocketAPI::getEgressRawData() {
 	egress.pop();
 	return ans;
 
+	CRASH_REPORT_END;
 }
 
 /**
  * Send a raw response to the server
  */
 void WebsocketAPI::sendRawData( const std::string& data ) {
+	CRASH_REPORT_BEGIN;
 
 	CVMWA_LOG("Debug", "Pushing egress data: '" << data << "'")
 
 	// Add data to the egress queue
 	egress.push(data);
 
+	CRASH_REPORT_END;
 }
 
 /**
  * Send error response
  */
 void WebsocketAPI::sendError( const std::string& error, const std::string& id ) {
+	CRASH_REPORT_BEGIN;
+
 	// Build and send an error response
 	std::ostringstream oss;
 	oss << "{\"type\":\"error\",";
@@ -112,12 +121,15 @@ void WebsocketAPI::sendError( const std::string& error, const std::string& id ) 
 		oss << "\"id\":\"" << id << "\",";
 	oss << "\"error\":\"" << error << "\"}";
 	sendRawData( oss.str() );
+
+	CRASH_REPORT_END;
 }
 
 /**
  * Send a json-formatted action response
  */
 void WebsocketAPI::reply( const std::string& id, const Json::Value& data ) {
+	CRASH_REPORT_BEGIN;
 	// Build and send an action response
 	Json::FastWriter writer;
 	Json::Value root;
@@ -131,12 +143,14 @@ void WebsocketAPI::reply( const std::string& id, const Json::Value& data ) {
 
 	// Compile JSON response
 	sendRawData( writer.write(root) );
+	CRASH_REPORT_END;
 }
 
 /**
  * Send a json-formatted action response
  */
 void WebsocketAPI::sendEvent( const std::string& event, const VariantArgList& argVariants, const std::string& id ) {
+	CRASH_REPORT_BEGIN;
 	// Build and send an action response
 	Json::FastWriter writer;
 	Json::Value root, data;
@@ -161,4 +175,5 @@ void WebsocketAPI::sendEvent( const std::string& event, const VariantArgList& ar
 
 	// Compile JSON response
 	sendRawData( writer.write(root) );
+	CRASH_REPORT_END;
 }

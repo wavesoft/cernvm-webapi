@@ -26,7 +26,8 @@ if (APPLE)
 endif()
 
 # Logging option
-set(LOGGING_ENABLED 0 CACHE STRING "Define the target architecture" )
+option(LOGGING "Set to ON to enable verbose logging on screen" OFF)
+option(CRASH_REPORTING "Set to ON to enable crash reporting" OFF)
 
 # CernVM Library
 project ( cernvm-webapi )
@@ -94,6 +95,14 @@ set( PROJECT_LIBRARIES
 #############################################################
 # SOURCES 
 #############################################################
+
+# Add custom definitions
+if (LOGGING)
+	add_definitions(-DLOGGING)
+endif()
+if (CRASH_REPORTING)
+	add_definitions(-DCRASH_REPORTING)
+endif()
 
 # Fixes for windows
 if (WIN32)
