@@ -204,22 +204,14 @@ void CVMWebAPISession::enablePeriodicJobs( bool status ) {
  */
 void CVMWebAPISession::processPeriodicJobs() {
 	CRASH_REPORT_BEGIN;
-	CVMWA_LOG("Debug", "Periodic: Going to try");
-	if (!acceptPeriodicJobs) {
-		CVMWA_LOG("Debug", "Periodic: Not accepting");
-		return;
-	}
-	if (periodicsRunning) {
-		CVMWA_LOG("Debug", "Periodic: Already running");
-		return;
-	}
+	if (!acceptPeriodicJobs) return;
+	if (periodicsRunning) return;
 
 	// Delete previous thread instance
 	if (periodicJobsThreadPtr != NULL)
 		delete periodicJobsThreadPtr;
 
 	// Create new periodic jobs thread
-	CVMWA_LOG("Debug", "Periodic: Launching thread");
 	periodicJobsThreadPtr = new boost::thread( boost::bind( &CVMWebAPISession::periodicJobsThread, this ) );
 
 	CRASH_REPORT_END;
@@ -235,7 +227,6 @@ void CVMWebAPISession::periodicJobsThread() {
 	periodicsRunning = true;
 
 	// Synchronize session state with VirtualBox (or file)
-	CVMWA_LOG("Debug", "Syncing session");
 	hvSession->update(false);
 
 	// Check for API port state
