@@ -21,9 +21,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <tchar.h>
+#include <cernvm/CrashReport.h>
 
 // Webserver
 #include <web/webserver.h>
+
 // Daemon components
 #include <daemon.h>
 
@@ -92,8 +94,13 @@ int WINAPI WinMain(HINSTANCE hInstance,
   		return 0;
   	}
     
-    // Initialize sysExec
+    // Initialize subcomponents
+#ifdef CRASH_REPORTING
+    crashReportInit();
+#endif
     initSysExec();
+    DomainKeystore::Initialize();
+
     // Create the C++ daemon core
     core = new DaemonCore();
     // Create a factory which is going to create the instances
@@ -145,6 +152,12 @@ int WINAPI WinMain(HINSTANCE hInstance,
     delete webserver;
     delete factory;
     delete core;
+
+    // Cleanup components
+#ifdef CRASH_REPORTING
+    crashReportCleanup();
+#endif
+    DomainKeystore::Cleanup();
 
   	// Release mutex & Exit
   	CloseHandle(instMutex);

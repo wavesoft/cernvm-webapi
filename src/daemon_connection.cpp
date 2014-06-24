@@ -326,6 +326,7 @@ void DaemonConnection::requestSession_thread( boost::thread ** thread, const std
     Json::Value data;
 	HVInstancePtr hv = core.hypervisor;
     boost::thread *thisThread = *thread;
+    int res;
 
     // Create the object where we can forward the events
     CVMCallbackFw cb( *this, eventID );
@@ -369,7 +370,7 @@ void DaemonConnection::requestSession_thread( boost::thread ** thread, const std
         pInit->doing("Initializing crypto store");
     
         // Trigger update in the keystore (if it's nessecary)
-        core.keystore.updateAuthorizedKeystore( core.downloadProvider );
+        res = core.keystore.updateAuthorizedKeystore( core.downloadProvider );
 
         // Still invalid? Something's wrong
         if (!core.keystore.valid) {
@@ -403,7 +404,7 @@ void DaemonConnection::requestSession_thread( boost::thread ** thread, const std
     
         // Download data from URL
         std::string jsonString;
-        int res = core.downloadProvider->downloadText( newURL, &jsonString );
+        res = core.downloadProvider->downloadText( newURL, &jsonString );
         if (res < 0) {
             cb.fire("failed", ArgumentList( "Unable to contact the VMCP endpoint" )( res ) );
             runningThreads.remove_thread(thisThread);
