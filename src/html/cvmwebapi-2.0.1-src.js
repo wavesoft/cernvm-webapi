@@ -104,7 +104,7 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 							// Infinite loop on polling for the socket
 							setTimeout(function() {
 								pollFunction();
-							}, 250);
+							}, 1000);
 						}
 					}, false);		
 				};
