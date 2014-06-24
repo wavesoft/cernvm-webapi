@@ -195,7 +195,7 @@
 {
 	// Reap timer that cleans-up plugin instances
 	reapTimer = [NSTimer 
-		scheduledTimerWithTimeInterval:1
+		scheduledTimerWithTimeInterval:5
 		target:self
 		selector:@selector(serverReap)
 		userInfo:nil
