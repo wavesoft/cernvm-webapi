@@ -35,6 +35,9 @@
 void DaemonConnection::cleanup() {
     CRASH_REPORT_BEGIN;
 
+    // Abort user interaction
+    userInteraction->abort(true);
+
     // Abort and join all threads
     runningThreads.interrupt_all();
     runningThreads.join_all();
@@ -259,6 +262,15 @@ void DaemonConnection::installHV_andRequestSession_thread( boost::thread ** thre
         return;
     }
 
+    // Check if user navigated away with the 
+    // interaction prompt in place
+    if (userInteraction->aborted) {
+        runningThreads.remove_thread(thisThread);
+        installInProgress = false;
+        userInteraction->abortHandled();
+        return;
+    }
+
     // Install hypervisor
     int ans = installHypervisor(
                 core.downloadProvider,
@@ -266,6 +278,15 @@ void DaemonConnection::installHV_andRequestSession_thread( boost::thread ** thre
                 pTasks,
                 2
             );
+
+    // Check if user navigated away with the 
+    // interaction prompt in place
+    if (userInteraction->aborted) {
+        runningThreads.remove_thread(thisThread);
+        installInProgress = false;
+        userInteraction->abortHandled();
+        return;
+    }
 
     // Check for error cases
     if (ans != HVE_OK) {
@@ -333,6 +354,14 @@ void DaemonConnection::requestSession_thread( boost::thread ** thread, const std
 
         // Wait for delaied hypervisor initiation
         hv->waitTillReady( pInit->begin<FiniteTask>( "Initializing hypervisor" ), userInteraction );
+
+        // Check if user navigated away with the 
+        // interaction prompt in place
+        if (userInteraction->aborted) {
+            runningThreads.remove_thread(thisThread);
+            userInteraction->abortHandled();
+            return;
+        }
 
         // =======================================================================
 
@@ -467,6 +496,14 @@ void DaemonConnection::requestSession_thread( boost::thread ** thread, const std
 
             // Prompt user using the currently active userInteraction 
             if (userInteraction->confirm("New CernVM WebAPI Session", msg) != UI_OK) {
+
+                // Check if user navigated away with the 
+                // interaction prompt in place
+                if (userInteraction->aborted) {
+                    runningThreads.remove_thread(thisThread);
+                    userInteraction->abortHandled();
+                    return;
+                }
             
                 // If we were aborted due to shutdown, exit
                 if (core.hasExited()) {

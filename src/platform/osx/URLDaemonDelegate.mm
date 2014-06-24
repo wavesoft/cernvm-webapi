@@ -47,7 +47,9 @@
 {
 
 	// Initialize subsystems
+#ifdef CRASH_REPORTING
 	crashReportInit();
+#endif
     initSysExec();
 	DomainKeystore::Initialize();
 
@@ -276,8 +278,9 @@
 
 	// Cleanup subsystems
 	DomainKeystore::Cleanup();
+#ifdef CRASH_REPORTING
 	crashReportCleanup();
-	
+#endif
 
 }
 
