@@ -235,10 +235,14 @@ void DaemonConnection::handleAction_thread( boost::thread** thread, CVMWebAPISes
     CRASH_REPORT_BEGIN;
     boost::thread *thisThread = *thread;
     CVMCallbackFw cb( *this, eventID );
-    // Handle action
-    session->handleAction(cb, action, parameters);
-    // Remove this thread from the active threads
-    runningThreads.remove_thread(thisThread);
+    try {
+        // Handle action
+        session->handleAction(cb, action, parameters);
+        // Remove this thread from the active threads
+        runningThreads.remove_thread(thisThread);
+    } catch (boost::thread_interrupted &e) {
+        // 
+    }
     CRASH_REPORT_END;
 }
 
@@ -247,74 +251,78 @@ void DaemonConnection::handleAction_thread( boost::thread** thread, CVMWebAPISes
  */
 void DaemonConnection::installHV_andRequestSession_thread( boost::thread ** thread, const std::string& eventID, const std::string& vmcpURL ) {
     CRASH_REPORT_BEGIN;
-    boost::thread *thisThread = *thread;
+    try {
 
-    // Create a progress feedback
-    CVMCallbackFw cb( *this, eventID );
-    FiniteTaskPtr pTasks = boost::make_shared<FiniteTask>();
-    cb.listen( pTasks );
+        boost::thread *thisThread = *thread;
 
-    // Prompt the user first
-    if (userInteraction->confirm("Hypervisor required", "For this website to work you must have a hypervisor installed in your system. Would you like us to install VirtualBox for you?") != UI_OK) {
-        cb.fire("failed", ArgumentList( "You must have a hypervisor installed in your system to continue." )( HVE_USAGE_ERROR ));
+        // Create a progress feedback
+        CVMCallbackFw cb( *this, eventID );
+        FiniteTaskPtr pTasks = boost::make_shared<FiniteTask>();
+        cb.listen( pTasks );
+
+        // Prompt the user first
+        if (userInteraction->confirm("Hypervisor required", "For this website to work you must have a hypervisor installed in your system. Would you like us to install VirtualBox for you?") != UI_OK) {
+            cb.fire("failed", ArgumentList( "You must have a hypervisor installed in your system to continue." )( HVE_USAGE_ERROR ));
+            runningThreads.remove_thread(thisThread);
+            installInProgress = false;
+
+            // Check if user navigated away with the 
+            // interaction prompt in place
+            if (userInteraction->aborted)
+                userInteraction->abortHandled();
+
+            return;
+        }
+
+        // Install hypervisor
+        int ans = installHypervisor(
+                    core.downloadProvider,
+                    userInteraction,
+                    pTasks,
+                    2
+                );
+
+        // Check if user navigated away with the 
+        // interaction prompt in place
+        if (userInteraction->aborted) {
+            runningThreads.remove_thread(thisThread);
+            installInProgress = false;
+            userInteraction->abortHandled();
+            return;
+        }
+
+        // Check for error cases
+        if (ans != HVE_OK) {
+            cb.fire("failed", ArgumentList( "We were unable to install a hypervisor in your system. Please try again manually." )( HVE_USAGE_ERROR ));
+            runningThreads.remove_thread(thisThread);
+            installInProgress = false;
+            return;
+        }
+
+        // Try to detecy hypervisor again
+        core.hypervisor = detectHypervisor();
+
+        // Was the installation successful? Start requestSession thread
+        if (core.hypervisor) {
+            boost::thread* t = NULL;
+            t = new boost::thread( boost::bind( &DaemonConnection::requestSession_thread, this, &t, eventID, vmcpURL ) );
+            runningThreads.add_thread(t);
+        } else {
+            cb.fire("failed", ArgumentList( "The hypervisor isntallation completed but we were not able to detect it! Please try again later or try to re-install it manually." )( HVE_USAGE_ERROR ));
+            runningThreads.remove_thread(thisThread);
+            installInProgress = false;
+            return;
+        }
+
+        // Remove this thread from the active threads
         runningThreads.remove_thread(thisThread);
         installInProgress = false;
-        return;
+
+    } catch (boost::thread_interrupted &e) {
+
+        // Interrupted
+
     }
-
-    // Check if user navigated away with the 
-    // interaction prompt in place
-    if (userInteraction->aborted) {
-        runningThreads.remove_thread(thisThread);
-        installInProgress = false;
-        userInteraction->abortHandled();
-        return;
-    }
-
-    // Install hypervisor
-    int ans = installHypervisor(
-                core.downloadProvider,
-                userInteraction,
-                pTasks,
-                2
-            );
-
-    // Check if user navigated away with the 
-    // interaction prompt in place
-    if (userInteraction->aborted) {
-        runningThreads.remove_thread(thisThread);
-        installInProgress = false;
-        userInteraction->abortHandled();
-        return;
-    }
-
-    // Check for error cases
-    if (ans != HVE_OK) {
-        cb.fire("failed", ArgumentList( "We were unable to install a hypervisor in your system. Please try again manually." )( HVE_USAGE_ERROR ));
-        runningThreads.remove_thread(thisThread);
-        installInProgress = false;
-        return;
-    }
-
-    // Try to detecy hypervisor again
-    core.hypervisor = detectHypervisor();
-
-    // Was the installation successful? Start requestSession thread
-    if (core.hypervisor) {
-        boost::thread* t = NULL;
-        t = new boost::thread( boost::bind( &DaemonConnection::requestSession_thread, this, &t, eventID, vmcpURL ) );
-        runningThreads.add_thread(t);
-    } else {
-        cb.fire("failed", ArgumentList( "The hypervisor isntallation completed but we were not able to detect it! Please try again later or try to re-install it manually." )( HVE_USAGE_ERROR ));
-        runningThreads.remove_thread(thisThread);
-        installInProgress = false;
-        return;
-    }
-
-    // Remove this thread from the active threads
-    runningThreads.remove_thread(thisThread);
-    installInProgress = false;
-
     CRASH_REPORT_END;
 }
 
@@ -503,12 +511,6 @@ void DaemonConnection::requestSession_thread( boost::thread ** thread, const std
                 if (userInteraction->aborted) {
                     runningThreads.remove_thread(thisThread);
                     userInteraction->abortHandled();
-                    return;
-                }
-            
-                // If we were aborted due to shutdown, exit
-                if (core.hasExited()) {
-                    runningThreads.remove_thread(thisThread);
                     return;
                 }
 
