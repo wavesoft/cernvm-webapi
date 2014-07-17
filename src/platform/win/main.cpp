@@ -95,6 +95,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
   	}
     
     // Initialize subcomponents
+    WSADATA wsaData;
+    WSAStartup( MAKEWORD(2, 2), &wsaData );
 #ifdef CRASH_REPORTING
     crashReportInit();
 #endif
@@ -158,6 +160,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
     crashReportCleanup();
 #endif
     DomainKeystore::Cleanup();
+    WSACleanup();
 
   	// Release mutex & Exit
   	CloseHandle(instMutex);
