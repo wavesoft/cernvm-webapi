@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 2.8.10)
 
 # Guess system architecture
 set(GUESS_ARCH "i386") 							# 1) Fallback to x86

@@ -9,7 +9,7 @@ Building
 The __cernvm-webapi__ installation scripts can automatically build all the required dependencies for the project. Hoever in order to be able to build all the components you are going to need the following packages installed:
 
  * GCC 4.7 or later (requires C++11 support)
- * CMake 2.8 or later
+ * CMake 2.8.10 or later
 
 You are also going to need the __libcernvm__ project from this repository.
 

@@ -45,12 +45,11 @@ void openAuthenticatedURL()
 
   // Build URL
   std::ostringstream oss;
-  oss << "http://127.0.0.1:5624/control.html#" << authToken;
+  oss << "xdg-open \"http://127.0.0.1:5624/control.html#" << authToken << "\"";
 
   // Get URL string
   std::string url = oss.str();
-  //ShellExecute(NULL,"open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
-
+  system(url.c_str());
 }
 
 /**
