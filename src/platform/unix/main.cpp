@@ -20,7 +20,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <cernvm/CrashReport.h>
+#include <CernVM/CrashReport.h>
 
 // Webserver
 #include <web/webserver.h>
@@ -49,7 +49,7 @@ void openAuthenticatedURL()
 
   // Get URL string
   std::string url = oss.str();
-  ShellExecute(NULL,"open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+  //ShellExecute(NULL,"open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
 
 }
 
