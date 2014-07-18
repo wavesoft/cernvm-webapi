@@ -1,0 +1,14 @@
+Source: cernvm-webapi
+Section: universe/misc
+Priority: optional
+Maintainer: Ioannis Charalampidis <ioannis.charalampidis@cern.ch>
+Build-Depends: build-essential, libicu-dev
+Homepage: http://www.cernvm.cern.ch
+
+Package: cernvm-webapi
+Architecture: any
+Depends: 
+Description: CernVM WebAPI
+ A secure mechanism that allows web applications to interact with virtual machines
+ in the user's computer.
+
