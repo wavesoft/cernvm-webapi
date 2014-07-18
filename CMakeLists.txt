@@ -240,3 +240,33 @@ if (APPLE)
 	)
 
 endif()
+
+# Installation rules for linux (for archive packaging)
+if (UNIX)
+
+	# Binary archive
+	install(
+		TARGETS
+        	cernvm-webapi
+        RUNTIME DESTINATION
+			${CMAKE_INSTALL_PREFIX}/bin
+		)
+
+	# Resources (icons)
+	install(
+		FILES
+			${PLATFORM_DIR}/icon.png
+			${PLATFORM_DIR}/icon.svg
+		DESTINATION
+			${CMAKE_INSTALL_PREFIX}/share/cernvm-webapi
+		)
+
+	# Desktop files (for Mime-Type registration)
+	install(
+		FILES
+			${PLATFORM_DIR}/CernVM WebAPI.desktop
+		DESTINATION
+			/usr/share/applications
+		)
+
+endif()

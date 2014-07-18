@@ -1,0 +1,14 @@
+[Desktop Entry]
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Terminal=false
+Exec=/usr/bin/cernvm-webapi %U
+Name[en_US]=CernVM WebAPI
+Comment[en_US]=Open the CernVM WebAPI Dashboard
+Name=CernVM WebAPI
+Comment=Open the CernVM WebAPI Dashboard
+Icon=/usr/share/cernvm-webapi/icon.svg
+Categories=Application;Network;
+MimeType=x-scheme-handler/cernvm-webapi;
+Comment[en_US.utf8]=Open the CernVM WebAPI Dashboard
