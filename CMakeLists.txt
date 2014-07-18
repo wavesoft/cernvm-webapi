@@ -264,9 +264,9 @@ if (UNIX)
 	# Desktop files (for Mime-Type registration)
 	install(
 		FILES
-			"${PLATFORM_DIR}/CernVM WebAPI.desktop"
+			${PLATFORM_DIR}/cernvm-webapi.desktop
 		DESTINATION
-			/usr/share/applications
+			${CMAKE_INSTALL_PREFIX}/share/applications
 		)
 
 endif()
