@@ -89,6 +89,7 @@ set( PROJECT_INCLUDES
 # Collect library names
 set( PROJECT_LIBRARIES 
 	${MONGOOSE_LIBRARIES}
+	rt
 )
 	
 
