@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <sys/file.h>
 #include <CernVM/CrashReport.h>
 
 // Webserver
@@ -56,6 +57,17 @@ void openAuthenticatedURL()
  * Entry point for the CernVM Web Daemon
  */
 int main( int argc, char ** argv ) {
+
+    // Ensure single instance
+    int pid_file = open("/var/run/cernvm-webapi.pid", O_CREAT | O_RDWR, 0666);
+    int rc = flock(pid_file, LOCK_EX | LOCK_NB);
+    if(rc) {
+        if(EWOULDBLOCK == errno) {
+            // Another instance is running
+            return 32;
+        }
+    }
+
 #ifdef CRASH_REPORTING
     crashReportInit();
 #endif
@@ -119,5 +131,8 @@ int main( int argc, char ** argv ) {
     crashReportCleanup();
 #endif
     DomainKeystore::Cleanup();
+
+    // 0 means successful shutdown
+    return 0;
 
 }
