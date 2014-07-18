@@ -15,7 +15,7 @@ You are also going to need the __libcernvm__ project from this repository.
 
 If you are using a decently recent linux installation, you can use the following:
 
-    sudo apt-get install build-essential libicu-dev
+    sudo apt-get install build-essential cmake devscripts libicu-dev
 
 Assuming that you have all the required dependencies in place you can prepare your build folder. There are various preparation scripts in the project root:
 

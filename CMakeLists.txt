@@ -41,7 +41,7 @@ include(cmake/AddCompileLinkFlags.cmake)
 #############################################################
 
 # CernVM Library sources
-set( CERNVM_LIBSRC "../libcernvm" )
+set( CERNVM_LIBSRC "../libcernvm" CACHE STRING "Specify the root directory of the libcernvm sources" )
 set( USE_SYSTEM_LIBS 0 )
 
 # Include sub-project

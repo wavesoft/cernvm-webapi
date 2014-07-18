@@ -64,6 +64,7 @@ int main( int argc, char ** argv ) {
     if(rc) {
         if(EWOULDBLOCK == errno) {
             // Another instance is running
+            close(pid_file);
             return 32;
         }
     }
@@ -133,6 +134,7 @@ int main( int argc, char ** argv ) {
     DomainKeystore::Cleanup();
 
     // 0 means successful shutdown
+    close(pid_file);
     return 0;
 
 }
