@@ -264,7 +264,7 @@ if (UNIX)
 	# Desktop files (for Mime-Type registration)
 	install(
 		FILES
-			${PLATFORM_DIR}/CernVM WebAPI.desktop
+			"${PLATFORM_DIR}/CernVM WebAPI.desktop"
 		DESTINATION
 			/usr/share/applications
 		)
