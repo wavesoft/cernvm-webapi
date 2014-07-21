@@ -89,9 +89,12 @@ set( PROJECT_INCLUDES
 # Collect library names
 set( PROJECT_LIBRARIES 
 	${MONGOOSE_LIBRARIES}
-	rt
 )
-	
+
+# Add additional libraries on linux
+if (UNIX AND NOT APPLE)
+	set( PROJECT_LIBRARIES ${PROJECT_LIBRARIES} rt)
+endif()	
 
 #############################################################
 # SOURCES 
@@ -242,7 +245,7 @@ if (APPLE)
 endif()
 
 # Installation rules for linux (for archive packaging)
-if (UNIX)
+if (DEFINED(UNIX) AND NOT DEFINED(APPLE))
 
 	# Binary archive
 	install(

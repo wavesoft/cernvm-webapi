@@ -504,7 +504,7 @@
 				<key>RELOCATABLE</key>
 				<false/>
 				<key>VERSION</key>
-				<string>2.0.4</string>
+				<string>2.0.5</string>
 			</dict>
 			<key>UUID</key>
 			<string>A7D28F3F-25ED-439C-BB33-44E706ABEC84</string>
@@ -944,7 +944,7 @@
 				</dict>
 			</array>
 			<key>NAME</key>
-			<string>cvmwebapi-2.0.4</string>
+			<string>cvmwebapi-2.0.5</string>
 			<key>PAYLOAD_ONLY</key>
 			<false/>
 			<key>REFERENCE_FOLDER_PATH</key>
