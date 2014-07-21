@@ -20,6 +20,7 @@ binary-indep:
 
 binary-arch:
 	cd $(BUILDDIR); $(CMAKE_BIN) -P cmake_install.cmake
+	rm -rf debian/tmp/usr/lib
 	mkdir debian/tmp/DEBIAN
 	dpkg-gencontrol -pcernvm-webapi
 	dpkg --build debian/tmp ..

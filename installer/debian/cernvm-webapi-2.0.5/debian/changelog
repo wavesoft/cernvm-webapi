@@ -1,0 +1,6 @@
+cernvm-webapi (2.0.5) oneiric; urgency=low
+
+  * Major bugfixes on all platforms
+  * Added automatic launching of the application at the last phase of installation
+
+ -- Ioannis Charalampidis <ioannis.charalampidis@cern.ch>  Mon, 21 Jul 2014 12:38:54 +0200
