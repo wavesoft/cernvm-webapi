@@ -245,7 +245,7 @@ if (APPLE)
 endif()
 
 # Installation rules for linux (for archive packaging)
-if (DEFINED(UNIX) AND NOT DEFINED(APPLE))
+if (UNIX AND NOT APPLE)
 
 	# Binary archive
 	install(
