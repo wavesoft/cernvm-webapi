@@ -21,7 +21,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dlfcn.h>
-#include <cernvm/CrashReport.h>
+#include <sys/file.h>
+#include <CernVM/CrashReport.h>
 
 // Webserver
 #include <web/webserver.h>
@@ -46,18 +47,29 @@ void openAuthenticatedURL()
 
   // Build URL
   std::ostringstream oss;
-  oss << "http://127.0.0.1:5624/control.html#" << authToken;
+  oss << "xdg-open \"http://127.0.0.1:5624/control.html#" << authToken << "\"";
 
   // Get URL string
   std::string url = oss.str();
-  ShellExecute(NULL,"open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
-
+  system(url.c_str());
 }
 
 /**
  * Entry point for the CernVM Web Daemon
  */
 int main( int argc, char ** argv ) {
+
+    // Ensure single instance
+    int pid_file = open("/var/run/cernvm-webapi.pid", O_CREAT | O_RDWR, 0666);
+    int rc = flock(pid_file, LOCK_EX | LOCK_NB);
+    if(rc) {
+        if(EWOULDBLOCK == errno) {
+            // Another instance is running
+            close(pid_file);
+            return 32;
+        }
+    }
+
 #ifdef CRASH_REPORTING
     crashReportInit();
 #endif
@@ -121,5 +133,9 @@ int main( int argc, char ** argv ) {
     crashReportCleanup();
 #endif
     DomainKeystore::Cleanup();
+
+    // 0 means successful shutdown
+    close(pid_file);
+    return 0;
 
 }

@@ -1,0 +1,32 @@
+#!/usr/bin/make -f
+
+CMAKE_BIN = /usr/local/bin/cmake
+BUILDDIR = build_dir
+BASE_DIR = ../../../../..
+SOURCE_DIR = $(BASE_DIR)/cernvm-webapi
+LIBCERNVM_DIR = $(BASE_DIR)/libcernvm
+
+# secondly called by launchpad
+build:
+	mkdir $(BUILDDIR);
+	cd $(BUILDDIR); $(CMAKE_BIN) -DSYSTEM_OPENSSL=ON -DCMAKE_BUILD_TYPE=Release -DCRASH_REPORTING=ON -DTARGET_ARCH="x86_64" -DCMAKE_INSTALL_PREFIX=../debian/tmp/usr $(SOURCE_DIR)
+	make -C $(BUILDDIR)
+
+# thirdly called by launchpad
+binary: binary-indep binary-arch
+
+binary-indep:
+	# nothing to be done
+
+binary-arch:
+	cd $(BUILDDIR); $(CMAKE_BIN) -P cmake_install.cmake
+	mkdir debian/tmp/DEBIAN
+	dpkg-gencontrol -pcernvm-webapi
+	dpkg --build debian/tmp ..
+
+# firstly called by launchpad
+clean:
+	rm -f build
+	rm -rf $(BUILDDIR)
+
+.PHONY: binary binary-arch binary-indep clean

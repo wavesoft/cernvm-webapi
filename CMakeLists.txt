@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 2.8.10)
 
 # Guess system architecture
 set(GUESS_ARCH "i386") 							# 1) Fallback to x86
@@ -41,7 +41,7 @@ include(cmake/AddCompileLinkFlags.cmake)
 #############################################################
 
 # CernVM Library sources
-set( CERNVM_LIBSRC "../libcernvm" )
+set( CERNVM_LIBSRC "../libcernvm" CACHE STRING "Specify the root directory of the libcernvm sources" )
 set( USE_SYSTEM_LIBS 0 )
 
 # Include sub-project
@@ -89,6 +89,7 @@ set( PROJECT_INCLUDES
 # Collect library names
 set( PROJECT_LIBRARIES 
 	${MONGOOSE_LIBRARIES}
+	rt
 )
 	
 
@@ -237,5 +238,35 @@ if (APPLE)
 		${PLATFORM_DIR}/icon.icns PROPERTIES
 		MACOSX_PACKAGE_LOCATION Resources
 	)
+
+endif()
+
+# Installation rules for linux (for archive packaging)
+if (UNIX)
+
+	# Binary archive
+	install(
+		TARGETS
+        	cernvm-webapi
+        RUNTIME DESTINATION
+			${CMAKE_INSTALL_PREFIX}/bin
+		)
+
+	# Resources (icons)
+	install(
+		FILES
+			${PLATFORM_DIR}/icon.png
+			${PLATFORM_DIR}/icon.svg
+		DESTINATION
+			${CMAKE_INSTALL_PREFIX}/share/cernvm-webapi
+		)
+
+	# Desktop files (for Mime-Type registration)
+	install(
+		FILES
+			${PLATFORM_DIR}/cernvm-webapi.desktop
+		DESTINATION
+			${CMAKE_INSTALL_PREFIX}/share/applications
+		)
 
 endif()
