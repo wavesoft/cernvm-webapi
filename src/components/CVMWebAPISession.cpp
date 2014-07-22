@@ -237,56 +237,64 @@ void CVMWebAPISession::processPeriodicJobs() {
  */
 void CVMWebAPISession::periodicJobsThread() {
 	CRASH_REPORT_BEGIN;
+	try {
 
-	// Mark the thread as running
-	periodicsRunning = true;
+		// Mark the thread as running
+		periodicsRunning = true;
 
-	// Synchronize session state with VirtualBox (or file)
-	hvSession->update(false);
+		// Synchronize session state with VirtualBox (or file)
+		hvSession->update(false);
 
-	// Check for API port state
-    int sessionState = hvSession->local->getNum<int>("state", 0);
-    std::string apiHost = hvSession->local->get("apiHost", "127.0.0.1");
-    std::string apiPort = hvSession->local->get("apiPort", "80");
-    std::string apiURL = "http://" + apiHost + ":" + apiPort;
+		// Check for API port state
+	    int sessionState = hvSession->local->getNum<int>("state", 0);
+	    std::string apiHost = hvSession->local->get("apiHost", "127.0.0.1");
+	    std::string apiPort = hvSession->local->get("apiPort", "80");
+	    std::string apiURL = "http://" + apiHost + ":" + apiPort;
 
-    if (sessionState == SS_RUNNING) {
-    	if (!apiPortOnline) {
+	    if (sessionState == SS_RUNNING) {
+	    	if (!apiPortOnline) {
 
-    		// Check if API port has gone online
-    		bool newState = hvSession->isAPIAlive(HSK_HTTP, 1);
-    		if (newState) {
-	    		connection.sendEvent( "apiStateChanged", ArgumentList(true)(apiURL), uuid_str );
-    			apiPortOnline = true;
-    		}
-
-    	} else {
-
-    		// Still check for API port going offline
-    		if (++apiPortCounter > 10) {
-
-    			// Check for offline port
-	    		if (!hvSession->isAPIAlive(HSK_HTTP, 10)) {
-		    		connection.sendEvent( "apiStateChanged", ArgumentList(false)(apiURL), uuid_str );
-	    			apiPortOnline = false;
-	    		} else {
+	    		// Check if API port has gone online
+	    		bool newState = hvSession->isAPIAlive(HSK_HTTP, 1);
+	    		if (newState) {
+		    		connection.sendEvent( "apiStateChanged", ArgumentList(true)(apiURL), uuid_str );
+	    			apiPortOnline = true;
 	    		}
 
-	    		// Reset counter
-	    		apiPortCounter=0;
-    		}
+	    	} else {
 
-    	}
-    } else {
-    	if (apiPortOnline) {
-    		// In any other state, the port is just offline
-    		connection.sendEvent( "apiStateChanged", ArgumentList(false)(apiURL), uuid_str );
-    		apiPortOnline = false;
-    	}
-    }
+	    		// Still check for API port going offline
+	    		if (++apiPortCounter > 10) {
 
-    // Mark the thread as completed
-    periodicsRunning = false;
+	    			// Check for offline port
+		    		if (!hvSession->isAPIAlive(HSK_HTTP, 10)) {
+			    		connection.sendEvent( "apiStateChanged", ArgumentList(false)(apiURL), uuid_str );
+		    			apiPortOnline = false;
+		    		} else {
+		    		}
+
+		    		// Reset counter
+		    		apiPortCounter=0;
+	    		}
+
+	    	}
+	    } else {
+	    	if (apiPortOnline) {
+	    		// In any other state, the port is just offline
+	    		connection.sendEvent( "apiStateChanged", ArgumentList(false)(apiURL), uuid_str );
+	    		apiPortOnline = false;
+	    	}
+	    }
+
+	    // Mark the thread as completed
+	    periodicsRunning = false;
+
+	} catch (boost::thread_interrupted &e) {
+		
+		// We are interrupted
+		periodicsRunning = false;
+
+	}
 
 	CRASH_REPORT_END;
 }

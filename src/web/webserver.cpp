@@ -186,7 +186,7 @@ int CVMWebserver::iterate_callback(struct mg_connection *conn, enum mg_event ev)
             // Send Connection Close Frame
             mg_websocket_write(conn, 0x08, NULL, 0);
 
-            // Mark as non-iterated so it's delete on poll()
+            // Mark as non-iterated so it's deleted on poll()
             c->isIterated = false;
         }
 
@@ -303,6 +303,8 @@ void CVMWebserver::poll( const int timeout) {
 
             // Delete non-iterated over actions
             if (!c->isIterated) {
+
+                CVMWA_LOG("Debug", "Found non-iterated connection. Will delete promptly...");
 
                 // Release connection object
                 c->cleanup();

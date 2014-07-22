@@ -89,7 +89,6 @@ public:
 		// Cleanup & abort libcernvm session threads
 		hvSession->off( "stateChanged", hStateChanged );
 		hvSession->off( "resolutionChanged", hResChanged );
-		hvSession->abort();
 
 		// Close session
 		core->hypervisor->sessionClose( hvSession );
@@ -105,7 +104,7 @@ public:
 	/**
 	 * Session polling timer
 	 */
-	void processPeriodicJobs( );
+	void 				processPeriodicJobs( );
 
 	/**
 	 * Set status of the periodic jobs thread
