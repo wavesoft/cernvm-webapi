@@ -309,7 +309,7 @@ void CVMWebserver::poll( const int timeout) {
                 delete c;
 
                 // Delete element
-                connections.erase(it);
+                it = connections.erase(it);
 
                 // Skip deleted element or exit
                 if (connections.empty() || (it == connections.end())) {
