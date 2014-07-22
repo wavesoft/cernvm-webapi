@@ -34,10 +34,12 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 	//////////////////////////////////
 
 		ret = hvSession->start( parameters );
-		if ((ret != HVE_OK) && (ret != HVE_SCHEDULED)) {
-	        cb.fire("failed", ArgumentList( "Unable to start session" )( ret ) );
-		} else {
+		if (ret == HVE_SCHEDULED) {
+	        cb.fire("succeed", ArgumentList("Session will start promptly"));
+		} else if (ret == HVE_OK) {
 	        cb.fire("succeed", ArgumentList("Session started successfully"));
+		} else {
+	        cb.fire("failed", ArgumentList( "Unable to start session" )( ret ) );
 		}
 
 	//////////////////////////////////
@@ -45,10 +47,12 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 	//////////////////////////////////
         
 		ret = hvSession->stop();
-		if ((ret != HVE_OK) && (ret != HVE_SCHEDULED)) {
-	        cb.fire("failed", ArgumentList( "Unable to stop session" )( ret ) );
+		if (ret == HVE_SCHEDULED) {
+	        cb.fire("succeed", ArgumentList("Session will stop promptly"));
+		} else if (ret == HVE_OK) {
+	        cb.fire("succeed", ArgumentList("Session stoped successfully"));
 		} else {
-	        cb.fire("succeed", ArgumentList("Session stopped successfully"));
+	        cb.fire("failed", ArgumentList( "Unable to stop session" )( ret ) );
 		}
 
 	//////////////////////////////////
@@ -56,21 +60,26 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 	//////////////////////////////////
         
 		ret = hvSession->pause();
-		if ((ret != HVE_OK) && (ret != HVE_SCHEDULED)) {
-	        cb.fire("failed", ArgumentList( "Unable to pause session" )( ret ) );
-		} else {
+		if (ret == HVE_SCHEDULED) {
+	        cb.fire("succeed", ArgumentList("Session will pause promptly"));
+		} else if (ret == HVE_OK) {
 	        cb.fire("succeed", ArgumentList("Session paused successfully"));
+		} else {
+	        cb.fire("failed", ArgumentList( "Unable to pause session" )( ret ) );
 		}
+
 
 	//////////////////////////////////
 	} else if (action == "resume") {
 	//////////////////////////////////
         
 		ret = hvSession->resume();
-		if ((ret != HVE_OK) && (ret != HVE_SCHEDULED)) {
-	        cb.fire("failed", ArgumentList( "Unable to resume session" )( ret ) );
-		} else {
+		if (ret == HVE_SCHEDULED) {
+	        cb.fire("succeed", ArgumentList("Session will resume promptly"));
+		} else if (ret == HVE_OK) {
 	        cb.fire("succeed", ArgumentList("Session resumed successfully"));
+		} else {
+	        cb.fire("failed", ArgumentList( "Unable to resume session" )( ret ) );
 		}
 
 	//////////////////////////////////
@@ -78,10 +87,12 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 	//////////////////////////////////
         
 		ret = hvSession->hibernate();
-		if ((ret != HVE_OK) && (ret != HVE_SCHEDULED)) {
-	        cb.fire("failed", ArgumentList( "Unable to hibernate session" )( ret ) );
-		} else {
+		if (ret == HVE_SCHEDULED) {
+	        cb.fire("succeed", ArgumentList("Session will hibernate promptly"));
+		} else if (ret == HVE_OK) {
 	        cb.fire("succeed", ArgumentList("Session hibernated successfully"));
+		} else {
+	        cb.fire("failed", ArgumentList( "Unable to hibernate session" )( ret ) );
 		}
 
 	//////////////////////////////////
@@ -89,10 +100,12 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 	//////////////////////////////////
         
 		ret = hvSession->reset();
-		if ((ret != HVE_OK) && (ret != HVE_SCHEDULED)) {
-	        cb.fire("failed", ArgumentList( "Unable to reset session" )( ret ) );
+		if (ret == HVE_SCHEDULED) {
+	        cb.fire("succeed", ArgumentList("Session will reset promptly"));
+		} else if (ret == HVE_OK) {
+	        cb.fire("succeed", ArgumentList("Session resetd successfully"));
 		} else {
-	        cb.fire("succeed", ArgumentList("Session reseted successfully"));
+	        cb.fire("failed", ArgumentList( "Unable to reset session" )( ret ) );
 		}
 
 	//////////////////////////////////
@@ -100,10 +113,12 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 	//////////////////////////////////
         
 		ret = hvSession->close();
-		if ((ret != HVE_OK) && (ret != HVE_SCHEDULED)) {
-	        cb.fire("failed", ArgumentList( "Unable to close session" )( ret ) );
-		} else {
+		if (ret == HVE_SCHEDULED) {
+	        cb.fire("succeed", ArgumentList("Session will close promptly"));
+		} else if (ret == HVE_OK) {
 	        cb.fire("succeed", ArgumentList("Session closed successfully"));
+		} else {
+	        cb.fire("failed", ArgumentList( "Unable to close session" )( ret ) );
 		}
 
 	//////////////////////////////////

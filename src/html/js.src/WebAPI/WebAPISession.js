@@ -36,6 +36,9 @@ _NS_.WebAPISession = function( socket, session_id, init_callback ) {
 	this.__config = {};
 	this.__valid = true;
 
+	// The last RDP window
+	this.__lastRDPWindow = null;
+
 	// Init handler
 	this.__initCallback = init_callback;
 
@@ -161,6 +164,21 @@ _NS_.WebAPISession.prototype.handleEvent = function(data) {
 			this.__config["rdpURL"] = 
 				parts[0] + "@" + 
 				data['data'][0] + "x" + data['data'][1] + "x" + data['data'][2];
+
+			// Resize the window
+			if (this.__lastRDPWindow) {
+				try {
+
+					// Resize the RDP window when host is resized
+					this.__lastRDPWindow.resizeTo(
+						parseInt( data['data'][0] ),
+						parseInt( data['data'][1] )
+					);
+
+				} catch (e) {
+				}
+			}
+
 		}
 
 	}
@@ -272,6 +290,7 @@ _NS_.WebAPISession.prototype.setProperty = function(name, value) {
 }
 
 _NS_.WebAPISession.prototype.openRDPWindow = function(parameter, cb) {
+	var self = this;
 
 	// If we have the rdpURL in proerties, prefer that
 	// because it's not going to trigger the pop-up blockers
@@ -279,14 +298,14 @@ _NS_.WebAPISession.prototype.openRDPWindow = function(parameter, cb) {
 
 		// Open the RDP window
 		var parts = this.__config['rdpURL'].split("@");
-		_NS_.launchRDP( parts[0], parts[1] )
+		this.__lastRDPWindow = _NS_.launchRDP( parts[0], parts[1] )
 
 	} else {
 
 		// Otherwise request asynchronously the rdpURL
 		this.getAsync("rdpURL", function(info) {
 			var parts = info.split("@");
-			_NS_.launchRDP( parts[0], parts[1] )
+			self.__lastRDPWindow = _NS_.launchRDP( parts[0], parts[1] )
 		});		
 
 	}

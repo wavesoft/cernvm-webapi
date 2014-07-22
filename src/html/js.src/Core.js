@@ -46,6 +46,9 @@ _NS_.launchRDP = function( rdpURL, resolution ) {
     setTimeout(function() { w.focus() }, 100);
     w.focus();
 
+    // Return window for further processing
+    return w;
+
 }
 
 /**
