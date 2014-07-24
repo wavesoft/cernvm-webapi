@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="CernVM WebAPI" Language="1033" Version="2.0.3.0" Manufacturer="PH/SFT Group, CERN" UpgradeCode="70DAC5E8-46A4-4EF3-80B3-A103AE948436">
+	<Product Id="*" Name="CernVM WebAPI" Language="1033" Version="2.0.6.0" Manufacturer="PH/SFT Group, CERN" UpgradeCode="70DAC5E8-46A4-4EF3-80B3-A103AE948436">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
