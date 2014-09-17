@@ -356,7 +356,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 
 				// Create a tiny iframe for triggering the launch
 				var e = document.createElement('iframe'); 
-				e.src = WS_URI + "launch";
+				e.src = WS_URI + "//launch";
 				e.style.display="none"; 
 				document.body.appendChild(e);
 
