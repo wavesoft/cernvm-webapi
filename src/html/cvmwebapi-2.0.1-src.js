@@ -167,12 +167,18 @@ var HVF_GUEST_ADDITIONS = 4;
 var HVF_FLOPPY_IO = 8;
 var HVF_HEADFUL = 16;
 
+var F_NO_VIRTUALIZATION = 1;
+
 var SS_MISSING = 0,
     SS_AVAILABLE = 1,
     SS_POWEROFF = 2,
     SS_SAVED = 3,
     SS_PAUSED = 4,
-    SS_RUNNING = 5;
+    _stateNameFor = function(n){
+        return [
+            "missing", "available", "poweroff", "saved", "paused"
+        ][n];
+    };
 
 /* Daemon flags */
 var DF_SUSPEND = 1;
@@ -1427,6 +1433,23 @@ _NS_.WebAPISession.prototype.handleEvent = function(data) {
 		if (this.__initCallback) {
 			this.__initCallback();
 			this.__initCallback = null;
+		}
+
+	} else if (data['name'] == 'failure') {
+
+		// Handle serious failures
+		var flags = data['data'][0];
+
+		// Check for missing virtualization
+		if (flags & F_NO_VIRTUALIZATION != 0) {
+
+			// Display some information to the user
+			_NS_.UserInteraction.alert(
+				"Virtualization Failure",
+				"<p>The hypervisor was unable to use your hardware's virtualization capabilities. This happens either if you have an old hardware (more than 4 years old) or if the <strong>Virtualization Technology</strong> features is disabled from your <strong>BIOS</strong>.</p>" +
+				"<p>There are various articles on the internet on how to enable this option from your BIOS. <a href=\"http://www.sysprobs.com/disable-enable-virtualization-technology-bios\">You can read this article for example.</a></p>"
+				);
+			
 		}
 
 	} else if (data['name'] == 'stateChanged') {
