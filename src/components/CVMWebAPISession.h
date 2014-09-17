@@ -49,6 +49,7 @@ public:
 		// Handle state changes
         hStateChanged = hvSession->on( "stateChanged", boost::bind( &CVMWebAPISession::__cbStateChanged, this, _1 ) );
         hResChanged = hvSession->on( "resolutionChanged", boost::bind( &CVMWebAPISession::__cbResolutionChanged, this, _1 ) );
+        hFailure = hvSession->on( "failure", boost::bind( &CVMWebAPISession::__cbFailure, this, _1 ) );
 
         // Enable progress feedback to the HVSessionPtr FSM.
         //
@@ -89,6 +90,7 @@ public:
 		// Cleanup & abort libcernvm session threads
 		hvSession->off( "stateChanged", hStateChanged );
 		hvSession->off( "resolutionChanged", hResChanged );
+		hvSession->off( "resolutionChanged", hFailure );
 
 		// Close session
 		core->hypervisor->sessionClose( hvSession );
@@ -144,6 +146,7 @@ private:
 	 */
 	void __cbStateChanged( VariantArgList& args );
 	void __cbResolutionChanged( VariantArgList& args );
+	void __cbFailure( VariantArgList& args );
 
 	/*
 	 * Periodic jobs thread
@@ -174,6 +177,11 @@ private:
 	 * Hook slots (used for unbinding the hooks at destruction)
 	 */
 	NamedEventSlotPtr 	hResChanged;
+
+	/**
+	 * Hook slots (used for unbinding the hooks at destruction)
+	 */
+	NamedEventSlotPtr 	hFailure;
 
 	/**
 	 * Callback forwarding object

@@ -300,6 +300,26 @@ void CVMWebAPISession::periodicJobsThread() {
 }
 
 /**
+ * A failure occured on hypervisor
+ */
+void CVMWebAPISession::__cbFailure( VariantArgList& args ) {
+	CRASH_REPORT_BEGIN;
+
+	// Check if we switched to a state where API is not available any more
+	int failureFlags = boost::get<int>(args[0]);
+
+	// Forward the failure to the UI
+	connection.sendEvent( "failure", args, uuid_str );
+
+	// Poweroff the vm in particular cases
+	if ( (failureFlags & HFL_NO_VIRTUALIZATION != 0) ) {
+		hvSession->stop();
+	}
+
+	CRASH_REPORT_END;
+}
+
+/**
  * Handle state changed events and forward them if needed to the UI
  */
 void CVMWebAPISession::__cbStateChanged( VariantArgList& args ) {

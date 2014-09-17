@@ -37,12 +37,18 @@ var HVF_GUEST_ADDITIONS = 4;
 var HVF_FLOPPY_IO = 8;
 var HVF_HEADFUL = 16;
 
+var F_NO_VIRTUALIZATION = 1;
+
 var SS_MISSING = 0,
     SS_AVAILABLE = 1,
     SS_POWEROFF = 2,
     SS_SAVED = 3,
     SS_PAUSED = 4,
-    SS_RUNNING = 5;
+    _stateNameFor = function(n){
+        return [
+            "missing", "available", "poweroff", "saved", "paused"
+        ][n];
+    };
 
 /* Daemon flags */
 var DF_SUSPEND = 1;
