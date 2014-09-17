@@ -162,7 +162,7 @@ _NS_.WebAPISession.prototype.handleEvent = function(data) {
 			_NS_.UserInteraction.alert(
 				"Virtualization Failure",
 				"<p>The hypervisor was unable to use your hardware's virtualization capabilities. This happens either if you have an old hardware (more than 4 years old) or if the <strong>Virtualization Technology</strong> features is disabled from your <strong>BIOS</strong>.</p>" +
-				"<p>There are various articles on the internet on how to enable this option from your BIOS. <a href=\"http://www.sysprobs.com/disable-enable-virtualization-technology-bios\">You can read this article for example.</a></p>"
+				"<p>There are various articles on the internet on how to enable this option from your BIOS. <a target=\"_blank\" href=\"http://www.sysprobs.com/disable-enable-virtualization-technology-bios\">You can read this article for example.</a></p>"
 				);
 			
 		}
