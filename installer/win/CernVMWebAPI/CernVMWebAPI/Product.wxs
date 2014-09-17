@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="CernVM WebAPI" Language="1033" Version="2.0.6.0" Manufacturer="PH/SFT Group, CERN" UpgradeCode="70DAC5E8-46A4-4EF3-80B3-A103AE948436">
+	<Product Id="*" Name="CernVM WebAPI" Language="1033" Version="2.0.7.0" Manufacturer="PH/SFT Group, CERN" UpgradeCode="70DAC5E8-46A4-4EF3-80B3-A103AE948436">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
@@ -10,7 +10,15 @@
 			<ComponentGroupRef Id="ProductComponents" />
 			<ComponentGroupRef Id="ProductShortcuts" />
 		</Feature>
-                    
+
+    <DirectoryRef Id="TARGETDIR">
+      <Merge Id="VCRedist" SourceFile="C:\Program Files (x86)\Common Files\Merge Modules\Microsoft_VC110_CRT_x86.msm" DiskId="1" Language="0"/>      
+    </DirectoryRef>
+    
+    <Feature Id="VCRedist" Title="Visual C++ 11.0 Runtime" AllowAdvertise="no" Display="hidden" Level="1">
+      <MergeRef Id="VCRedist"/>
+    </Feature>                    
+    
     <!-- Launch WebAPI When it's finished -->
     <CustomAction Id="RunWebAPI"
                   Directory="INSTALLFOLDER"
