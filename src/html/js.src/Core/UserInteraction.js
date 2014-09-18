@@ -14,11 +14,18 @@ var UserInteraction = _NS_.UserInteraction = function( socket ) {
 	this.socket = socket;
 	this.onResize = null;
 	window.addEventListener('resize', function() {
-		console.log("RESIZE!");
 		if (self.onResize) self.onResize();
 	});
 };
 
+/**
+ * Hide a particular interaction scren
+ */
+UserInteraction.hideScreen = function(elm) {
+	try {
+		document.body.removeChild(elm);
+	} catch(e) { }
+}
 
 /**
  * Hide the active interaction screen
@@ -271,6 +278,10 @@ UserInteraction.displayLicenseWindow = function( title, body, isURL, cbAccept, c
 		cBody.height = 450;
 		cBody.frameBorder = 0;
 	} else {
+
+		// Add line breaks on newlines
+		body = body.replace( /\n/g,"<br />\n" );
+
 		cBody = document.createElement('div');
 		cBody.width = "100%";
 		cBody.style.height = '450px';
@@ -311,6 +322,8 @@ UserInteraction.displayLicenseWindow = function( title, body, isURL, cbAccept, c
 	   if (cbDecline) cbDecline();
 	};
 	
+	// Return window
+	return win;
 }
 
 /** 
@@ -354,6 +367,9 @@ UserInteraction.confirm = function( title, body, callback ) {
 		}
 	});
 
+	// Return window
+	return win;
+
 }
 
 /** 
@@ -381,6 +397,31 @@ UserInteraction.alert = function( title, body, callback ) {
 		'footer': cButtons, 
 		'icon'  : ICON_ALERT
 	});
+
+	// Return window
+	return win;
+
+}
+
+/** 
+ * Display occupied status message
+ */
+UserInteraction.occupied = function( title, body ) {
+	var cBody = document.createElement('div');
+
+	// Prepare body
+	cBody.innerHTML = body;
+	cBody.style.width = '100%';
+
+	// Display window
+	var win = UserInteraction.createFramedWindow({
+		'body'  : cBody, 
+		'header': title, 
+		'icon'  : ICON_INSTALL
+	});
+
+	// Return window instance
+	return win;
 
 }
 

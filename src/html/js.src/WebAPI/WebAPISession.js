@@ -171,6 +171,33 @@ _NS_.WebAPISession.prototype.handleEvent = function(data) {
 
 		this.__state = data['data'][0];
 
+	} else if (data['name'] == 'lengthyTask') {
+
+		// Get event data
+		var msg = data['data'][0],
+			isLengthy = data['data'][1];
+
+		// Handle lenghy progress
+		if (isLengthy) {
+
+			// Display occupied window
+			if (!_NS_.occupiedWindow)
+				_NS_.occupiedWindow = _NS_.UserInteraction.occupied(
+					"Installation in progress",
+					"<p>Pay attention on the the pop-up windows and follow the on-screen instructions.</p>"+
+					"<p>When completed, please close any open installation window in order to continue.</p>"
+					);
+
+		} else {
+
+			// Hide occupied window
+			if (_NS_.occupiedWindow) {
+				_NS_.UserInteraction.hideScreen(_NS_.occupiedWindow);
+				_NS_.occupiedWindow = null;
+			}
+
+		}
+
 	} else if (data['name'] == 'resolutionChanged') {
 
 		// Update resolution in the RDP URL

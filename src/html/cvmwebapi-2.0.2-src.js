@@ -1,4 +1,4 @@
-window.CVM={'version':'2.0.1'};(function(_NS_) {
+window.CVM={'version':'2.0.2'};(function(_NS_) {
 var ICON_ALERT = "data:image/gif;base64,R0lGODlhIAAgALMAAGZmZnl5eczMzJ+fn////7Ozs4yMjGtra+Li4nFxcaampgAAAAAAAAAAAAAAAAAAACH5BAEHAAQALAAAAAAgACAAAASjkMhJq704681JKV04JYkYDgAwmBuSpgibGS9gyJdQpwJeBTtAwDcpBFMgYuJ1WKZKPlRqSACmVjLXK2l8xVi0raSbupl0Ne6uJ7K+zOEXtUOWS9zijrNGxT87UjtURyothAASh18YcUGJhGY5hzZ7R2wWfpNHcxR1lmiHSRSVQQoSCpNQE4GQEo1HWARamgcHmjCut7pvBKC7ugKZv4ecRMYsEQA7";
 var ICON_CONFIRM = "data:image/gif;base64,R0lGODlhIAAgAMQAAGZmZnt7e8TExK2treXl5dXV1Wtra4qKivj4+L29vd7e3pGRke/v78zMzLW1tYSEhHR0dJmZmQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEHAAgALAAAAAAgACAAAAXUICKOZGmeKMoUguMIBZPOY3IAeI4fCX0KEJ0wBxH4RouhMrfwEQLLKCBAmEGl0UAqmRUQBsumSYBtjG5KYykoVYwiS0gpgQUsZAVp71zHsaMHIwx9hAAyCHmACQoEDn9RBSJkSweMI5NSag51VSJ1DiKbWJ0In5JYBiOJmSKrYSNgWJEIg3ojV1KHCGhLnbVSgTVRciINdXsjjzpaxVjEJJhDbiIKCrhCaiVcQwEJBAoJD68o14VTM0/mOFQ+231iR0B1RUdzvEI89SosLjC6+gBnhAAAOw==";
 var ICON_INSTALL = "data:image/gif;base64,R0lGODlhIAAgALMAAGZmZpOTk93d3Wtra8zMzLW1tXNzc3p6eu/v78XFxYODg9bW1qWlpejo6Pj4+IqKiiH5BAEHAA4ALAAAAAAgACAAAATr0MlJq7046827p4QBGMTHicBoVohApTAlIN4yjE1TwGmRH4DBooMa3XipQXFA0wiQ0ChguAHyFCUJQYE8dBqogY8BPDB0R0Pje0zYkMJEcs3ZAQKII7zx6GlCPAsMKQcuC1YMBDwkF0UpDih0DgspBghIBhdQDjcDEgEOl0EOmxaOAJApLlqVojCZFoeBgwAHQ4AAiTy2GnZ4p619AAUdeSlupwYLckFNG2BJBQgMIgYMCAVpkhpWMFg0CFuYHE9S5lMnr3o8SjBM5DcHDdhI0g1AQh+rEkgyziupKgHMsKAalYEIEypcyHBDBAA7";
@@ -752,11 +752,18 @@ var UserInteraction = _NS_.UserInteraction = function( socket ) {
 	this.socket = socket;
 	this.onResize = null;
 	window.addEventListener('resize', function() {
-		console.log("RESIZE!");
 		if (self.onResize) self.onResize();
 	});
 };
 
+/**
+ * Hide a particular interaction scren
+ */
+UserInteraction.hideScreen = function(elm) {
+	try {
+		document.body.removeChild(elm);
+	} catch(e) { }
+}
 
 /**
  * Hide the active interaction screen
@@ -1009,6 +1016,10 @@ UserInteraction.displayLicenseWindow = function( title, body, isURL, cbAccept, c
 		cBody.height = 450;
 		cBody.frameBorder = 0;
 	} else {
+
+		// Add line breaks on newlines
+		body = body.replace( /\n/g,"<br />\n" );
+
 		cBody = document.createElement('div');
 		cBody.width = "100%";
 		cBody.style.height = '450px';
@@ -1049,6 +1060,8 @@ UserInteraction.displayLicenseWindow = function( title, body, isURL, cbAccept, c
 	   if (cbDecline) cbDecline();
 	};
 	
+	// Return window
+	return win;
 }
 
 /** 
@@ -1092,6 +1105,9 @@ UserInteraction.confirm = function( title, body, callback ) {
 		}
 	});
 
+	// Return window
+	return win;
+
 }
 
 /** 
@@ -1119,6 +1135,31 @@ UserInteraction.alert = function( title, body, callback ) {
 		'footer': cButtons, 
 		'icon'  : ICON_ALERT
 	});
+
+	// Return window
+	return win;
+
+}
+
+/** 
+ * Display occupied status message
+ */
+UserInteraction.occupied = function( title, body ) {
+	var cBody = document.createElement('div');
+
+	// Prepare body
+	cBody.innerHTML = body;
+	cBody.style.width = '100%';
+
+	// Display window
+	var win = UserInteraction.createFramedWindow({
+		'body'  : cBody, 
+		'header': title, 
+		'icon'  : ICON_INSTALL
+	});
+
+	// Return window instance
+	return win;
 
 }
 
@@ -1455,6 +1496,33 @@ _NS_.WebAPISession.prototype.handleEvent = function(data) {
 	} else if (data['name'] == 'stateChanged') {
 
 		this.__state = data['data'][0];
+
+	} else if (data['name'] == 'lengthyTask') {
+
+		// Get event data
+		var msg = data['data'][0],
+			isLengthy = data['data'][1];
+
+		// Handle lenghy progress
+		if (isLengthy) {
+
+			// Display occupied window
+			if (!_NS_.occupiedWindow)
+				_NS_.occupiedWindow = _NS_.UserInteraction.occupied(
+					"Installation in progress",
+					"<p>Pay attention on the the pop-up windows and follow the on-screen instructions.</p>"+
+					"<p>When completed, please close any open installation window in order to continue.</p>"
+					);
+
+		} else {
+
+			// Hide occupied window
+			if (_NS_.occupiedWindow) {
+				_NS_.UserInteraction.hideScreen(_NS_.occupiedWindow);
+				_NS_.occupiedWindow = null;
+			}
+
+		}
 
 	} else if (data['name'] == 'resolutionChanged') {
 
