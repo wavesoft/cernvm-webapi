@@ -71,7 +71,7 @@ public:
 	/**
 	 * Destructor
 	 */
-	~CVMWebAPISession() {
+	virtual ~CVMWebAPISession() {
 	    CRASH_REPORT_BEGIN;
 		CVMWA_LOG("Debug", "Destructing CVMWebAPISession");
 

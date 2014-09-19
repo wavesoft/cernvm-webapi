@@ -41,7 +41,7 @@ public:
 	/**
 	 * Disconnect from the event slot on destruction
 	 */	
-	~DisposableDelegate() {
+	virtual ~DisposableDelegate() {
 		cb->offAnyEvent( slot );
 	}
 

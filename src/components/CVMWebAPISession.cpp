@@ -42,6 +42,9 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 	        cb.fire("failed", ArgumentList( "Unable to start session" )( ret ) );
 		}
 
+		// Send state variables in case they were modified by hypervisor code
+		sendStateVariables();
+
 	//////////////////////////////////
 	} else if (action == "stop") {
 	//////////////////////////////////
@@ -54,6 +57,9 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 		} else {
 	        cb.fire("failed", ArgumentList( "Unable to stop session" )( ret ) );
 		}
+
+		// Send state variables in case they were modified by hypervisor code
+		sendStateVariables();
 
 	//////////////////////////////////
 	} else if (action == "pause") {
@@ -68,6 +74,8 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 	        cb.fire("failed", ArgumentList( "Unable to pause session" )( ret ) );
 		}
 
+		// Send state variables in case they were modified by hypervisor code
+		sendStateVariables();
 
 	//////////////////////////////////
 	} else if (action == "resume") {
@@ -82,6 +90,9 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 	        cb.fire("failed", ArgumentList( "Unable to resume session" )( ret ) );
 		}
 
+		// Send state variables in case they were modified by hypervisor code
+		sendStateVariables();
+
 	//////////////////////////////////
 	} else if (action == "hibernate") {
 	//////////////////////////////////
@@ -94,6 +105,9 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 		} else {
 	        cb.fire("failed", ArgumentList( "Unable to hibernate session" )( ret ) );
 		}
+
+		// Send state variables in case they were modified by hypervisor code
+		sendStateVariables();
 
 	//////////////////////////////////
 	} else if (action == "reset") {
@@ -108,6 +122,9 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 	        cb.fire("failed", ArgumentList( "Unable to reset session" )( ret ) );
 		}
 
+		// Send state variables in case they were modified by hypervisor code
+		sendStateVariables();
+
 	//////////////////////////////////
 	} else if (action == "close") {
 	//////////////////////////////////
@@ -120,6 +137,9 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 		} else {
 	        cb.fire("failed", ArgumentList( "Unable to close session" )( ret ) );
 		}
+
+		// Send state variables in case they were modified by hypervisor code
+		sendStateVariables();
 
 	//////////////////////////////////
 	} else if (action == "get") {
@@ -182,6 +202,9 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 			hvSession->parameters->set("cernvmFlavor", keyValue);
 		} else if (keyName == "executionCap") {
 			hvSession->parameters->set("executionCap", keyValue);
+
+			// Try to apply execution cap right-away
+
 		} else if (keyName == "flags") {
 			hvSession->parameters->set("flags", keyValue);
 		}
