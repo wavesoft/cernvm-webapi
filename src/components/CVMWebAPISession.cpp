@@ -146,8 +146,8 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 			keyValue = hvSession->parameters->get("cpus", "1");
         } else if (keyName == "disk") {
 			keyValue = hvSession->parameters->get("disk", "1024");
-		} else if (keyName == "ram") {
-			keyValue = hvSession->parameters->get("ram", "512");
+		} else if (keyName == "memory") {
+			keyValue = hvSession->parameters->get("memory", "512");
 		} else if (keyName == "cernvmVersion") {
 			keyValue = hvSession->parameters->get("cernvmVersion", "1.17-11");
 		} else if (keyName == "cernvmFlavor") {
@@ -174,8 +174,8 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 			hvSession->parameters->set("cpus", keyValue);
         } else if (keyName == "disk") {
 			hvSession->parameters->set("disk", keyValue);
-		} else if (keyName == "ram") {
-			hvSession->parameters->set("ram", keyValue);
+		} else if (keyName == "memory") {
+			hvSession->parameters->set("memory", keyValue);
 		} else if (keyName == "cernvmVersion") {
 			hvSession->parameters->set("cernvmVersion", keyValue);
 		} else if (keyName == "cernvmFlavor") {
@@ -401,7 +401,7 @@ void CVMWebAPISession::sendStateVariables() {
 	config["ip"] = hvSession->parameters->get("ip", "");
 	config["cpus"] = hvSession->parameters->getNum<int>("cpus", 1);
 	config["disk"] = hvSession->parameters->getNum<int>("disk", 1024);
-	config["ram"] = hvSession->parameters->getNum<int>("ram", 512);
+	config["memory"] = hvSession->parameters->getNum<int>("memory", 512);
 	config["cernvmVersion"] = hvSession->parameters->get("cernvmVersion", "1.17-11");
 	config["cernvmFlavor"] = hvSession->parameters->get("cernvmFlavor", "prod");
 	config["executionCap"] = hvSession->parameters->getNum<int>("executionCap", 100);

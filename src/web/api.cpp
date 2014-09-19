@@ -174,6 +174,7 @@ void WebsocketAPI::sendEvent( const std::string& event, const VariantArgList& ar
 	root["data"] = data;
 
 	// Compile JSON response
-	sendRawData( writer.write(root) );
+    std::string jsonResponse = writer.write(root);
+	sendRawData( jsonResponse );
 	CRASH_REPORT_END;
 }

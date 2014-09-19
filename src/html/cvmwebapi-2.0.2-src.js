@@ -1375,7 +1375,7 @@ _NS_.WebAPISession = function( socket, session_id, init_callback ) {
         "state"         :   {   get: function () { if (!this.__valid) return u; return this.__state;                 		 } },
         "stateName"     :   {   get: function () { if (!this.__valid) return u; return _stateNameFor(this.__state );  		 } },
         "ip"            :   {   get: function () { if (!this.__valid) return u; return this.__config['ip'];                  } },
-        "ram"           :   {   get: function () { if (!this.__valid) return u; return this.__config['ram'];                 } },
+        "memory"        :   {   get: function () { if (!this.__valid) return u; return this.__config['memory'];              } },
         "disk"          :   {   get: function () { if (!this.__valid) return u; return this.__config['disk'];                } },
         "apiURL"        :   {   get: function () { if (!this.__valid) return u; return this.__config['apiURL'];              } },
         "rdpURL"        :   {   get: function () { if (!this.__valid) return u; return this.__config['rdpURL'];              } },
