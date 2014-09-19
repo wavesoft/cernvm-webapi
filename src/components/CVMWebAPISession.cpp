@@ -204,6 +204,7 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 			hvSession->parameters->set("executionCap", keyValue);
 
 			// Try to apply execution cap right-away
+			hvSession->setExecutionCap( ston<int>(keyValue) );
 
 		} else if (keyName == "flags") {
 			hvSession->parameters->set("flags", keyValue);
