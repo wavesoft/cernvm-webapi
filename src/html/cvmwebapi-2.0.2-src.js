@@ -1376,6 +1376,7 @@ _NS_.WebAPISession = function( socket, session_id, init_callback ) {
         "stateName"     :   {   get: function () { if (!this.__valid) return u; return _stateNameFor(this.__state );  		 } },
         "ip"            :   {   get: function () { if (!this.__valid) return u; return this.__config['ip'];                  } },
         "memory"        :   {   get: function () { if (!this.__valid) return u; return this.__config['memory'];              } },
+        "cpus"          :   {   get: function () { if (!this.__valid) return u; return this.__config['cpus'];                } },
         "disk"          :   {   get: function () { if (!this.__valid) return u; return this.__config['disk'];                } },
         "apiURL"        :   {   get: function () { if (!this.__valid) return u; return this.__config['apiURL'];              } },
         "rdpURL"        :   {   get: function () { if (!this.__valid) return u; return this.__config['rdpURL'];              } },
@@ -1425,7 +1426,7 @@ _NS_.WebAPISession = function( socket, session_id, init_callback ) {
                               }, 
         
         /* A smarter way of accessing flags */
-          "flags"         :   {   get: function () {
+        "flags"         :   {   get: function () {
                                     // Return a smart object with properties that when changed
                                     // they automatically update the session object.
                                     if (!this.__valid) return u; 
@@ -1476,6 +1477,9 @@ _NS_.WebAPISession.prototype.handleEvent = function(data) {
 			this.__initCallback();
 			this.__initCallback = null;
 		}
+
+		// Don't forward
+		return;
 
 	} else if (data['name'] == 'failure') {
 
