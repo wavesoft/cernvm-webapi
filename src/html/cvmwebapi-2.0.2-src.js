@@ -1619,7 +1619,7 @@ _NS_.WebAPISession.prototype.getAsync = function(parameter, cb) {
 		"key": parameter
 	},{
 		onSucceed : function( value ) {
-			cb(value);
+			if (cb) cb(value);
 		}
 	})
 }
@@ -1632,7 +1632,7 @@ _NS_.WebAPISession.prototype.setAsync = function(parameter, value, cb) {
 		"value": value
 	},{
 		onSucceed : function() {
-			cb();
+			if (cb) cb();
 		}
 	})
 }
