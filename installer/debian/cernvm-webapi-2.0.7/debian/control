@@ -4,6 +4,7 @@ Priority: optional
 Maintainer: Ioannis Charalampidis <ioannis.charalampidis@cern.ch>
 Build-Depends: build-essential, libicu-dev
 Homepage: http://www.cernvm.cern.ch
+Architecture: amd64
 
 Package: cernvm-webapi
 Architecture: any
