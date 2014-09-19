@@ -503,37 +503,49 @@ void DaemonConnection::requestSession_thread( boost::thread ** thread, const std
             // Newline-specific split
             std::string msg = "The website " + domain + " is trying to allocate a " + core.get_hv_name() + " Virtual Machine \"" + vmcpData->get("name") + "\". This website is validated and trusted by CernVM." _EOL _EOL "Do you want to continue?";
 
-            // Prompt user using the currently active userInteraction 
-            if (userInteraction->confirm("New CernVM WebAPI Session", msg) != UI_OK) {
+            // Interaction might be interrupted
+            try {
 
-                // Check if user navigated away with the 
-                // interaction prompt in place
-                if (userInteraction->aborted) {
+                // Prompt user using the currently active userInteraction 
+                if (userInteraction->confirm("New CernVM WebAPI Session", msg) != UI_OK) {
+
+                    // Check if user navigated away with the 
+                    // interaction prompt in place
+                    if (userInteraction->aborted) {
+                        runningThreads.remove_thread(thisThread);
+                        userInteraction->abortHandled();
+                        return;
+                    }
+
+                    // Manage throttling 
+                    if ((getMillis() - this->throttleTimestamp) <= THROTTLE_TIMESPAN) {
+                        if (++this->throttleDenies >= THROTTLE_TRIES)
+                            this->throttleBlock = true;
+                    } else {
+                        this->throttleDenies = 1;
+                        this->throttleTimestamp = getMillis();
+                    }
+
+                    // Fire error
+                    cb.fire("failed", ArgumentList( "User denied the allocation of new session" )( HVE_ACCESS_DENIED ) );
                     runningThreads.remove_thread(thisThread);
-                    userInteraction->abortHandled();
                     return;
-                }
-
-                // Manage throttling 
-                if ((getMillis() - this->throttleTimestamp) <= THROTTLE_TIMESPAN) {
-                    if (++this->throttleDenies >= THROTTLE_TRIES)
-                        this->throttleBlock = true;
+                
                 } else {
-                    this->throttleDenies = 1;
-                    this->throttleTimestamp = getMillis();
+                
+                    // Reset throttle
+                    this->throttleDenies = 0;
+                    this->throttleTimestamp = 0;
+                
                 }
 
-                // Fire error
-                cb.fire("failed", ArgumentList( "User denied the allocation of new session" )( HVE_ACCESS_DENIED ) );
+            } catch (boost::thread_interrupted &e) {
+
+                // Thread entered cleanup state before finishing with the prompt.
+                // Session is not yet open, we are safe to exit.
                 runningThreads.remove_thread(thisThread);
                 return;
-            
-            } else {
-            
-                // Reset throttle
-                this->throttleDenies = 0;
-                this->throttleTimestamp = 0;
-            
+
             }
         
         }
@@ -578,6 +590,10 @@ void DaemonConnection::requestSession_thread( boost::thread ** thread, const std
         // Enable periodic jobs thread after stateChanged is sent
         // (This ensures that apiStateChanged is fired AFTER stateChanged event is sent)
         cvmSession->enablePeriodicJobs(true);
+
+    } catch (boost::thread_interrupted &e) {
+
+        // Interrupted
 
     } catch (...) {
 
