@@ -53,6 +53,7 @@ _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
 			console.error("Failed to request session! "+msg);
 
 			// Fire the failed callback
+			self.__fire("failed", [msg]);
 			if (cbFail) cbFail(msg, code);
 
 		},

@@ -40,7 +40,7 @@ _NS_.Socket.prototype = Object.create( _NS_.EventDispatcher.prototype );
 _NS_.Socket.prototype.__handleClose = function() {
 
 	// Fire the disconnected event
-	this.__fire("disconnected");
+	this.__fire("disconnected", []);
 
 	// Hide any active user interaction - it's now useless
 	UserInteraction.hideInteraction();
