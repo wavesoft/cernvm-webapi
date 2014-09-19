@@ -403,7 +403,7 @@ _NS_.Socket.prototype = Object.create( _NS_.EventDispatcher.prototype );
 _NS_.Socket.prototype.__handleClose = function() {
 
 	// Fire the disconnected event
-	this.__fire("disconnected");
+	this.__fire("disconnected", []);
 
 	// Hide any active user interaction - it's now useless
 	UserInteraction.hideInteraction();
@@ -1306,6 +1306,7 @@ _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
 			console.error("Failed to request session! "+msg);
 
 			// Fire the failed callback
+			self.__fire("failed", [msg]);
 			if (cbFail) cbFail(msg, code);
 
 		},
