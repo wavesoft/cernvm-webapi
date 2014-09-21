@@ -24,7 +24,7 @@
 									<key>GID</key>
 									<integer>20</integer>
 									<key>PATH</key>
-									<string>../../build/Release/CernVM WebAPI.app</string>
+									<string>../../build_osx_10.8/Release/CernVM WebAPI.app</string>
 									<key>PATH_TYPE</key>
 									<integer>1</integer>
 									<key>PERMISSIONS</key>
