@@ -114,7 +114,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
     bool launchURL = isEmpty(lpCmdLine);
 
     // Check if we were launched with a 'setup' argument
-    bool launchedBySetup = (lstrcmp(lpCmdLine, L"setup") == 0);
+    bool launchedBySetup = (lstrcmp(lpCmdLine, "setup") == 0);
 
     // Start server
     long lastIdle = getMillis();
