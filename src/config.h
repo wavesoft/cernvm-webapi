@@ -25,6 +25,9 @@
 // The CernVM WebAPI Version
 #define CERNVM_WEBAPI_VERSION "2.0.7"
 
+// The minimum required hypervisor version
+#define CERNVM_WEBAPI_MIN_HV_VERSION "4.1.0"
+
 // The port where the cernvm webapi is running
 #define CERNVM_WEBAPI_PORT 	  5624
 

@@ -118,7 +118,7 @@ void DaemonConnection::handleAction( const std::string& id, const std::string& a
 
             // Check if a hypervisor is installed. If not,
             // use the installer thread.
-            if (core.hypervisor) {
+            if (core.hypervisor && (core.hypervisor->version.compareStr(CERNVM_WEBAPI_MIN_HV_VERSION) <= 0)) {
 
                 // Try to open session
                 boost::thread* t = NULL;
@@ -254,14 +254,23 @@ void DaemonConnection::installHV_andRequestSession_thread( boost::thread ** thre
     try {
 
         boost::thread *thisThread = *thread;
+        CVMWA_LOG("Debug", "installHV_andRequestSession_thread: " << thisThread);
 
         // Create a progress feedback
         CVMCallbackFw cb( *this, eventID );
         FiniteTaskPtr pTasks = boost::make_shared<FiniteTask>();
         cb.listen( pTasks );
 
+        // Pick a message to prompt
+        string pTitle = "Hypervisor required";
+        string pMessage = "For this website to work you must have a hypervisor installed in your system. Would you like us to install VirtualBox for you?";
+        if (core.hypervisor->version.compareStr(CERNVM_WEBAPI_MIN_HV_VERSION) > 0) {
+            pTitle = "Hypervisor too old";
+            pMessage = "It seems that your current VirtualBox installation is too old and not properly supported by the CernVM WebAPI. Would you like us to install the latest version for you?";
+        }
+
         // Prompt the user first
-        if (userInteraction->confirm("Hypervisor required", "For this website to work you must have a hypervisor installed in your system. Would you like us to install VirtualBox for you?") != UI_OK) {
+        if (userInteraction->confirm(pTitle, pMessage) != UI_OK) {
             cb.fire("failed", ArgumentList( "You must have a hypervisor installed in your system to continue." )( HVE_USAGE_ERROR ));
             runningThreads.remove_thread(thisThread);
             installInProgress = false;
@@ -304,9 +313,17 @@ void DaemonConnection::installHV_andRequestSession_thread( boost::thread ** thre
 
         // Was the installation successful? Start requestSession thread
         if (core.hypervisor) {
-            boost::thread* t = NULL;
-            t = new boost::thread( boost::bind( &DaemonConnection::requestSession_thread, this, &t, eventID, vmcpURL ) );
-            runningThreads.add_thread(t);
+            
+            // Load stored sessions
+            core.hypervisor->loadSessions();
+
+            // Request session in the same thread
+            installInProgress = false;
+            this->requestSession_thread( &thisThread, eventID, vmcpURL );
+
+            // (Thread will be removed from the pool from within the requestSession)
+            return;
+
         } else {
             cb.fire("failed", ArgumentList( "The hypervisor isntallation completed but we were not able to detect it! Please try again later or try to re-install it manually." )( HVE_USAGE_ERROR ));
             runningThreads.remove_thread(thisThread);
@@ -338,7 +355,7 @@ void DaemonConnection::requestSession_thread( boost::thread ** thread, const std
 
     // Create the object where we can forward the events
     CVMCallbackFw cb( *this, eventID );
-    std::cout << "Thread: " << thisThread << std::endl;
+    CVMWA_LOG("Debug", "requestSession_thread: " << thisThread);
 
     // Block requests when reached throttled state
     if (this->throttleBlock) {
