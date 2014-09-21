@@ -18,14 +18,14 @@
  * Initialize variables
  */
 - (id)init {
-    self = [super init];
-    if (self) {
-    	self->launchedByURL = false;
-    	self->launchedBySetup = false;
-    	self->focusOnActiate = false;
-    	self->usedLauchURL = false;
-    }
-    return self;
+	self = [super init];
+	if (self) {
+		self->launchedByURL = false;
+		self->launchedBySetup = false;
+		self->focusOnActiate = false;
+		self->usedLauchURL = false;
+	}
+	return self;
 }
 
 /**
@@ -51,7 +51,7 @@
 #ifdef CRASH_REPORTING
 	crashReportInit();
 #endif
-    initSysExec();
+	initSysExec();
 	DomainKeystore::Initialize();
 
 	// Add some extra crash-report information
@@ -183,10 +183,13 @@
 /**
  * Disable launching URL (same effect as launchedByURL)
  */
-- (void)dontLaunchURL
+- (void)markAsSetup
 {
 	// Mark as launched by URL (therefore we don't have to launch the URL again)
 	launchedByURL = true;
+	// Mark as launched by setup
+	launchedBySetup = true;
+	
 }
 
 /**
@@ -194,10 +197,6 @@
  */
 - (void)startReap
 {
-
-	// Dont' start server reap if we launched by setup
-	if (launchedBySetup) return;
-
 	// Reap timer that cleans-up plugin instances
 	reapTimer = [NSTimer 
 		scheduledTimerWithTimeInterval:5
@@ -213,8 +212,21 @@
 - (void)serverReap
 {
 	if (!webserver->hasLiveConnections()) {
+
+		// Dont' reap server if we started by setup
+		if (launchedBySetup) {
+			return;
+		}
+
 		NSLog(@"Reaping server because of no connections");
 		[NSApp terminate: nil];
+	} else {
+
+		// The moment we got an active connection, we are allowed
+		// to dismiss the process. Therefore reset any possible
+		// launchedBySetup flag
+		launchedBySetup = false;
+		
 	}
 }
 
@@ -273,8 +285,8 @@
 	// Start core cleanups
 	core->shutdownCleanup();
 
-    // Abory any lingering sysExec commands
-    abortSysExec();
+	// Abory any lingering sysExec commands
+	abortSysExec();
 
 	// Destruct webserver components
 	delete webserver;

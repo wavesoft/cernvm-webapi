@@ -75,7 +75,7 @@
 /**
  * Prohibit launching a URL At open
  */
-- (void)dontLaunchURL;
+- (void)markAsSetup;
 
 /**
  * Callback when a URL is requested
