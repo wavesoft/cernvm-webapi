@@ -41,6 +41,9 @@
     @private bool           focusOnActiate;
     // Flag that defines if the URL was launched once
     @private bool           usedLauchURL;
+    // Flag that denotes that the URL was started by the installer
+    // this should disable all the timers
+    @private bool           launchedBySetup;
 
 }
 

@@ -113,6 +113,9 @@ int WINAPI WinMain(HINSTANCE hInstance,
     // Check if we should launch a URL
     bool launchURL = isEmpty(lpCmdLine);
 
+    // Check if we were launched with a 'setup' argument
+    bool launchedBySetup = (lstrcmp(lpCmdLine, L"setup") == 0);
+
     // Start server
     long lastIdle = getMillis();
     long lastCronTime = lastIdle;
@@ -123,11 +126,18 @@ int WINAPI WinMain(HINSTANCE hInstance,
         // Update idle timer when we have connections
         if (webserver->hasLiveConnections()) {
             lastIdle = now;
+
+            // The moment we got an active connection, we are allowed
+            // to dismiss the process. Therefore reset any possible
+            // launchedBySetup flag
+            launchedBySetup = false;
+
         }
 
         // Exit if we are idle for 10 seconds
         else if (now - lastIdle > 10000) {
-            break;
+            // .. but not if we were launched by setup
+            if (!launchedBySetup) break;
         }
 
         // If we have to launch a URL, do it after the first poll

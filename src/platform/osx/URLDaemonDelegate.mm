@@ -21,6 +21,7 @@
     self = [super init];
     if (self) {
     	self->launchedByURL = false;
+    	self->launchedBySetup = false;
     	self->focusOnActiate = false;
     	self->usedLauchURL = false;
     }
@@ -193,6 +194,10 @@
  */
 - (void)startReap
 {
+
+	// Dont' start server reap if we launched by setup
+	if (launchedBySetup) return;
+
 	// Reap timer that cleans-up plugin instances
 	reapTimer = [NSTimer 
 		scheduledTimerWithTimeInterval:5
