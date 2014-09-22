@@ -266,7 +266,7 @@ void DaemonConnection::installHV_andRequestSession_thread( boost::thread ** thre
         std::string pMessage = "For this website to work you must have a hypervisor installed in your system. Would you like us to install VirtualBox for you?";
         if (core.hypervisor && core.hypervisor->version.compareStr(CERNVM_WEBAPI_MIN_HV_VERSION) > 0) {
             pTitle = "Hypervisor too old";
-            pMessage = "It seems that your current VirtualBox installation is too old and not properly supported by the CernVM WebAPI. Would you like us to install the latest version for you?";
+            pMessage = "It seems that your current VirtualBox installation (version " + core.hypervisor->version.verString + ") is too old and not properly supported by the CernVM WebAPI. Would you like us to install the latest version for you?";
         }
 
         // Prompt the user first

@@ -7,6 +7,11 @@ var UI_OK 			= 0x01,
 	UI_NOTAGAIN		= 0x100;
 
 /**
+ * Private variables
+ */
+var occupiedWindow = null;
+
+/**
  * The private WebAPI Interaction class
  */
 var UserInteraction = _NS_.UserInteraction = function( socket ) {
@@ -280,7 +285,7 @@ UserInteraction.displayLicenseWindow = function( title, body, isURL, cbAccept, c
 	} else {
 
 		// Add line breaks on newlines
-		body = body.replace( /\n/g,"<br />\n" );
+		body = body.replace( /\n/g, "<br />\n" );
 
 		cBody = document.createElement('div');
 		cBody.width = "100%";
@@ -415,9 +420,10 @@ UserInteraction.occupied = function( title, body ) {
 
 	// Display window
 	var win = UserInteraction.createFramedWindow({
-		'body'  : cBody, 
-		'header': title, 
-		'icon'  : ICON_INSTALL
+		'body'  		: cBody, 
+		'header'		: title, 
+		'icon'  		: ICON_INSTALL,
+		'disposable'	: false
 	});
 
 	// Return window instance
@@ -445,6 +451,34 @@ UserInteraction.confirmLicenseURL = function( title, url, callback ) {
 	}, function() {
 		callback(false);
 	});
+}
+
+/**
+ * Hide/show lengthy task placeholder
+ */
+UserInteraction.controlOccupied = function( isLengthy, msg ) {
+
+	// Handle lenghy progress
+	if (isLengthy) {
+
+		// Display occupied window
+		if (!occupiedWindow)
+			occupiedWindow = UserInteraction.occupied(
+				"Installation in progress",
+				"<p>Pay attention on the the pop-up windows and follow the on-screen instructions.</p>"+
+				"<p>When completed, please close any open installation window in order to continue.</p>"
+				);
+
+	} else {
+
+		// Hide occupied window
+		if (occupiedWindow) {
+			UserInteraction.hideScreen(occupiedWindow);
+			occupiedWindow = null;
+		}
+
+	}
+
 }
 
 /**

@@ -57,6 +57,12 @@ _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
 			if (cbFail) cbFail(msg, code);
 
 		},
+		onLengthyTask: function( msg, isLengthy ) {
+
+			// Control the occupied window
+			_NS_.UserInteraction.controlOccupied( isLengthy, msg );
+
+		},
 
 		// Progress feedbacks
 		onProgress: function( msg, percent ) {
