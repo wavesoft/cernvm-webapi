@@ -4,9 +4,11 @@
 GIT_DIR=$(mktemp -d)
 (
 	cd $GIT_DIR
-	git clone https://github.com/wavesoft/cernvm-webapi.git 2>&1 >/dev/null
+	echo "INFO: Fetching cernvm-webapi from git..." 1>&2
+	git clone https://github.com/wavesoft/cernvm-webapi.git 2>/dev/null >/dev/null
 	[ $? -ne 0 ] && echo "ERROR: Could not check-out cernvm-webapi!" 1>&2 && exit 1
-	git clone https://github.com/wavesoft/libcernvm.git 2>&1 >/dev/null
+	echo "INFO: Fetching libcernvm from git..." 1>&2
+	git clone https://github.com/wavesoft/libcernvm.git 2>/dev/null >/dev/null
 	[ $? -ne 0 ] && echo "ERROR: Could not check-out libcernvm!" 1>&2 && exit 1
 )
 
@@ -37,15 +39,20 @@ clean:
 .PHONY: all prepare binary install clean
 EOF
 
+# Move license & readme files to the root folder
+mv "${GIT_DIR}/cernvm-webapi/LICENSE" "${GIT_DIR}"
+mv "${GIT_DIR}/cernvm-webapi/README.md" "${GIT_DIR}"
+
 # Put everything in the archive folder
 ARCHIVE_FOLDER=cernvm-webapi-${UPSTREAM_VERSION}
+echo "INFO: Creating archive ${ARCHIVE_FOLDER}..." 1>&2
 mkdir ${GIT_DIR}/${ARCHIVE_FOLDER}
 mv ${GIT_DIR}/{cernvm-webapi,libcernvm,Makefile} ${GIT_DIR}/${ARCHIVE_FOLDER}
 
 # Create archive
-tar -zcf cernvm-webapi_${UPSTREAM_VERSION}.orig.tar.gz -C "${GIT_DIR}" ${ARCHIVE_FOLDER}
+tar -zcf cernvm-webapi_${UPSTREAM_VERSION}.orig.tar.gz -C "${GIT_DIR}" ${ARCHIVE_FOLDER} 2>/dev/null >/dev/null
 
 # Move archive dir to the current dir
 mv "${GIT_DIR}/${ARCHIVE_FOLDER}" "${ARCHIVE_FOLDER}"
 rmdir "${GIT_DIR}"
-
+echo ${ARCHIVE_FOLDER}
