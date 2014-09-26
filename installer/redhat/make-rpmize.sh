@@ -53,11 +53,5 @@ make install DESTDIR=\$RPM_BUILD_ROOT
 %{_sbindir}/*
 %{_datadir}/cernvm-webapi
 %{_datadir}/cernvm-webapi/*
-
-%changelog
-* Tue Feb 08 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.1.5-21
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
-
-* Fri Jul 02 2010 Kamil Dudka <kdudka@redhat.com> 2.1.5-20
-- handle multi-partition devices with spaces in mount points properly (#608502)
 EOF
+
