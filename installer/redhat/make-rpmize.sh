@@ -51,7 +51,7 @@ make install DESTDIR=\$RPM_BUILD_ROOT
 %files
 %{_bindir}/*
 %{_sbindir}/*
-%{_datadir}/cernvm-webapi
-%{_datadir}/cernvm-webapi/*
-EOF
+%{_datadir}/*
 
+%changelog
+EOF
