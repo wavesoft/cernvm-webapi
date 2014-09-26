@@ -31,8 +31,6 @@ License:            GPLv3+
 Group:              Applications/Internet
 Source:             %{name}_%{version}.orig.tar.gz
 URL:                http://cernvm.cern.ch
-BuildRequires:      build-essential
-BuildRequires:      cmake
 
 %description
 A secure mechanism that allows web applications to interact with virtual machines
@@ -45,8 +43,8 @@ in the user's computer.
 make %{?_smp_mflags}
 
 %install
-rm -rf \$RPM_BUILD_ROOT
-make install DESTDIR=\$RPM_BUILD_ROOT
+rm -rf  %{buildroot}
+make install DESTDIR=%{buildroot}/usr
 
 %files
 %{_bindir}/*
