@@ -222,7 +222,7 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 					keyValue = parameters->get("value", "");
 
 		// Update property
-		properties->set(keyName, keyValue);
+		hvSession->setProperty(keyName, keyValue);
 
 		// Notify success
         cb.fire("succeed", ArgumentList(1));
