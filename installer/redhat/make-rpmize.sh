@@ -2,11 +2,11 @@
 
 TARBALL="$1"
 [ -z "$TARBALL" ] && echo "ERROR: Please specify the upstream source code tarball!" 1>&2 && exit 1
-[ ! -f "$TARBALL"] && echo "ERROR: The specified argument is not a file!" 1>&2 && exit 1
+[ ! -f "$TARBALL" ] && echo "ERROR: The specified argument is not a file!" 1>&2 && exit 1
 
 # Detect version
-[ ${TARBALL:0:14} != "cernvm-webapi-" ] && echo "ERROR: Invalid directory name ${TARBALL}" 1>&2 && exit 1
-UPSTREAM_VERSION=$(echo ${TARBALL} | sed -r 's/cernvm-webapi-([0-9\.]+)\..*\1/')
+[ ${TARBALL:0:14} != "cernvm-webapi_" ] && echo "ERROR: Invalid directory name ${TARBALL}" 1>&2 && exit 1
+UPSTREAM_VERSION=$(echo ${TARBALL} | sed -r 's/cernvm-webapi_([0-9\.]+)\..*/\1/')
 [ -z "$UPSTREAM_VERSION" ] && echo "ERROR: Could not identify version!" 1>&2 && exit 1
 echo "INFO: Creating cernvm-webapi source package for version ${UPSTREAM_VERSION}" 1>&2
 
@@ -39,7 +39,7 @@ A secure mechanism that allows web applications to interact with virtual machine
 in the user's computer.
 
 %prep
-%autosetup -n %{name}-%{version}
+%setup -n %{name}-%{version}
 
 %build
 make %{?_smp_mflags}

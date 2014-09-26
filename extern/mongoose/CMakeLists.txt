@@ -32,7 +32,7 @@ if ( NOT EXISTS ${ARCHIVE_DIR} )
 
         # Remove file and dir
         file( REMOVE ${ARCHIVE_FILE} )
-        file( REMOVE ${ARCHIVE_DIR} )
+        file( REMOVE_RECURSE ${ARCHIVE_DIR} )
 
         # Fatal error
         message( FATAL_ERROR "Could not download ${PROJECT_NAME} archive!" )
