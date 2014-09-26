@@ -47,7 +47,7 @@ mv "${GIT_DIR}/cernvm-webapi/README.md" "${GIT_DIR}"
 ARCHIVE_FOLDER=cernvm-webapi-${UPSTREAM_VERSION}
 echo "INFO: Creating archive ${ARCHIVE_FOLDER}..." 1>&2
 mkdir ${GIT_DIR}/${ARCHIVE_FOLDER}
-mv ${GIT_DIR}/{cernvm-webapi,libcernvm,Makefile} ${GIT_DIR}/${ARCHIVE_FOLDER}
+mv ${GIT_DIR}/{cernvm-webapi,libcernvm,Makefile,LICENSE,README.md} ${GIT_DIR}/${ARCHIVE_FOLDER}
 
 # Create archive
 tar -zcf cernvm-webapi_${UPSTREAM_VERSION}.orig.tar.gz -C "${GIT_DIR}" ${ARCHIVE_FOLDER} 2>/dev/null >/dev/null

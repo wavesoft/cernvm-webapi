@@ -1,22 +1,63 @@
 #!/bin/bash
 
 TARBALL="$1"
-[ -z "$TARBALL" ] && echo "Please specify the upstream source code (folder or tarball)!" && exit 1
-
-# Extract tarball
-WORK_DIR=""
-if [ -f "${TARBALL}" ]; then
-	TMP_DIR=$(mktemp -d)
-	tar -C "${TMP_DIR}" -zxf "${TARBALL}"
-else
-	WORK_DIR="${TARBALL}"
-fi
+[ -z "$TARBALL" ] && echo "ERROR: Please specify the upstream source code tarball!" 1>&2 && exit 1
+[ ! -f "$TARBALL"] && echo "ERROR: The specified argument is not a file!" 1>&2 && exit 1
 
 # Detect version
-[ ${WORK_DIR:0:14} != "cernvm-webapi-" ] && echo "Invalid directory name ${WORK_DIR}" && exit 2
-UPSTREAM_VERSION=$(echo ${WORK_DIR} | sed -r 's/cernvm-webapi-([0-9\.]+).*/\1/')
-echo "Creating cernvm-webapi source package for version ${UPSTREAM_VERSION}"
+[ ${TARBALL:0:14} != "cernvm-webapi-" ] && echo "ERROR: Invalid directory name ${TARBALL}" 1>&2 && exit 1
+UPSTREAM_VERSION=$(echo ${TARBALL} | sed -r 's/cernvm-webapi-([0-9\.]+)\..*\1/')
+[ -z "$UPSTREAM_VERSION" ] && echo "ERROR: Could not identify version!" 1>&2 && exit 1
+echo "INFO: Creating cernvm-webapi source package for version ${UPSTREAM_VERSION}" 1>&2
+
+# Make workdir
+WORK_DIR=cernvm-webapi-${UPSTREAM_VERSION}
+[ ! -d ${WORK_DIR} ] && mkdir ${WORK_DIR}
 
 # Start operations
 export HOME=${WORK_DIR}
 rpmdev-setuptree
+
+# Move tarball to sources
+mv ${TARBALL} ${WORK_DIR}/rpmbuild/SOURCES/$(basename ${TARBALL})
+
+# Create spec file
+cat <<EOF > ${WORK_DIR}/rpmbuild/SPECS/cernvm-webapi.spec
+Summary:            CernVM WebAPI interface application
+Name:               cernvm-webapi
+Version:            ${UPSTREAM_VERSION}
+Release:            1%{?dist}
+License:            GPLv3+
+Group:              Applications/Internet
+Source:             %{name}_%{version}.orig.tar.gz
+URL:                http://cernvm.cern.ch
+BuildRequires:      build-essential
+BuildRequires:      cmake
+
+%description
+A secure mechanism that allows web applications to interact with virtual machines
+in the user's computer.
+
+%prep
+%autosetup -n %{name}-%{version}
+
+%build
+make %{?_smp_mflags}
+
+%install
+rm -rf \$RPM_BUILD_ROOT
+make install DESTDIR=\$RPM_BUILD_ROOT
+
+%files
+%{_bindir}/*
+%{_sbindir}/*
+%{_datadir}/cernvm-webapi
+%{_datadir}/cernvm-webapi/*
+
+%changelog
+* Tue Feb 08 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2.1.5-21
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
+
+* Fri Jul 02 2010 Kamil Dudka <kdudka@redhat.com> 2.1.5-20
+- handle multi-partition devices with spaces in mount points properly (#608502)
+EOF

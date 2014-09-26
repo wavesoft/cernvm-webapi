@@ -1,21 +1,15 @@
 #!/bin/bash
 
-TARBALL="$1"
-[ -z "$TARBALL" ] && echo "Please specify the upstream source code (folder or tarball)!" && exit 1
+WORK_DIR="$1"
+[ -z "$WORK_DIR" ] && echo "ERROR: Please specify the upstream source code folder!" 1>&2 && exit 1
 
 # Extract tarball
-WORK_DIR=""
-if [ -f "${TARBALL}" ]; then
-	TMP_DIR=$(mktemp -d)
-	tar -C "${TMP_DIR}" -zxf "${TARBALL}"
-else
-	WORK_DIR="${TARBALL}"
-fi
+[ ! -d "${WORK_DIR}" ] && echo "ERROR: The specified parameter is not folder!" 1>&2 && exit 1
 
 # Detect version
 [ ${WORK_DIR:0:14} != "cernvm-webapi-" ] && echo "Invalid directory name ${WORK_DIR}" && exit 2
-UPSTREAM_VERSION=$(echo ${WORK_DIR} | sed -r 's/cernvm-webapi-([0-9\.]+).*/\1/')
-echo "Creating cernvm-webapi source package for version ${UPSTREAM_VERSION}"
+UPSTREAM_VERSION=$(echo ${WORK_DIR} | sed -r 's/cernvm-webapi-([0-9\.]+)/\1/')
+echo "INFO: Creating cernvm-webapi source package for version ${UPSTREAM_VERSION}" 1>&2
 
 # Start operations
 [ ! -d ${WORK_DIR}/debian ] && mkdir ${WORK_DIR}/debian
