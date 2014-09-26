@@ -45,11 +45,21 @@ make %{?_smp_mflags}
 %install
 rm -rf  %{buildroot}
 make install DESTDIR=%{buildroot}/usr
+rm %{buildroot}/usr/lib/libcurl.a
+rmdir %{buildroot}/usr/lib
 
 %files
 %{_bindir}/*
-%{_sbindir}/*
 %{_datadir}/*
+
+%post
+
+# Check who's running X and run cernvm-webapi as that user
+X_TTY=\$(ps ax | grep bin/X | awk '{ print \$2 }' | head -n1)
+X_USER=\$(who | grep \$X_TTY | awk '{ print \$1 }' | head -n1)
+if [ ! -z "\$X_USER" ]; then
+    su -c "/usr/bin/cernvm-webapi install" \$X_USER&
+fi
 
 %changelog
 EOF
