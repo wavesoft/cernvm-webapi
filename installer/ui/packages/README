@@ -1,0 +1,27 @@
+
+Here you should place the platform-dependant binaries
+using the following file name:
+
+ <any_name>_<arch>-<version>[.<flavor>].<ext>
+
+Architecture aliases
+--------------------
+
+There is only one valid architecture for Intel 32-bit (i386) and
+only one for AMD64 bit (amd64). Any other specified architecture
+will be mapped according to the following table. If the installer
+contains both architectures you should use 'all' architecture
+map (all).
+
+ - i486 	-> i386
+ - i586 	-> i386
+ - i686 	-> i386
+ - x86_64	-> amd64
+
+Examples
+--------
+
+ - Windows 32-bit : cvmwebapi_i386-2.0.4.exe
+ - Mac OSX 10.8   : cvmwebapi_all-2.0.5.exe
+ - Ubuntu 32-bit  : cvmwebapi_i386-2.0.4.weezy.deb
+
