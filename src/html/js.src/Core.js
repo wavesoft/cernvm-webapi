@@ -38,7 +38,7 @@ _NS_.launchRDP = function( rdpURL, resolution ) {
     var w = window.open(
         'http://cernvm.cern.ch/releases/webapi/webrdp/webclient.html#' + rdpURL + ',' + width + ',' + height, 
         'WebRDPClient', 
-        'width=' + width + ',height=' + height+30
+        'width=' + width + ',height=' + (height+30)
     );
 
     // Align, center and focus
