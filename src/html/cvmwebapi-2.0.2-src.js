@@ -34,7 +34,7 @@ _NS_.launchRDP = function( rdpURL, resolution ) {
         // Split <width>x<height>x<bpp> string into it's components
         var res_parts = resolution.split("x");
         width = parseInt(res_parts[0]);
-        height = parseInt(res_parts[1]);
+        height = parseInt(res_parts[1])+30;
         if (res_parts.length > 2)
             bpp  = parseInt(res_parts[2]);
     }
@@ -43,7 +43,7 @@ _NS_.launchRDP = function( rdpURL, resolution ) {
     var w = window.open(
         'http://cernvm.cern.ch/releases/webapi/webrdp/webclient.html#' + rdpURL + ',' + width + ',' + height, 
         'WebRDPClient', 
-        'width=' + width + ',height=' + (height+30)
+        'width=' + width + ',height=' + height
     );
 
     // Align, center and focus
