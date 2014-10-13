@@ -43,11 +43,11 @@ _NS_.launchRDP = function( rdpURL, resolution ) {
     var w = window.open(
         'http://cernvm.cern.ch/releases/webapi/webrdp/webclient.html#' + rdpURL + ',' + width + ',' + height, 
         'WebRDPClient', 
-        'width=' + width + ',height=' + (height+28)
+        'width=' + width + ',height=' + (height+60)
     );
 
     // Align, center and focus
-    w.moveTo( (screen.width - width)/2, (screen.height - (height+28))/2 );
+    w.moveTo( (screen.width - width)/2, (screen.height - (height+60))/2 );
     setTimeout(function() { w.focus() }, 100);
     w.focus();
 
