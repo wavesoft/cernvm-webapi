@@ -64,38 +64,38 @@
 		<?php
 		if (strtolower($USER['browser']) == 'msie') {
 		?> 
-		<script type="text/vbscript" language="vbscript">
-		Sub LaunchInstaller()
-			Dim Installer
-			Set Installer = CreateObject("WindowsInstaller.Installer")
-			Installer.InstallProduct "http://labs.wavesoft.gr/webapi/<?= $PLATFORM_PACKAGES[0]['href']; ?>", ""
-		End Sub
-		</script>
-		<script type="text/javascript" language="javascript">
-		$("#pane-standby").hide();
-		$("#install-btn").click(function(e) {
-			try {
-				LaunchInstaller();
-				e.stopPropagation();
-				e.preventDefault();
-			} catch (e) {
-				$("#pane-install").fadeOut(function() {
-					$("#pane-standby").fadeIn();
-				});
-			}
-		});
-		</script>
+			<script type="text/vbscript" language="vbscript">
+			Sub LaunchInstaller()
+				Dim Installer
+				Set Installer = CreateObject("WindowsInstaller.Installer")
+				Installer.InstallProduct "http://labs.wavesoft.gr/webapi/<?= $PLATFORM_PACKAGES[0]['href']; ?>", ""
+			End Sub
+			</script>
+			<script type="text/javascript" language="javascript">
+			$("#pane-standby").hide();
+			$("#install-btn").click(function(e) {
+				try {
+					LaunchInstaller();
+					e.stopPropagation();
+					e.preventDefault();
+				} catch (e) {
+					$("#pane-install").fadeOut(function() {
+						$("#pane-standby").fadeIn();
+					});
+				}
+			});
+			</script>
 		<?php
 		} else {
 		?>
-		<script type="text/javascript">
-		$("#pane-standby").hide();
-		$("#install-btn").click(function() {
-			$("#pane-install").fadeOut(function() {
-				$("#pane-standby").fadeIn();
+			<script type="text/javascript">
+			$("#pane-standby").hide();
+			$("#install-btn").click(function() {
+				$("#pane-install").fadeOut(function() {
+					$("#pane-standby").fadeIn();
+				});
 			});
-		});
-		</script>
+			</script>
 		<?php
 		}
 		?>

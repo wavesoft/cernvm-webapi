@@ -43,7 +43,7 @@ _NS_.launchRDP = function( rdpURL, resolution ) {
     var w = window.open(
         'http://cernvm.cern.ch/releases/webapi/webrdp/webclient.html#' + rdpURL + ',' + width + ',' + height, 
         'WebRDPClient', 
-        'width=' + width + ',height=' + height
+        'width=' + width + ',height=' + height+30
     );
 
     // Align, center and focus
@@ -1399,6 +1399,7 @@ _NS_.WebAPISession = function( socket, session_id, init_callback ) {
 
 	// Local variables
 	this.__state = 0;
+	this.__apiState = false;
 	this.__properties = {};
 	this.__config = {};
 	this.__valid = true;
@@ -1419,6 +1420,7 @@ _NS_.WebAPISession = function( socket, session_id, init_callback ) {
         "cpus"          :   {   get: function () { if (!this.__valid) return u; return this.__config['cpus'];                } },
         "disk"          :   {   get: function () { if (!this.__valid) return u; return this.__config['disk'];                } },
         "apiURL"        :   {   get: function () { if (!this.__valid) return u; return this.__config['apiURL'];              } },
+        "apiAvailable"  :   {   get: function () { if (!this.__valid) return u; return this.__apiState;     		         } },
         "rdpURL"        :   {   get: function () { if (!this.__valid) return u; return this.__config['rdpURL'];              } },
         "executionCap"  :   {   get: function () { if (!this.__valid) return u; return this.__config['executionCap'];          }, 
                                 set: function(v) { this.__config['executionCap']=v; this.setAsync('executionCap', v);        } },
@@ -1546,6 +1548,11 @@ _NS_.WebAPISession.prototype.handleEvent = function(data) {
 
 		// Control the occupied window
 		_NS_.UserInteraction.controlOccupied( data['data'][1], data['data'][0] );
+
+	} else if (data['name'] == 'apiStateChanged' ) {
+
+		// Update api state property
+		this.__apiState = (data['data'][0] == 1);
 
 	} else if (data['name'] == 'resolutionChanged') {
 

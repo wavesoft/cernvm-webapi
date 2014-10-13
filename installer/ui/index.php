@@ -1,6 +1,125 @@
 <?php
 
 /**
+ * Architecture mapping
+ */
+$ARCH_MAP = array(
+    'i486'      => 'i386',
+    'i586'      => 'i386',
+    'i686'      => 'i386',
+    'i786'      => 'i386',
+    'i886'      => 'i386',
+    'i986'      => 'i386',
+    'x86_64'    => 'amd64',
+
+    'all'       => 'all',
+    'i386'      => 'i386',
+    'amd64'     => 'amd64'
+);
+
+/**
+ * Platform mapping depending on extension
+ */
+$EXT_MAP = array(
+    'exe'       => 'windows',
+    'pkg'       => 'macintosh',
+    'deb'       => 'linux',
+    'rpm'       => 'linux'
+);
+
+/**
+ * Platform tree
+ */
+$PLATFORM_DICT = array(
+    'windows' => array(
+        'default' => array(
+            'icon' => 'img/plaf-windows.png',
+            'title' => 'Windows',
+            'flavor' => 'XP SP3+'
+            )
+        ),
+    'macintosh' => array(
+        'default' => array(
+            'icon' => 'img/plaf-macintosh.png',
+            'title' => 'Mac OS X',
+            'flavor' => '10.8+'
+            )
+        ),
+    'linux' => array(
+
+        'lucid' => array(
+            'icon' => 'img/plaf-linux-ubuntu.png',
+            'title' => 'Ubuntu',
+            'flavor' => '10.04 LTS (Lucid Lynx)'
+            ),
+        'maverick' => array(
+            'icon' => 'img/plaf-linux-ubuntu.png',
+            'title' => 'Ubuntu',
+            'flavor' => '10.10 (Maverick Meerkat)'
+            ),
+        'natty' => array(
+            'icon' => 'img/plaf-linux-ubuntu.png',
+            'title' => 'Ubuntu',
+            'flavor' => '11.04 (Natty Narwhal)'
+            ),
+        'oneiric' => array(
+            'icon' => 'img/plaf-linux-ubuntu.png',
+            'title' => 'Ubuntu',
+            'flavor' => '11.10 (Oneiric Ocelot)'
+            ),
+        'precise' => array(
+            'icon' => 'img/plaf-linux-ubuntu.png',
+            'title' => 'Ubuntu',
+            'flavor' => '12.04 LTS (Precise Pangolin)'
+            ),
+        'quantal' => array(
+            'icon' => 'img/plaf-linux-ubuntu.png',
+            'title' => 'Ubuntu',
+            'flavor' => '12.10 (Quantal Quetzal)'
+            ),
+        'raring' => array(
+            'icon' => 'img/plaf-linux-ubuntu.png',
+            'title' => 'Ubuntu',
+            'flavor' => '13.04 (Raring Ringtail)'
+            ),
+        'saucy' => array(
+            'icon' => 'img/plaf-linux-ubuntu.png',
+            'title' => 'Ubuntu',
+            'flavor' => '13.10 (Saucy Salamander)'
+            ),
+        'trusty' => array(
+            'icon' => 'img/plaf-linux-ubuntu.png',
+            'title' => 'Ubuntu',
+            'flavor' => '14.04 LTS (Trusty Tahr)'
+            ),
+
+        'squeeze' => array(
+            'icon' => 'img/plaf-linux-debian.png',
+            'title' => 'Debian',
+            'flavor' => '6.0 (Squeeze)'
+            ),
+        'wheezy' => array(
+            'icon' => 'img/plaf-linux-debian.png',
+            'title' => 'Debian',
+            'flavor' => '7.0 (Wheezy)'
+            ),
+        'jessie' => array(
+            'icon' => 'img/plaf-linux-debian.png',
+            'title' => 'Debian',
+            'flavor' => '8.0 (Jessie)'
+            ),
+
+        'slc6' => array(
+            'icon' => 'img/plaf-linux-slc.png',
+            'title' => 'Scientific Linux CERN',
+            'flavor' => '6.0'
+            ),
+
+        
+        )
+);
+
+/**
  * Parses a user agent string into its important parts
  *
  * @author Jesse G. Donat <donatj@gmail.com>
@@ -158,8 +277,23 @@ if (isset($_GET['plaf'])) {
 }
 
 /**
+ * Detect platform flavor
+ */
+$ua = strtolower($_SERVER['HTTP_USER_AGENT']);
+$FLAVOR = "default";
+$PLATFORM_FLAVORS = $PLATFORM_DICT[$PLATFORM];
+if ((count($PLATFORM_FLAVORS) > 1) || !isset($PLATFORM_FLAVORS['default'])) {
+    // Scan user agent to look for that flavor
+    for ($PLATFORM_FLAVORS as $flav => $info) {
+        if (stristr($ua, $flav)) {
+            $FLAVOR = $flav;
+            break;
+        }
+    }
+}
+
+/**
  * Scan packages and build lookup table
- * 
  */
 $PACKAGES = array();
 $pkgs = scandir("packages");
@@ -168,35 +302,91 @@ foreach ($pkgs as $f => $v) {
         continue;
 
     // Extract the information part
-    $parts = explode("_", $v);
+    $parts = explode("_", $v, 2);
     $info_part = array_pop($parts);
 
     // Extract arch
-    $parts = explode("-", $info_part);
-    $i_arch = $parts[0];
+    $parts = explode("-", $info_part, 2);
+    $i_arch = strtolower($parts[0]);
+
+    // Fix architecture if exists on arch_map
+    if (!isset($ARCH_MAP[$i_arch])) continue;
+    $i_arch = $ARCH_MAP[$i_arch];
 
     // Extract extension
+    if (count($parts) < 2) continue;
     $parts = explode(".", $parts[1]);
     $i_ext = array_pop($parts);
 
+    // Map platform according to extension
+    if (!isset($EXT_MAP[$i_ext])) continue;
+    $i_platf = $EXT_MAP[$i_ext];
+
     // Extract flavor (if exists)
-    $i_flavor = "";
-    if (!is_numeric($parts[0])) {
-        $i_flavor = array_shift($parts);
+    $i_flavor = "default";
+    if (!is_numeric($parts[count($parts)-1])) {
+        $i_flavor = strtolower(array_pop($parts));
     }
 
     // Collect version information
+    if (!is_numeric($parts[0])) continue;
+    if (!is_numeric($parts[1])) continue;
+    if (!is_numeric($parts[2])) continue;
+    $s_ver = $parts[0].".".$parts[1].".".$parts[2];
+    $i_ver  = ((int)(array_shift($parts))) * 10000 +
+              ((int)(array_shift($parts))) * 100 +
+              ((int)(array_shift($parts)));
 
+    // Get file size
+    $size = filesize('packages/'.$v);
+    $s_size = "${size} b";
+    if ($size > 1024) {
+        $size /= 1024;
+        $s_size = sprintf("%0.2f Kb", $size);
+        if ($size > 1024) {
+            $size /= 1024;
+            $s_size = sprintf("%0.2f Mb", $size);
+            if ($size > 1024) {
+                $size /= 1024;
+                $s_size = sprintf("%0.2f Gb", $size);
+            }
+        }
+    }
 
-    // Extract file parts
-    $ext = substr($v,-4);
-    $parts = explode("-", substr($v,0,-4));
-    $verParts = explode(".", $parts[1]);
-    $intVer = ((int)($verParts[0])) * 10000 +
-              ((int)($verParts[1])) * 100 +
-              ((int)($verParts[2]));
+    // Check for other garbage
+    if (count($parts) != 0) continue;
+
+    // Store on packages
+    if (!isset($PACKAGES[$i_platf])) $PACKAGES[$i_platf]=array();
+    if (!isset($PACKAGES[$i_platf][$i_flavor])) $PACKAGES[$i_platf][$i_flavor]=array();
+    $PACKAGES[$i_platf][$i_flavor][] = array(
+        'version'   => $s_ver,
+        'intver'    => $i_ver,
+        'arch'      => $i_arch,
+        'size'      => $s_size,
+        'name'      => $v,
+        'href'      => 'packages/'.$v
+    );
 
 }
+
+/**
+ * Sort packages
+ */
+function cmp_intver($b, $a) {
+    if ($a['intver'] == $b['intver']) return 0;
+    return ($a['intver'] < $b['intver']) ? -1 : 1;
+}
+foreach ($PACKAGES as $os => $flavors) {
+    foreach ($flavors as $i => $packages) {
+        usort($PACKAGES[$os][$i], 'cmp_intver');
+    }
+}
+
+include("pages/cflavor.php");
+
+//print_r($PACKAGES);
+die();
 
 /**
  * Detect linux variants
@@ -314,10 +504,6 @@ foreach ($pkgs as $f => $v) {
  * Sort the platform versions
  */
 $PLATFORM_PACKAGES = $PACKAGES[$PLATFORM];
-function cmp_intver($b, $a) {
-    if ($a['intver'] == $b['intver']) return 0;
-    return ($a['intver'] < $b['intver']) ? -1 : 1;
-}
 usort($PLATFORM_PACKAGES, 'cmp_intver');
 
 /**
