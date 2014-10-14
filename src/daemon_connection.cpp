@@ -74,11 +74,10 @@ void DaemonConnection::handleAction( const std::string& id, const std::string& a
 		// Check if we are privileged
 		if (parameters->contains("auth")) {
 			privileged = core.authKeyValid( parameters->get("auth") );
-
-            // Let UI know about it's priviledges
-            sendEvent("privileged", ArgumentList(privileged));
-
 		}
+
+        // Let UI know about it's priviledges
+        sendEvent("privileged", ArgumentList(privileged));
 
     }
 

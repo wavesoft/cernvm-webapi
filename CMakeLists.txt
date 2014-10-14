@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8.10)
+cmake_minimum_required (VERSION 2.8)
 
 # Guess system architecture
 set(GUESS_ARCH "i386") 							# 1) Fallback to x86
@@ -28,6 +28,7 @@ endif()
 # Logging option
 option(LOGGING "Set to ON to enable verbose logging on screen" OFF)
 option(CRASH_REPORTING "Set to ON to enable crash reporting" OFF)
+option(COVERITY_RUN "Set to ON when running this application with coverity" OFF)
 
 # CernVM Library
 project ( cernvm-webapi )
@@ -208,7 +209,7 @@ else()
 endif()
 
 # On linux we should add a flag to define the architecture we are building for
-if (UNIX)
+if (UNIX AND NOT COVERITY_RUN)
 	if ("${TARGET_ARCH}" STREQUAL "x86_64")
 		add_compile_flags( ${PROJECT_NAME} -m64 )
 	else()

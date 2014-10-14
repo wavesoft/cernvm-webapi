@@ -125,6 +125,17 @@ int CVMWebserver::api_handler(struct mg_connection *conn) {
             mg_printf_data(conn, "{\"status\":\"ok\",\"request\":\"%s\",\"domain\":\"%s\",\"version\":\"%s\"}", conn->uri, domain.c_str(), CERNVM_WEBAPI_VERSION);
             return MG_TRUE;
 
+        } else if ( self->staticURLHandler->canHandleStaticURL(url) ) {
+
+            // Handle URL
+            string responsePayload = self->staticURLHandler->handleStaticURL(url);
+
+            // Send response
+            mg_send_header(conn, "Access-Control-Allow-Origin", "*" );
+            mg_send_data(conn, responsePayload.c_str(), responsePayload.length() );
+
+            return MG_TRUE;
+
         } else if (res_buffer == NULL) {
             
             // File not found
@@ -216,7 +227,8 @@ int CVMWebserver::ev_handler(struct mg_connection *conn, enum mg_event ev) {
 /**
  * Create a webserver and setup listening port
  */
-CVMWebserver::CVMWebserver( CVMWebserverConnectionFactory& factory, const int port ) : factory(factory), staticResources() {
+CVMWebserver::CVMWebserver( CVMWebserverConnectionFactory& factory, const int port ) 
+    : factory(factory), staticResources(), staticURLHandler(NULL) {
     CRASH_REPORT_BEGIN;
 
 	// Create a mongoose server, passing the pointer
@@ -257,6 +269,13 @@ CVMWebserver::~CVMWebserver() {
     }
 
     CRASH_REPORT_END;
+}
+
+/**
+ * Set static url handler
+ */
+void CVMWebserver::setStaticURLHandler( CVMWebserverStaticURLHandler * handler ) {
+    staticURLHandler = handler;
 }
 
 /**

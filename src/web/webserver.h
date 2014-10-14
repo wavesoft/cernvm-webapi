@@ -74,6 +74,24 @@ public:
 };
 
 /**
+ * Abstract class for handling static URL queries
+ */
+class CVMWebserverStaticURLHandler {
+public:
+
+	/**
+	 * Check if we can handle the specified URL
+	 */
+	virtual bool 			canHandleStaticURL( const std::string& url );
+
+	/**
+	 * Handle a URL query
+	 */
+	virtual std::string 	handleStaticURL( const std::string& url );
+
+};
+
+/**
  * Record for tracking connections and their state
  */
 class CVMWebserverConnection {
@@ -149,6 +167,10 @@ public:
 	 */
 	void serve_static( const std::string& url, const std::string& file );
 
+	/**
+	 * Register a static URL handler
+	 */
+	void setStaticURLHandler( CVMWebserverStaticURLHandler * handler );
 
 private:
 
@@ -171,6 +193,11 @@ private:
 	 * The factory used for connection handler creation
 	 */
 	CVMWebserverConnectionFactory&	factory;
+
+	/**
+	 * The query handler used for handling static queries
+	 */
+	CVMWebserverStaticURLHandler* staticURLHandler;
 
 	/**
 	 * Map of static resources
