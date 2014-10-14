@@ -29,6 +29,9 @@
 
 #include <CernVM/Hypervisor/Virtualbox/VBoxSession.h>
 
+// How many times to retry before deciding that
+// the API port is really offline.
+#define CVMWA_SESS_APIPORT_DOWN_RETRIES		2
 
 class CVMWebAPISession {
 public:
@@ -39,7 +42,7 @@ public:
 	CVMWebAPISession( DaemonCore* core, DaemonConnection& connection, HVSessionPtr hvSession, int uuid  )
 		: core(core), connection(connection), hvSession(hvSession), uuid(uuid), uuid_str(ntos<int>(uuid)), 
 		  callbackForwarder( connection, uuid_str ), apiPortOnline(false), periodicsRunning(false), apiPortCounter(0),
-		  periodicJobsThreadPtr(NULL)
+		  periodicJobsThreadPtr(NULL), apiPortDownCounter(0)
 	{ 
 	    CRASH_REPORT_BEGIN;
 
@@ -197,6 +200,11 @@ private:
 	 * Polling counter of the API Port
 	 */
 	int 				apiPortCounter;
+
+	/**
+	 * Grace retries before deciding that the API port is indeed down
+	 */
+	int 				apiPortDownCounter;
 
 	/**
 	 * Flag that defines if we should accept periodic

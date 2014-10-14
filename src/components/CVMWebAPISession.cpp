@@ -286,6 +286,8 @@ void CVMWebAPISession::periodicJobsThread() {
 	    		if (newState) {
 		    		connection.sendEvent( "apiStateChanged", ArgumentList(true)(apiURL), uuid_str );
 	    			apiPortOnline = true;
+	    			apiPortDownCounter = 0;
+	    			apiPortCounter = 0;
 	    		}
 
 	    	} else {
@@ -295,9 +297,12 @@ void CVMWebAPISession::periodicJobsThread() {
 
 	    			// Check for offline port
 		    		if (!hvSession->isAPIAlive(HSK_HTTP, 10)) {
-			    		connection.sendEvent( "apiStateChanged", ArgumentList(false)(apiURL), uuid_str );
-		    			apiPortOnline = false;
+		    			if (++apiPortDownCounter >= CVMWA_SESS_APIPORT_DOWN_RETRIES) {
+				    		connection.sendEvent( "apiStateChanged", ArgumentList(false)(apiURL), uuid_str );
+			    			apiPortOnline = false;
+			    		}
 		    		} else {
+		    			apiPortDownCounter = 0;
 		    		}
 
 		    		// Reset counter
@@ -310,6 +315,8 @@ void CVMWebAPISession::periodicJobsThread() {
 	    		// In any other state, the port is just offline
 	    		connection.sendEvent( "apiStateChanged", ArgumentList(false)(apiURL), uuid_str );
 	    		apiPortOnline = false;
+	    		apiPortDownCounter = 0;
+	    		apiPortCounter = 0;
 	    	}
 	    }
 
