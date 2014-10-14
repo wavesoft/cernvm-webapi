@@ -43,6 +43,11 @@ public:
 	WebsocketAPI( const std::string& domain, const std::string& uri ) : domain(domain), uri(uri), egress(), connected(true), CVMWebserverConnectionHandler() { };
 
 	/**
+	 * Virtual destructor
+	 */
+	virtual ~WebsocketAPI() { };
+
+	/**
 	 * Virtual cleanup function
 	 */
 	virtual void 			cleanup() { };

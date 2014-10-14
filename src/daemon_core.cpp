@@ -142,11 +142,9 @@ bool DaemonCore::authKeyValid( const std::string& key ) {
 	for (std::list< AuthKey >::iterator it = authKeys.begin(); it != authKeys.end(); ++it) {
 		AuthKey k = *it;
 		if (ts >= k.expireTime) {
-			authKeys.erase(it);
+			it = authKeys.erase(it);
             if (authKeys.empty())
                 break;
-			if (it != authKeys.end())
-				++it;
 		} else if (k.key == key) {
 			found = true;
 		}

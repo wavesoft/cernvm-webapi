@@ -61,12 +61,15 @@ int main( int argc, char ** argv ) {
 
     // Ensure single instance
     int pid_file = open("/var/run/cernvm-webapi.pid", O_CREAT | O_RDWR, 0666);
-    int rc = flock(pid_file, LOCK_EX | LOCK_NB);
-    if(rc) {
-        if(EWOULDBLOCK == errno) {
-            // Another instance is running
-            close(pid_file);
-            return 32;
+    if (pid_file > 0) {
+        // Try to lock the pid file
+        int rc = flock(pid_file, LOCK_EX | LOCK_NB);
+        if(rc) {
+            if(EWOULDBLOCK == errno) {
+                // Another instance is running
+                close(pid_file);
+                return 32;
+            }
         }
     }
 
@@ -145,7 +148,7 @@ int main( int argc, char ** argv ) {
     DomainKeystore::Cleanup();
 
     // 0 means successful shutdown
-    close(pid_file);
+    if (pid_file>0) close(pid_file);
     return 0;
 
 }

@@ -251,7 +251,10 @@ void CVMWebAPISession::processPeriodicJobs() {
 		delete periodicJobsThreadPtr;
 
 	// Create new periodic jobs thread
-	periodicJobsThreadPtr = new boost::thread( boost::bind( &CVMWebAPISession::periodicJobsThread, this ) );
+	try {
+		periodicJobsThreadPtr = new boost::thread( boost::bind( &CVMWebAPISession::periodicJobsThread, this ) );
+	} catch (boost::thread_resource_error& e) {
+	}
 
 	CRASH_REPORT_END;
 }

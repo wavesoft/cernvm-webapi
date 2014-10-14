@@ -330,10 +330,6 @@ void DaemonConnection::installHV_andRequestSession_thread( boost::thread ** thre
             return;
         }
 
-        // Remove this thread from the active threads
-        runningThreads.remove_thread(thisThread);
-        installInProgress = false;
-
     } catch (boost::thread_interrupted &e) {
 
         // Interrupted

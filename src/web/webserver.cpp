@@ -369,7 +369,11 @@ void CVMWebserver::start() {
  */
 bool CVMWebserver::hasLiveConnections() {
     CRASH_REPORT_BEGIN;
-    boost::mutex::scoped_lock lock(connMutex);
-    return !connections.empty();
+    try {
+        boost::mutex::scoped_lock lock(connMutex);
+        return !connections.empty();
+    } catch (boost::lock_error&) {
+        return connections.empty();
+    }
     CRASH_REPORT_END;
 }
