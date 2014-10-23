@@ -125,7 +125,7 @@ int CVMWebserver::api_handler(struct mg_connection *conn) {
             mg_printf_data(conn, "{\"status\":\"ok\",\"request\":\"%s\",\"domain\":\"%s\",\"version\":\"%s\"}", conn->uri, domain.c_str(), CERNVM_WEBAPI_VERSION);
             return MG_TRUE;
 
-        } else if ( self->staticURLHandler->canHandleStaticURL(url) ) {
+        } else if ( (self->staticURLHandler != NULL) && self->staticURLHandler->canHandleStaticURL(url) ) {
 
             // Handle URL
             string responsePayload = self->staticURLHandler->handleStaticURL(url);

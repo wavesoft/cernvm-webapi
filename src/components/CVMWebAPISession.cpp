@@ -28,6 +28,7 @@
 void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& action, ParameterMapPtr parameters ) {
 	CRASH_REPORT_BEGIN;
 	int ret;
+    if (isAborting) return;
 
 	//////////////////////////////////
 	if (action == "start") {
@@ -235,7 +236,16 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
  * Enable or disable periodic jobs
  */
 void CVMWebAPISession::enablePeriodicJobs( bool status ) {
+    if (isAborting) return;
 	acceptPeriodicJobs = status;
+}
+
+/**
+ * Abort session
+ */
+void CVMWebAPISession::abort() {
+	boost::unique_lock<boost::mutex> lock(periodicJobsMutex);
+	isAborting = true;
 }
 
 /**
@@ -243,6 +253,7 @@ void CVMWebAPISession::enablePeriodicJobs( bool status ) {
  */
 void CVMWebAPISession::processPeriodicJobs() {
 	CRASH_REPORT_BEGIN;
+    if (isAborting) return;
 	if (!acceptPeriodicJobs) return;
 	if (periodicsRunning) return;
 
@@ -264,6 +275,9 @@ void CVMWebAPISession::processPeriodicJobs() {
  */
 void CVMWebAPISession::periodicJobsThread() {
 	CRASH_REPORT_BEGIN;
+	boost::unique_lock<boost::mutex> lock(periodicJobsMutex);
+    if (isAborting) return;
+
 	try {
 
 		// Mark the thread as running
@@ -323,6 +337,12 @@ void CVMWebAPISession::periodicJobsThread() {
 	    // Mark the thread as completed
 	    periodicsRunning = false;
 
+    } catch (std::bad_alloc&) {
+
+        // An object was destructed but the thread was still running
+        CVMWA_LOG("CRITICAL", "Object pointer access error on restructed object");
+        periodicsRunning = false;
+
 	} catch (boost::thread_interrupted &e) {
 		
 		// We are interrupted
@@ -338,6 +358,7 @@ void CVMWebAPISession::periodicJobsThread() {
  */
 void CVMWebAPISession::__cbFailure( VariantArgList& args ) {
 	CRASH_REPORT_BEGIN;
+    if (isAborting) return;
 
 	// Check if we switched to a state where API is not available any more
 	int failureFlags = boost::get<int>(args[0]);
@@ -358,6 +379,7 @@ void CVMWebAPISession::__cbFailure( VariantArgList& args ) {
  */
 void CVMWebAPISession::__cbStateChanged( VariantArgList& args ) {
 	CRASH_REPORT_BEGIN;
+    if (isAborting) return;
 
 	// Before sending stateChanged, send the updated state variables
 	sendStateVariables();
@@ -383,6 +405,7 @@ void CVMWebAPISession::__cbStateChanged( VariantArgList& args ) {
  */
 void CVMWebAPISession::__cbResolutionChanged( VariantArgList& args ) {
 	CRASH_REPORT_BEGIN;
+    if (isAborting) return;
 
 	// Get resolution information
 	int width = boost::get<int>(args[0]),
@@ -402,6 +425,7 @@ void CVMWebAPISession::__cbResolutionChanged( VariantArgList& args ) {
  */
 void CVMWebAPISession::sendStateVariables() {
 	CRASH_REPORT_BEGIN;
+    if (isAborting) return;
 
 	Json::FastWriter writer;
 	Json::Value root, data, properties, config;

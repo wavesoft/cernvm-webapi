@@ -223,6 +223,7 @@ void DaemonCore::releaseConnectionSessions( DaemonConnection& connection ) {
         if (&sess->connection == &connection) {
 
             // Dispose
+            sess->abort();
             delete sess;
             
             // Remove from list

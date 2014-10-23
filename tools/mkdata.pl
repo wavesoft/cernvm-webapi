@@ -9,7 +9,9 @@
 #
 
 foreach my $i (0 .. $#ARGV) {
-  open FD, '<:raw', $ARGV[$i] or die "Cannot open $ARGV[$i]: $!\n";
+  my $f = $ARGV[$i];
+  $f=$1 if ($f =~ /([^:]+):/);
+  open FD, '<:raw', $f or die "Cannot open $f: $!\n";
   printf("static const unsigned char v%d[] = {", $i);
   my $byte;
   my $j = 0;
@@ -39,7 +41,9 @@ static const struct embedded_file {
 EOS
 
 foreach my $i (0 .. $#ARGV) {
-  print "  {\"$ARGV[$i]\", v$i, sizeof(v$i) - 1},\n";
+  my $f = $ARGV[$i];
+  $f=$1 if ($f =~ /[^:]+:(.*)/);
+  print "  {\"$f\", v$i, sizeof(v$i) - 1},\n";
 }
 
 print <<EOS;

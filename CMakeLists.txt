@@ -137,11 +137,13 @@ file ( GLOB WEBAPI_SOURCES
 	)
 
 # Collect resources
-file ( GLOB WEBAPI_RESOURCES
-		RELATIVE ${PROJECT_SOURCE_DIR}/src/html
+file ( GLOB_RECURSE WEBAPI_RESOURCES
+		RELATIVE ${PROJECT_SOURCE_DIR}/src/html/binary.src
 		# Get HTML Websites
-		${PROJECT_SOURCE_DIR}/src/html/*.html
-		${PROJECT_SOURCE_DIR}/src/html/*.js
+		${PROJECT_SOURCE_DIR}/src/html/binary.src/*
+	)
+list( APPEND WEBAPI_RESOURCES 
+		"../cvmwebapi-2.0.2.js:js/cvmwebapi-2.0.2.js"
 	)
 
 # Setup includes
@@ -163,10 +165,11 @@ endif()
 set( GEN_RESOURCES_C "${PROJECT_BINARY_DIR}/generated_data.cpp" )
 
 # Collect resources and build executable
+message(STATUS "Compiling: ${WEBAPI_RESOURCES}")
 execute_process(
 	COMMAND ${PERL_EXECUTABLE} "${PROJECT_SOURCE_DIR}/tools/mkdata.pl" ${WEBAPI_RESOURCES}
 	OUTPUT_FILE ${GEN_RESOURCES_C}
-	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/html
+	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/html/binary.src
 	)
 
 #############################################################

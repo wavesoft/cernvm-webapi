@@ -80,19 +80,6 @@ int WINAPI WinMain(HINSTANCE hInstance,
                    LPSTR lpCmdLine,
                    int nCmdShow) 
 {
-
-  	// Check if the instance is already running
-  	HANDLE instMutex = CreateMutex( NULL, true, "CernVM_WebAPI_Instance_Mutex" ); 
-  	if ((instMutex = 0) || (GetLastError() == ERROR_ALREADY_EXISTS)) {
-  		// Already runs
-
-  		// Launch instance if we are not launched by URL
-        if (isEmpty(lpCmdLine))
-            openAuthenticatedURL();
-
-  		// Exit
-  		return 0;
-  	}
     
     // Initialize subcomponents
     WSADATA wsaData;
@@ -105,6 +92,20 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
     // Create the C++ daemon core
     core = new DaemonCore();
+
+  	// Check if the instance is already running (requires core initialized)
+  	HANDLE instMutex = CreateMutex( NULL, true, "CernVM_WebAPI_Instance_Mutex" ); 
+  	if ((instMutex = 0) || (GetLastError() == ERROR_ALREADY_EXISTS)) {
+  		// Already runs
+
+  		// Launch instance if we are not launched by URL
+        if (isEmpty(lpCmdLine))
+            openAuthenticatedURL();
+
+  		// Exit
+  		return 0;
+  	}
+
     // Create a factory which is going to create the instances
     factory = new DaemonFactory(*core);
     // Create the webserver instance

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>CernVM WebAPI :: Socket Test</title>
+		<link rel="stylesheet" href="css/bootstrap.min.css">
+		<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
+		<script type="text/javascript" src="js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="js/cvmwebapi-2.0.2.js"></script>
+		<script type="text/javascript">
+
+		var sess, cvmapi, elmControls, elmSessionControls;
+
+		function initialize() {
+			elmControls = document.getElementById('btn-controls');
+			elmSession = document.getElementById('btn-session');
+			elmControls.style['display'] = 'none';
+			elmSession.style['display'] = 'none';
+			CVM.startCVMWebAPI(function(api) {
+				console.info("Got API: ",api);
+				cvmapi = api;
+				elmControls.style['display'] = 'block';
+				api.addEventListener('disconnected', function() {
+					elmControls.style['display'] = 'none';
+				});
+			});
+		}
+
+		function openSession() {
+			cvmapi.requestSession(
+				"http://localhost/sign.php",
+				function(session) {
+					sess = session;
+					console.info("Got Session: ",session);
+					elmSession.style['display'] = 'block';
+
+					var elmState = document.getElementById('sess-state');
+					sess.addEventListener('stateChanged', function(state) {
+						elmState.innerHTML = state;
+					});
+
+				}, function(errorMsg, errorCode) {
+					CVM.UserInteraction.alert("CernVM WebAPI", "We were unable to request VM session! " + errorMsg);
+				});
+		}
+
+		var Interface = function() {
+
+		};
+
+		Interface.prototype.registerVM = function(config) {
+			var row = $('<tr></tr>'),
+				colName = $('<td></td>').appendTo(row),
+					cLabel 	= $('<span class="label"></span>').appendTo(colName),
+					cName 	= $('<span></span>').appendTo(colName),
+					cResources = $('<td></td>').appendTo(row),
+				colControls = $('<td></td>').appendTo(row),
+					bTrash	= $('<button class="btn btn-sm btn-danger"><span class="glyphicon glyphicon-trash"></span> Remove</button>').appendTo(colControls),
+					bStop	= $('<button class="btn btn-sm btn-danger"><span class="glyphicon glyphicon-stop"></span> Stop</button>').appendTo(colControls),
+					bStart	= $('<button class="btn btn-sm btn-default"><span class="glyphicon glyphicon-play"></span> Play</button>').appendTo(colControls),
+					bPause	= $('<button class="btn btn-sm btn-default"><span class="glyphicon glyphicon-pause"></span> Suspend</button>').appendTo(colControls);
+					
+		}
+
+		</script>
+	</head>
+	<body>
+
+		<div class="container">
+
+			<h1>CernVM WebAPI <small>Dashboard</small></h1>
+			<br />
+
+			<!-- Nav tabs -->
+			<ul class="nav nav-tabs" role="tablist">
+			  <li class="active"><a href="#vms" role="tab" data-toggle="tab">Instances</a></li>
+			  <li><a href="#settings" role="tab" data-toggle="tab">Settings</a></li>
+			  <li><a href="#cache" role="tab" data-toggle="tab">Resources</a></li>
+			</ul>
+
+			<!-- Tab panes -->
+			<div class="tab-content">
+			  <div class="tab-pane active" id="vms">
+
+				<div class="panel panel-default">
+					<div class="panel-body">
+						<table class="table table-hover">
+							<thead>
+								<th width="256">Name</th>
+								<th>Resources</th>
+								<th width="256">Controls</th>
+							</thead>
+							<tbody>
+								<tr>
+									<th><span class="label label-success">Running</span> LHC_Test_64</th>
+									<td>cpus=4, ram=1023, disk=512</td>
+									<td>
+										<button class="btn btn-sm btn-danger"><span class="glyphicon glyphicon-stop"></span> Stop</button>
+										<button class="btn btn-sm btn-danger"><span class="glyphicon glyphicon-stop"></span> Stop</button>										
+										<button class="btn btn-sm btn-danger"><span class="glyphicon glyphicon-stop"></span> Stop</button>																			</td>
+								</td>
+								<tr>
+									<td colspan="3" class="text-center">
+										<em>(No virtual machines)</em>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+
+			  </div>
+			  <div class="tab-pane" id="settings">
+
+			  </div>
+			  <div class="tab-pane" id="cache">
+
+			  </div>
+			</div>
+
+		</div>
+
+		<h1>CernVM WebAPI</h1>
+
+
+		<div id="btn-controls">
+			<input type="button" value="Open Session" onclick="openSession()" />
+			<input type="button" value="Stop Service" onclick="cvmapi.stopService()" />
+			<div id="btn-session">
+			<div class="display:none" id="session_controls">
+				<input type="button" value="Start" onclick="sess.start()" />
+				<input type="button" value="Stop" onclick="sess.stop()" />
+				<input type="button" value="Pause" onclick="sess.pause()" />
+				<input type="button" value="Resume" onclick="sess.resume()" />
+				<input type="button" value="Hibernate" onclick="sess.hibernate()" />
+				<input type="button" value="Close" onclick="sess.close()" />
+				<input type="button" value="RDP Window" onclick="sess.openRDPWindow()" />
+				<div>state = <span id="sess-state" style="font-weight:bold">0</span></div>
+			</div>
+		</div>
+
+		<pre id="log">
+		</pre>
+		<script type="text/javascript">initialize();</script>
+	</body>
+</html>
