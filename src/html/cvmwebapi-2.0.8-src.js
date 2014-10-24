@@ -1,4 +1,4 @@
-window.CVM={'version':'2.0.2'};(function(_NS_) {
+window.CVM={'version':'2.0.8'};(function(_NS_) {
 var ICON_ALERT = "data:image/gif;base64,R0lGODlhIAAgALMAAGZmZnl5eczMzJ+fn////7Ozs4yMjGtra+Li4nFxcaampgAAAAAAAAAAAAAAAAAAACH5BAEHAAQALAAAAAAgACAAAASjkMhJq704681JKV04JYkYDgAwmBuSpgibGS9gyJdQpwJeBTtAwDcpBFMgYuJ1WKZKPlRqSACmVjLXK2l8xVi0raSbupl0Ne6uJ7K+zOEXtUOWS9zijrNGxT87UjtURyothAASh18YcUGJhGY5hzZ7R2wWfpNHcxR1lmiHSRSVQQoSCpNQE4GQEo1HWARamgcHmjCut7pvBKC7ugKZv4ecRMYsEQA7";
 var ICON_CONFIRM = "data:image/gif;base64,R0lGODlhIAAgAMQAAGZmZnt7e8TExK2treXl5dXV1Wtra4qKivj4+L29vd7e3pGRke/v78zMzLW1tYSEhHR0dJmZmQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEHAAgALAAAAAAgACAAAAXUICKOZGmeKMoUguMIBZPOY3IAeI4fCX0KEJ0wBxH4RouhMrfwEQLLKCBAmEGl0UAqmRUQBsumSYBtjG5KYykoVYwiS0gpgQUsZAVp71zHsaMHIwx9hAAyCHmACQoEDn9RBSJkSweMI5NSag51VSJ1DiKbWJ0In5JYBiOJmSKrYSNgWJEIg3ojV1KHCGhLnbVSgTVRciINdXsjjzpaxVjEJJhDbiIKCrhCaiVcQwEJBAoJD68o14VTM0/mOFQ+231iR0B1RUdzvEI89SosLjC6+gBnhAAAOw==";
 var ICON_INSTALL = "data:image/gif;base64,R0lGODlhIAAgALMAAGZmZpOTk93d3Wtra8zMzLW1tXNzc3p6eu/v78XFxYODg9bW1qWlpejo6Pj4+IqKiiH5BAEHAA4ALAAAAAAgACAAAATr0MlJq7046827p4QBGMTHicBoVohApTAlIN4yjE1TwGmRH4DBooMa3XipQXFA0wiQ0ChguAHyFCUJQYE8dBqogY8BPDB0R0Pje0zYkMJEcs3ZAQKII7zx6GlCPAsMKQcuC1YMBDwkF0UpDih0DgspBghIBhdQDjcDEgEOl0EOmxaOAJApLlqVojCZFoeBgwAHQ4AAiTy2GnZ4p619AAUdeSlupwYLckFNG2BJBQgMIgYMCAVpkhpWMFg0CFuYHE9S5lMnr3o8SjBM5DcHDdhI0g1AQh+rEkgyziupKgHMsKAalYEIEypcyHBDBAA7";
@@ -559,7 +559,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 		try {
 
 			// Calculate timeout
-			if (!timeout) timeout=100;
+			if (!timeout) timeout=500;
 
 			// Safari bugfix: When everything else fails
 			var timedOut = false,
@@ -633,7 +633,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 		};
 
 		// Calculate timeout allowance for the probe socket
-		var probeTimeout = 100;
+		var probeTimeout = 500;
 		if (msLeft < probeTimeout)
 			probeTimeout = msLeft;
 
@@ -707,8 +707,38 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 
 	};
 
+	/**
+	 * Prope a socket with retries if failed
+	 */
+	var probe_socket_with_retries = function( probe_timeout, retries, callback ) {
+		var do_try = function() {
+
+			// Check if we ran out of retries
+			if (retries-- <= 0) {
+				callback(false);
+				return;
+			}
+
+			// Probe for connection
+			probe_socket(function(state, socket) {
+				if (state) {
+					// If we got a socket, we are done
+					callback(state, socket);
+					return;
+				} else {
+					// Otherwise schedule another try
+					setTimeout(do_try, 100);
+				}
+			}, probe_timeout);
+		}
+
+		do_try();
+	}
+
 	// First, check if we can directly contact a socket
-	probe_socket(function(state, socket) {
+	// (Probe a socket with 4 retries before reaching a decision of launching
+	//  the plug-in via URL)
+	probe_socket_with_retries( 500, 4, function(state, socket) {
 		if (state) {
 			// A socket is directly available
 			socket_success(socket);
@@ -720,7 +750,11 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 				// Create a tiny iframe for triggering the launch
 				var e = document.createElement('iframe'); 
 				e.src = WS_URI + "//launch";
-				e.style.display="none"; 
+				e.style.visibility="hidden";
+				e.style.width = "0";
+				e.style.height = "0";
+				e.style.position = "absolute";
+				e.style.left = "-1000px"; 
 				document.body.appendChild(e);
 
 				// And start loop for 5 sec

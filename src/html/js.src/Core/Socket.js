@@ -196,7 +196,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 		try {
 
 			// Calculate timeout
-			if (!timeout) timeout=100;
+			if (!timeout) timeout=500;
 
 			// Safari bugfix: When everything else fails
 			var timedOut = false,
@@ -270,7 +270,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 		};
 
 		// Calculate timeout allowance for the probe socket
-		var probeTimeout = 100;
+		var probeTimeout = 500;
 		if (msLeft < probeTimeout)
 			probeTimeout = msLeft;
 
@@ -344,8 +344,38 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 
 	};
 
+	/**
+	 * Prope a socket with retries if failed
+	 */
+	var probe_socket_with_retries = function( probe_timeout, retries, callback ) {
+		var do_try = function() {
+
+			// Check if we ran out of retries
+			if (retries-- <= 0) {
+				callback(false);
+				return;
+			}
+
+			// Probe for connection
+			probe_socket(function(state, socket) {
+				if (state) {
+					// If we got a socket, we are done
+					callback(state, socket);
+					return;
+				} else {
+					// Otherwise schedule another try
+					setTimeout(do_try, 100);
+				}
+			}, probe_timeout);
+		}
+
+		do_try();
+	}
+
 	// First, check if we can directly contact a socket
-	probe_socket(function(state, socket) {
+	// (Probe a socket with 4 retries before reaching a decision of launching
+	//  the plug-in via URL)
+	probe_socket_with_retries( 500, 4, function(state, socket) {
 		if (state) {
 			// A socket is directly available
 			socket_success(socket);
@@ -357,7 +387,11 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 				// Create a tiny iframe for triggering the launch
 				var e = document.createElement('iframe'); 
 				e.src = WS_URI + "//launch";
-				e.style.display="none"; 
+				e.style.visibility="hidden";
+				e.style.width = "0";
+				e.style.height = "0";
+				e.style.position = "absolute";
+				e.style.left = "-1000px"; 
 				document.body.appendChild(e);
 
 				// And start loop for 5 sec

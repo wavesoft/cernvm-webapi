@@ -32,7 +32,7 @@ option(COVERITY_RUN "Set to ON when running this application with coverity" OFF)
 
 # CernVM Library
 project ( cernvm-webapi )
-set(VERSION "2.0.3")
+set(VERSION "2.0.8")
 
 # Include additional libraries
 include(cmake/AddCompileLinkFlags.cmake)
@@ -143,7 +143,7 @@ file ( GLOB_RECURSE WEBAPI_RESOURCES
 		${PROJECT_SOURCE_DIR}/src/html/binary.src/*
 	)
 list( APPEND WEBAPI_RESOURCES 
-		"../cvmwebapi-2.0.2.js:js/cvmwebapi-2.0.2.js"
+		"../cvmwebapi-${VERSION}.js:js/cvmwebapi.js"
 	)
 
 # Setup includes
