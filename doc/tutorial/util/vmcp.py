@@ -154,6 +154,9 @@ class VMCPSigner:
 		strBuffer += salt
 		# ------------------------------------
 
+		# Create a copy so we don't touch the original dict
+		parameters = parameters.copy()
+
 		# Store the resulting signature to the parameter
 		parameters['signature'] = self.crypto.sign( strBuffer )
 		return parameters
