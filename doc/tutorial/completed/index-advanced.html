@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>CernVM WebAPI Demo</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+        <style>
+        body {
+            font-family: Verdana, Tahoma, sans-serif;
+            font-size: 14px;
+        }
+        </style>
+        <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+        <script type="text/javascript" src="http://cernvm.cern.ch/releases/webapi/js/cvmwebapi-2.0.8.js"></script>
+        <script type="text/javascript">
+        $(function() {
+
+            // Helper function to update progress value
+            function update_progress_value(value) {
+                var percent = Number(value * 100).toFixed() + '%';
+                $("#progress-frame .progress-bar").css('width', percent);
+                $("#progress-frame .progress-bar").text(percent);
+            }
+
+            // Callback handler to show the progress bar
+            function progress_started(message) {
+                $("#progress-frame").show();
+                $("#lbl-progress").text(message);
+                update_progress_value(0.0);
+            }
+
+            // Callback handler to hide the progress bar when completed
+            function progress_completed(message) {
+                $("#progress-frame").hide();
+                $("#lbl-progress").text(message);
+                update_progress_value(1.0);
+            }
+
+            // Callback handler to update the progress bar
+            function progress_updated(message, value) {
+                $("#lbl-progress").text(message);
+                update_progress_value(value);
+            }
+
+            // Callback handler in case of error
+            function progress_error(message) {
+                $("#progress-frame").hide();
+                $("#lbl-error").text(message);
+                $('#alert-frame').fadeIn();
+            }
+
+            // Initialize CernVM WebAPI & Callback when ready
+            CVM.startCVMWebAPI(function(api) {
+                $("#lbl-status").text("CernVM WebAPI Ready");
+
+                // Bind progress listeners on the plugin instance
+                api.addEventListener('started', progress_started);
+                api.addEventListener('completed', progress_completed);
+                api.addEventListener('progress', progress_updated);
+                api.addEventListener('failed', progress_error);
+                
+                // Request a session through our VMC endpoint
+                api.requestSession('http://test.local:5000/vmcp', function(session) {
+                    $("#lbl-status").text("Session open");
+                    window.s = session;
+                    
+                    // Obtained from the Appendix
+                    var STATE_NAMES = ['Not yet created', '', 'Powered off', 'Saved', 'Paused', 'Running'];
+
+                    // Bind progress listeners on the session instance
+                    session.addEventListener('started', progress_started);
+                    session.addEventListener('completed', progress_completed);
+                    session.addEventListener('progress', progress_updated);
+                    session.addEventListener('failed', progress_error);
+
+                    // Listen for state changed events
+                    session.addEventListener('stateChanged', function(newState) {
+                        $("#lbl-status").text(STATE_NAMES[newState]);
+                    });
+
+                    // Listen for API state changed events
+                    session.addEventListener('apiStateChanged', function(newState, apiURL) {
+                        if (newState) {
+                            $("#lbl-api-status").text(apiURL);
+                            $("#lbl-api-status").attr('href', apiURL);
+                        } else {
+                            $("#lbl-api-status").text("Not available");
+                            $("#lbl-api-status").attr('href', "#");
+                        }
+                    });
+
+                    // Register button clicks
+                    $("#btn-start").click(function() {
+                        $("#lbl-status").text("Starting...");
+                        session.start();
+                    });
+                    $("#btn-stop").click(function() {
+                        $("#lbl-status").text("Stopping...");
+                        session.stop();
+                    });
+                    $("#btn-pause").click(function() {
+                        $("#lbl-status").text("Pausing...");
+                        session.pause();
+                    });
+                    $("#btn-hibernate").click(function() {
+                        $("#lbl-status").text("Hibernating...");
+                        session.hibernate();
+                    });
+                    $("#btn-close").click(function() {
+                        $("#lbl-status").text("Closing...");
+                        session.close();
+                    });
+
+                });
+            });
+
+        });
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Advanced Example</h1>
+            <p>
+                <strong>Session state:</strong> <span id="lbl-status">Not started</span>
+            </p>
+            <p>
+                <strong>API state:</strong> <a href="#" id="lbl-api-status">Not available</a>
+            </p>
+            <p>
+                <button id="btn-start" class="btn btn-success">Start</button>
+                <button id="btn-stop" class="btn btn-danger">Stop</button>
+                <button id="btn-pause" class="btn btn-default">Pause</button>
+                <button id="btn-hibernate" class="btn btn-default">Hibernate</button>
+                <button id="btn-close" class="btn btn-default">Close (Destroy)</button>
+            </p>
+
+            <!-- Progress frame -->
+            <div id="progress-frame" class="well well-sm" style="display:none">
+                <div class="progress">
+                  <div class="progress-bar" role="progressbar" style="width: 0%;">0%</div>
+                </div>
+                <div><span id="lbl-progress"></span></div>
+            </div>
+
+            <!-- Alert frame -->
+            <div id="alert-frame" style="display:none" class="alert alert-danger">
+              <button onclick="$('#alert-frame').fadeOut()" type="button" class="close"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+              <h4>Oh snap! You got an error!</h4>
+              <p id="lbl-error">(None)</p>
+            </div>
+
+        </div>
+    </body>
+</html>

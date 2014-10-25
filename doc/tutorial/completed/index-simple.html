@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>CernVM WebAPI Demo</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+        <style>
+        body {
+            font-family: Verdana, Tahoma, sans-serif;
+            font-size: 14px;
+        }
+        </style>
+        <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+        <script type="text/javascript" src="http://cernvm.cern.ch/releases/webapi/js/cvmwebapi-2.0.8.js"></script>
+        <script type="text/javascript">
+        $(function() {
+
+            // Website is initialized. Continue here:
+
+            // Initialize CernVM WebAPI & Callback when ready
+            CVM.startCVMWebAPI(function(api) {
+                $("#lbl-status").text("CernVM WebAPI Ready");
+                
+                // Request a session through our VMC endpoint
+                api.requestSession('http://test.local:5000/vmcp', function(session) {
+                    $("#lbl-status").text("Session open");
+                    window.s = session;
+                    
+                    // Obtained from the Appendix
+                    var STATE_NAMES = ['Not yet created', '', 'Powered off', 'Saved', 'Paused', 'Running'];
+
+                    // Listen for state changed events
+                    session.addEventListener('stateChanged', function(newState) {
+                        $("#lbl-status").text(STATE_NAMES[newState]);
+                    });
+
+                    // Register button clicks
+                    $("#btn-start").click(function() {
+                        $("#lbl-status").text("Starting...");
+                        session.start();
+                    });
+                    $("#btn-stop").click(function() {
+                        $("#lbl-status").text("Stopping...");
+                        session.stop();
+                    });
+                    $("#btn-pause").click(function() {
+                        $("#lbl-status").text("Pausing...");
+                        session.pause();
+                    });
+                    $("#btn-hibernate").click(function() {
+                        $("#lbl-status").text("Hibernating...");
+                        session.hibernate();
+                    });
+                    $("#btn-close").click(function() {
+                        $("#lbl-status").text("Closing...");
+                        session.close();
+                    });
+
+                });
+            });
+
+        });
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Simple Example</h1>
+            <p>
+                <strong>Session state:</strong> <span id="lbl-status">Not started</span></p>
+            <p>
+                <button id="btn-start" class="btn btn-success">Start</button>
+                <button id="btn-stop" class="btn btn-danger">Stop</button>
+                <button id="btn-pause" class="btn btn-default">Pause</button>
+                <button id="btn-hibernate" class="btn btn-default">Hibernate</button>
+                <button id="btn-close" class="btn btn-default">Close (Destroy)</button>
+            </p>
+        </div>
+    </body>
+</html>
