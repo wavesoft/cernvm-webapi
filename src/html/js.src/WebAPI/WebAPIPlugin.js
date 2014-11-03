@@ -79,3 +79,52 @@ _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
 
 
 };
+
+/**
+ * Enumerate the running vitual machines
+ * (Available only if the session is privileged)
+ */
+_NS_.WebAPIPlugin.prototype.enumSessions = function(callback) {
+	var self = this;
+	if (!callback) return;
+
+	// Send requestSession
+	this.send("enumSessions", { }, {
+
+		// Basic responses
+		onSucceed : function( vm_list ) {
+			callback(vm_list);
+		},
+		onFailed: function( msg, code ) {
+			callback(null, msg, code);
+		}
+
+	});
+
+};
+
+/**
+ * Control a session with the given ID
+ * (Available only if the session is privileged)
+ */
+_NS_.WebAPIPlugin.prototype.controlSession = function(session_id, action, callback) {
+	var self = this;
+	if (!callback) return;
+
+	// Send requestSession
+	this.send("controlSession", {
+		"session_id" : session_id,
+		"action" : action
+	}, {
+
+		// Basic responses
+		onSucceed : function( vm_list ) {
+			callback(vm_list);
+		},
+		onFailed: function( msg, code ) {
+			callback(null, msg, code);
+		}
+
+	});
+
+};

@@ -47,7 +47,11 @@
 
 		};
 
-		Interface.prototype.registerVM = function(config) {
+		Interface.prototype.controlVM = function(vmid, action) {
+			cvmapi.
+		}
+
+		Interface.prototype.registerVM = function(status) {
 			var row = $('<tr></tr>'),
 				colName = $('<td></td>').appendTo(row),
 					cLabel 	= $('<span class="label"></span>').appendTo(colName),
@@ -58,7 +62,43 @@
 					bStop	= $('<button class="btn btn-sm btn-danger"><span class="glyphicon glyphicon-stop"></span> Stop</button>').appendTo(colControls),
 					bStart	= $('<button class="btn btn-sm btn-default"><span class="glyphicon glyphicon-play"></span> Play</button>').appendTo(colControls),
 					bPause	= $('<button class="btn btn-sm btn-default"><span class="glyphicon glyphicon-pause"></span> Suspend</button>').appendTo(colControls);
-					
+			
+			// Update status field
+			if (status.state == 0) {
+				cLabel.addClass("label-default");
+				cLabel.text("Not created");
+				bStop.hide();
+				bPause.hide();
+			} else if (status.state == 1) {
+				cLabel.addClass("label-default");
+				cLabel.text("Available");
+				bStop.hide();
+				bPause.hide();
+			} else if (status.state == 2) {
+				cLabel.addClass("label-default");
+				cLabel.text("Stopped");
+				bStop.hide();
+				bPause.hide();
+			} else if (status.state == 3) {
+				cLabel.addClass("label-default");
+				cLabel.text("Saved");
+				bPause.hide();
+			} else if (status.state == 4) {
+				cLabel.addClass("label-primary");
+				cLabel.text("Paused");
+				bPause.hide();
+			} else if (status.state == 5) {
+				cLabel.addClass("label-success");
+				cLabel.text("Running");
+				bStart.hide();
+			}
+
+			// Update name
+			cName.text(status.name);
+
+			// Apply configuration
+
+
 		}
 
 		</script>
@@ -80,37 +120,36 @@
 			<!-- Tab panes -->
 			<div class="tab-content">
 			  <div class="tab-pane active" id="vms">
-
-				<div class="panel panel-default">
-					<div class="panel-body">
-						<table class="table table-hover">
-							<thead>
-								<th width="256">Name</th>
-								<th>Resources</th>
-								<th width="256">Controls</th>
-							</thead>
-							<tbody>
-								<tr>
-									<th><span class="label label-success">Running</span> LHC_Test_64</th>
-									<td>cpus=4, ram=1023, disk=512</td>
-									<td>
-										<button class="btn btn-sm btn-danger"><span class="glyphicon glyphicon-stop"></span> Stop</button>
-										<button class="btn btn-sm btn-danger"><span class="glyphicon glyphicon-stop"></span> Stop</button>										
-										<button class="btn btn-sm btn-danger"><span class="glyphicon glyphicon-stop"></span> Stop</button>																			</td>
-								</td>
-								<tr>
-									<td colspan="3" class="text-center">
-										<em>(No virtual machines)</em>
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
-				</div>
+				<p></p>
+				<table class="table table-hover">
+					<thead>
+						<th width="256">Name</th>
+						<th>Resources</th>
+						<th width="256">Controls</th>
+					</thead>
+					<tbody>
+						<tr>
+							<th><span class="label label-success">Running</span> LHC_Test_64</th>
+							<td>cpus=4, ram=1023, disk=512</td>
+							<td>
+								<button class="btn btn-sm btn-danger"><span class="glyphicon glyphicon-stop"></span> Stop</button>
+								<button class="btn btn-sm btn-danger"><span class="glyphicon glyphicon-stop"></span> Stop</button>										
+								<button class="btn btn-sm btn-danger"><span class="glyphicon glyphicon-stop"></span> Stop</button>																			</td>
+						</td>
+						<tr>
+							<td colspan="3" class="text-center">
+								<em>(No virtual machines)</em>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<p>
+					<button class="btn btn-primary" id="btn-refresh"><i class="glyphicon glyphicon-refresh"></i> Refresh </button>
+				</p>
 
 			  </div>
 			  <div class="tab-pane" id="settings">
-
+					<button class="btn btn-danger" id="btn-stop"><i class="glyphicon glyphicon-ban-circle"></i> Exit now</button>
 			  </div>
 			  <div class="tab-pane" id="cache">
 

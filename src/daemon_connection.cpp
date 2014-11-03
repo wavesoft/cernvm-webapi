@@ -148,6 +148,12 @@ void DaemonConnection::handleAction( const std::string& id, const std::string& a
 
     }
 
+    // [Enumerate Session] 
+    //  List the running sessions.
+    else if (action == "enumSessions") {
+
+    }
+
     // [Session commands]
     //  If there is a 'session_id' parameter in the request,
     //  forward the command to the appropriate action
