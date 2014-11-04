@@ -134,94 +134,52 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 var HV_NONE = 0;
 var HV_VIRTUALBOX = 1;
 
-var HVE_ALREADY_EXISTS = 2;
-var HVE_SCHEDULED = 1;
-var HVE_OK = 0;
-var HVE_CREATE_ERROR = -1;
-var HVE_MODIFY_ERROR = -2;
-var HVE_CONTROL_ERROR = -3;
-var HVE_DELETE_ERROR = -4;
-var HVE_QUERY_ERROR = -5;
-var HVE_IO_ERROR = -6;
-var HVE_EXTERNAL_ERROR = -7;
-var HVE_INVALID_STATE = -8;
-var HVE_NOT_FOUND = -9;
-var HVE_NOT_ALLOWED = -10;
-var HVE_NOT_SUPPORTED = -11;
-var HVE_NOT_VALIDATED = -12;
-var HVE_NOT_TRUSTED = -13;
-var HVE_USAGE_ERROR = -99;
-var HVE_NOT_IMPLEMENTED = -100;
+/**
+ * Websocket configuration
+ */
+var WS_ENDPOINT = "ws://127.0.0.1:5624",
+    WS_URI = "cernvm-webapi://launch";
 
-var STATE_CLOSED = 0;
-var STATE_OPPENING = 1;
-var STATE_OPEN = 2;
-var STATE_STARTING = 3;
-var STATE_STARTED = 4;
-var STATE_ERROR = 5;
-var STATE_PAUSED = 6;
+/**
+ * Session bit flags
+ */
+var HVF_SYSTEM_64BIT = 1,
+    HVF_DEPLOYMENT_HDD = 2,
+    HVF_GUEST_ADDITIONS = 4,
+    HVF_FLOPPY_IO = 8,
+    HVF_HEADFUL = 16;
 
-var HVF_SYSTEM_64BIT = 1; 
-var HVF_DEPLOYMENT_HDD = 2; 
-var HVF_GUEST_ADDITIONS = 4;
-var HVF_FLOPPY_IO = 8;
-var HVF_HEADFUL = 16;
+/**
+ * Flags for the UserInteraction
+ */
+var UI_OK           = 0x01,
+    UI_CANCEL       = 0x02,
+    UI_NOTAGAIN     = 0x100;
 
+/**
+ * Critical failures
+ */
 var F_NO_VIRTUALIZATION = 1;
 
-var SS_MISSING = 0,
-    SS_AVAILABLE = 1,
-    SS_POWEROFF = 2,
-    SS_SAVED = 3,
-    SS_PAUSED = 4,
-    _stateNameFor = function(n){
-        return [
-            "missing", "available", "poweroff", "saved", "paused"
-        ][n];
-    };
-
-/* Daemon flags */
-var DF_SUSPEND = 1;
-var DF_AUTOSTART = 2;
-
 /**
- * Convert state to string
+ * Return the textual representation of the specified state
  */
-function state_string(state) {
-    if (state == STATE_CLOSED)      return "Closed";
-    if (state == STATE_OPPENING)    return "Oppening";
-    if (state == STATE_OPEN)        return "Open";
-    if (state == STATE_STARTING)    return "Starting";
-    if (state == STATE_STARTED)     return "Started";
-    if (state == STATE_ERROR)       return "Error";
-    if (state == STATE_PAUSED)      return "Paused";
-    return "Unknown state " + state;
-};
+function _stateNameFor(state) {
+    var states = [
+        'missing',
+        'available',
+        'poweroff',
+        'saved',
+        'paused',
+        'running'
+    ];
 
-/**
- * Convert error code to string
- */
-function error_string(code) {
-    if (code == HVE_ALREADY_EXISTS) return "Already exists";
-    if (code == HVE_SCHEDULED) return "Scheduled";
-    if (code == HVE_OK) return "No error";
-    if (code == HVE_CREATE_ERROR) return "Creation Error";
-    if (code == HVE_MODIFY_ERROR) return "Modification Error";
-    if (code == HVE_CONTROL_ERROR) return "Control Error";
-    if (code == HVE_DELETE_ERROR) return "Deletion Error";
-    if (code == HVE_QUERY_ERROR) return "Query Error";
-    if (code == HVE_IO_ERROR) return "I/O Error";
-    if (code == HVE_EXTERNAL_ERROR) return "Server/Library Error";
-    if (code == HVE_INVALID_STATE) return "Invalid state for such action";
-    if (code == HVE_NOT_FOUND) return "The requested resource was not found";
-    if (code == HVE_NOT_ALLOWED) return "Access denied";
-    if (code == HVE_NOT_SUPPORTED) return "The requested action is not supported";
-    if (code == HVE_NOT_VALIDATED) return "Unable to validate the resource";
-    if (code == HVE_NOT_TRUSTED) return "The domain is not trusted";
-    if (code == HVE_USAGE_ERROR) return "Usage error";
-    if (code == HVE_NOT_IMPLEMENTED) return "The requested functionality is not implemented";
-    return "Unknown error #" + code;
+    // Validate state range
+    if ((state < 0) || (state>=states.length))
+        return 'unknown';
+    return states[state];
 }
+
 _NS_.EventDispatcher = function(e) {
     this.events = { };
 };
@@ -256,11 +214,6 @@ _NS_.EventDispatcher.prototype.removeEventListener = function( name, listener ) 
     this.events.splice(i,1);
 };
 
-var HVF_SYSTEM_64BIT = 1; 
-var HVF_DEPLOYMENT_HDD = 2; 
-var HVF_GUEST_ADDITIONS = 4;
-var HVF_FLOPPY_IO = 8;
-
 /**
  * User-friendly interface to flags
  */
@@ -270,7 +223,7 @@ var parseSessionFlags = function( o ) {
     if (o.useBootDisk) val |= HVF_DEPLOYMENT_HDD;
     if (o.useGuestAdditions) val |= HVF_GUEST_ADDITIONS;
     if (o.useFloppyIO) val |= HVF_FLOPPY_IO;
-    if (o.HVF_HEADFUL) val |= HVF_HEADFUL;
+    if (o.headful) val |= HVF_HEADFUL;
     return val;
 };
 var SessionFlags = function( o ) {
@@ -361,9 +314,6 @@ var SessionFlags = function( o ) {
 _NS_.ProgressFeedback = function() {
 	
 };
-
-var WS_ENDPOINT = "ws://127.0.0.1:5624",
-	WS_URI = "cernvm-webapi:";
 
 /**
  * WebAPI Socket handler
@@ -749,7 +699,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 
 				// Create a tiny iframe for triggering the launch
 				var e = document.createElement('iframe'); 
-				e.src = WS_URI + "//launch";
+				e.src = WS_URI;
 				e.style.visibility="hidden";
 				e.style.width = "0";
 				e.style.height = "0";
@@ -771,13 +721,6 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 	});	
 
 }
-/**
- * Flags for the UserInteraction
- */
-var UI_OK 			= 0x01,
-	UI_CANCEL 		= 0x02,
-	UI_NOTAGAIN		= 0x100;
-
 /**
  * Private variables
  */
@@ -1400,24 +1343,56 @@ _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
 
 
 };
-/**
- * Return the textual representation of the specified state
- */
-function _stateNameFor(state) {
-	var states = [
-		'missing',
-		'available',
-		'poweroff',
-		'saved',
-		'paused',
-		'running'
-	];
 
-	// Validate state range
-	if ((state < 0) || (state>=states.length))
-		return 'unknown';
-	return states[state];
-}
+/**
+ * Enumerate the running vitual machines
+ * (Available only if the session is privileged)
+ */
+_NS_.WebAPIPlugin.prototype.enumSessions = function(callback) {
+	var self = this;
+	if (!callback) return;
+
+	// Send requestSession
+	this.send("enumSessions", { }, {
+
+		// Basic responses
+		onSucceed : function( vm_list ) {
+			callback(vm_list);
+		},
+		onFailed: function( msg, code ) {
+			callback(null, msg, code);
+		}
+
+	});
+
+};
+
+/**
+ * Control a session with the given ID
+ * (Available only if the session is privileged)
+ */
+_NS_.WebAPIPlugin.prototype.controlSession = function(session_id, action, callback) {
+	var self = this;
+	if (!callback) return;
+
+	// Send requestSession
+	this.send("controlSession", {
+		"session_id" : session_id,
+		"action" : action
+	}, {
+
+		// Basic responses
+		onSucceed : function( vm_list ) {
+			callback(vm_list);
+		},
+		onFailed: function( msg, code ) {
+			callback(null, msg, code);
+		}
+
+	});
+
+};
+
 
 /**
  * WebAPI Socket handler
