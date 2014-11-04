@@ -1,9 +1,4 @@
 
-var HVF_SYSTEM_64BIT = 1; 
-var HVF_DEPLOYMENT_HDD = 2; 
-var HVF_GUEST_ADDITIONS = 4;
-var HVF_FLOPPY_IO = 8;
-
 /**
  * User-friendly interface to flags
  */
@@ -13,7 +8,7 @@ var parseSessionFlags = function( o ) {
     if (o.useBootDisk) val |= HVF_DEPLOYMENT_HDD;
     if (o.useGuestAdditions) val |= HVF_GUEST_ADDITIONS;
     if (o.useFloppyIO) val |= HVF_FLOPPY_IO;
-    if (o.HVF_HEADFUL) val |= HVF_HEADFUL;
+    if (o.headful) val |= HVF_HEADFUL;
     return val;
 };
 var SessionFlags = function( o ) {

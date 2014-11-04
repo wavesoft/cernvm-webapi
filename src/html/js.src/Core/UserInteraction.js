@@ -1,12 +1,5 @@
 
 /**
- * Flags for the UserInteraction
- */
-var UI_OK 			= 0x01,
-	UI_CANCEL 		= 0x02,
-	UI_NOTAGAIN		= 0x100;
-
-/**
  * Private variables
  */
 var occupiedWindow = null;

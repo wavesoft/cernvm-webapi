@@ -1,7 +1,4 @@
 
-var WS_ENDPOINT = "ws://127.0.0.1:5624",
-	WS_URI = "cernvm-webapi:";
-
 /**
  * WebAPI Socket handler
  */
@@ -386,7 +383,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 
 				// Create a tiny iframe for triggering the launch
 				var e = document.createElement('iframe'); 
-				e.src = WS_URI + "//launch";
+				e.src = WS_URI;
 				e.style.visibility="hidden";
 				e.style.width = "0";
 				e.style.height = "0";

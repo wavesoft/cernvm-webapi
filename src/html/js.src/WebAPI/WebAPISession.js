@@ -1,22 +1,4 @@
 
-/**
- * Return the textual representation of the specified state
- */
-function _stateNameFor(state) {
-	var states = [
-		'missing',
-		'available',
-		'poweroff',
-		'saved',
-		'paused',
-		'running'
-	];
-
-	// Validate state range
-	if ((state < 0) || (state>=states.length))
-		return 'unknown';
-	return states[state];
-}
 
 /**
  * WebAPI Socket handler
