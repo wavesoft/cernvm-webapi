@@ -208,6 +208,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 				if (timedOut) return;
 				clearTimeout(timeoutCb);
 				if (!self.connecting) return;
+				socket.close();
 				cb(false);
 			};
 			socket.onopen = function(e) {
@@ -220,6 +221,9 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 		} catch(e) {
 			console.warn("[socket] Error setting up socket! ",e);
 			if (timedOut) return;
+			clearTimeout(timeoutCb);
+			if (!self.connecting) return;
+			socket.close();
 			cb(false);
 		}
 	};
@@ -345,10 +349,11 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 	 * Prope a socket with retries if failed
 	 */
 	var probe_socket_with_retries = function( probe_timeout, retries, callback ) {
-		var do_try = function() {
+		var tries = 0,
+			do_try = function() {
 
 			// Check if we ran out of retries
-			if (retries-- <= 0) {
+			if (++tries > retries) {
 				callback(false);
 				return;
 			}

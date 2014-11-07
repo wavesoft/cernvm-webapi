@@ -148,12 +148,6 @@ void DaemonConnection::handleAction( const std::string& id, const std::string& a
 
     }
 
-    // [Enumerate Session] 
-    //  List the running sessions.
-    else if (action == "enumSessions") {
-
-    }
-
     // [Session commands]
     //  If there is a 'session_id' parameter in the request,
     //  forward the command to the appropriate action
@@ -186,8 +180,51 @@ void DaemonConnection::handleAction( const std::string& id, const std::string& a
 
             // Mark core for forced shutdown
             core.running = false;
+        }
+
+        // [Enumerate Session] 
+        //  List the running sessions.
+        else if (action == "enumSessions") {
+
+            Json::Value sessions;
+            HVInstancePtr hv = core.hypervisor;
+
+            // Enumerate sessions
+            for (std::map< std::string, HVSessionPtr >::iterator it = hv->sessions.begin(); it != hv->sessions.end(); ++it) {
+                Json::Value session;
+
+                // Keep session information
+                session["uuid"] = (*it).first;
+                session["config"] = sessionStateInfoToJSON((*it).second);
+
+                // Store on session object
+                sessions.append(session);
+
+            }
+
+            data["sessions"] = sessions;
+            reply(id, data);
 
         }
+
+        // [Control Session] 
+        //  Control an active session sessions.
+        else if (action == "controlSession") {
+
+            // Check for missing parameters
+            if (!parameters->contains("session")) {
+                sendError("Missing 'session' parameter", id);
+                return;
+            }
+            if (!parameters->contains("action")) {
+                sendError("Missing 'action' parameter", id);
+                return;
+            }
+
+            // Try to find this on the hypervisor sessions
+
+        }
+
     }
 
     CRASH_REPORT_END;
