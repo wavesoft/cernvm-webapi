@@ -14,6 +14,7 @@
 
 // Daemon components
 #include <daemon.h>
+#import <web_rpc.h>
 
 @interface URLDaemonDelegate : NSObject <NSApplicationDelegate> {
   
@@ -23,6 +24,8 @@
   	@private DaemonFactory *	factory;
   	// Create a webserver that serves with the daemon factory
   	@private CVMWebserver *		webserver;
+    // The RPC static url handler
+    @private WebRPCHandler * rpcHandler;
 
   	// The webserver polling timer
   	@private NSTimer *			timer;
@@ -44,6 +47,8 @@
     // Flag that denotes that the URL was started by the installer
     // this should disable all the timers
     @private bool           launchedBySetup;
+    // The timestamp the last URL request was performed
+    @private long           urlLaunchTimestamp;
 
 }
 

@@ -82,12 +82,12 @@ public:
 	/**
 	 * Check if we can handle the specified URL
 	 */
-	virtual bool 			canHandleStaticURL( const std::string& url );
+	virtual bool 			canHandleStaticURL( const std::string& url ) = 0;
 
 	/**
 	 * Handle a URL query
 	 */
-	virtual std::string 	handleStaticURL( const std::string& url );
+	virtual std::string 	handleStaticURL( const std::string& url ) = 0;
 
 };
 

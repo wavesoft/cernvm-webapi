@@ -73,6 +73,13 @@ void openAuthenticatedURL()
 }
 
 /**
+ * Static RPC implementation : open authenticated URL
+ */
+void WebRPCHandler::platf_openControl() {
+    openAuthenticatedURL();
+}
+
+/**
  * Windows entry point
  */
 int WINAPI WinMain(HINSTANCE hInstance,
@@ -87,11 +94,6 @@ int WINAPI WinMain(HINSTANCE hInstance,
 #ifdef CRASH_REPORTING
     crashReportInit();
 #endif
-    initSysExec();
-    DomainKeystore::Initialize();
-
-    // Create the C++ daemon core
-    core = new DaemonCore();
 
   	// Check if the instance is already running (requires core initialized)
   	HANDLE instMutex = CreateMutex( NULL, true, "CernVM_WebAPI_Instance_Mutex" ); 
@@ -100,16 +102,25 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
   		// Launch instance if we are not launched by URL
         if (isEmpty(lpCmdLine))
-            openAuthenticatedURL();
+            WebRPC::openControl();
 
   		// Exit
   		return 0;
   	}
 
+    // Initialize components
+    initSysExec();
+    DomainKeystore::Initialize();
+
+    // Create the C++ daemon core
+    core = new DaemonCore();
     // Create a factory which is going to create the instances
     factory = new DaemonFactory(*core);
     // Create the webserver instance
     webserver = new CVMWebserver(*factory);
+    // Create the RPC handler
+    rpcHandler = new WebRPCHandler();
+    webserver->setStaticURLHandler(rpcHandler);
 
     // Check if we should launch a URL
     bool launchURL = isEmpty(lpCmdLine);

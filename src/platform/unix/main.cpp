@@ -55,6 +55,13 @@ void openAuthenticatedURL()
 }
 
 /**
+ * Static RPC implementation : open authenticated URL
+ */
+void WebRPCHandler::platf_openControl() {
+    openAuthenticatedURL();
+}
+
+/**
  * Entry point for the CernVM Web Daemon
  */
 int main( int argc, char ** argv ) {
@@ -66,9 +73,14 @@ int main( int argc, char ** argv ) {
         int rc = flock(pid_file, LOCK_EX | LOCK_NB);
         if(rc) {
             if(EWOULDBLOCK == errno) {
+                
+                // Open URL
+                WebRPC::openControl();
+
                 // Another instance is running
                 close(pid_file);
                 return 32;
+                
             }
         }
     }
@@ -85,6 +97,9 @@ int main( int argc, char ** argv ) {
     factory = new DaemonFactory(*core);
     // Create the webserver instance
     webserver = new CVMWebserver(*factory);
+    // Create the RPC handler
+    rpcHandler = new WebRPCHandler();
+    webserver->setStaticURLHandler(rpcHandler);
 
     // Check if we should launch a URL
     bool launchURL = (argc <= 1);
@@ -140,6 +155,7 @@ int main( int argc, char ** argv ) {
     delete webserver;
     delete factory;
     delete core;
+    delete rpcHandler;
 
     // Cleanup components
 #ifdef CRASH_REPORTING

@@ -24,6 +24,7 @@
 		self->launchedBySetup = false;
 		self->focusOnActiate = false;
 		self->usedLauchURL = false;
+		self->urlLaunchTimestamp = 0;
 	}
 	return self;
 }
@@ -33,9 +34,10 @@
  */
 - (void)applicationDidBecomeActive:(NSNotification *)aNotification
 {
-	// Launch URL on focus only when allowed
-	if (focusOnActiate) {
-		NSLog(@"Focusing!");
+	// Launch URL on focus only when allowed and only if at least
+	// 1s is passed since the URL handling was performed.
+	NSLog(@"Focusing (Delta=%d)!", getMillis() - urlLaunchTimestamp );
+	if (focusOnActiate && (getMillis() - urlLaunchTimestamp > 2000)) {
 		[self launchURL];
 	}
 
@@ -63,6 +65,9 @@
 	factory = new DaemonFactory(*core);
 	// Create the webserver instance
 	webserver = new CVMWebserver(*factory);
+	// Create the RPC handler
+	rpcHandler = new WebRPCHandler();
+	webserver->setStaticURLHandler(rpcHandler);
 
 	// Handle URL
 	NSAppleEventManager *em = [NSAppleEventManager sharedAppleEventManager];
@@ -266,6 +271,9 @@
 	NSString *urlStr = [[event paramDescriptorForKeyword:keyDirectObject] 
 		stringValue];
 
+	// Update the timestamp we were last launched by URL
+	urlLaunchTimestamp = getMillis();
+
 	NSLog(@"URL Handled: %s", [urlStr UTF8String]);
 	launchedByURL = true;
 }
@@ -292,6 +300,7 @@
 	delete webserver;
 	delete factory;
 	delete core;
+	delete rpcHandler;
 
 	// Cleanup subsystems
 	DomainKeystore::Cleanup();

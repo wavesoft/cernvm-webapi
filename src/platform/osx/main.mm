@@ -11,11 +11,26 @@
 #import "URLDaemonDelegate.h"
 #import <string.h>
 
+/**
+ * The URL daemon deletgate
+ */
+URLDaemonDelegate * delegate;
+
+/**
+ * Static RPC implementation : open authenticated URL
+ */
+void WebRPCHandler::platf_openControl() {
+	[delegate launchURL];
+}
+
+/**
+ * Application entry point
+ */
 int main(int argc, const char * argv[])
 {
 
 	// Initialize delegate
-	URLDaemonDelegate * delegate = [[URLDaemonDelegate alloc] init];
+	delegate = [[URLDaemonDelegate alloc] init];
 
 	// Check if we have the 'setup' argument which is provided
 	// when we are launched by the setup
