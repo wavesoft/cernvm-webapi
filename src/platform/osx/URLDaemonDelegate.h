@@ -35,6 +35,8 @@
     @private NSTimer *      cronTimer;
     // The timer used for delay-starting reap timer
     @private NSTimer *      delayStartTimer;
+    // The timer used for delay-activating the URL launching
+    @private NSTimer *      delayActivateLaunch;
     // The timer used for delay-launching the URL
     @private NSTimer *      delayLaunch;
 
@@ -71,6 +73,11 @@
  * Start reaping probe
  */
 - (void)startReap;
+
+/**
+ * Check if a URL should be launched and launch it
+ */
+- (void)checkAndLaunchURL;
 
 /**
  * Launch URL

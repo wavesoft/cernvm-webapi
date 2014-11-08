@@ -194,27 +194,35 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 
 			// Calculate timeout
 			if (!timeout) timeout=500;
+			console.log("[socket] Probing socket, timeout=", timeout);
 
 			// Safari bugfix: When everything else fails
 			var timedOut = false,
 				timeoutCb = setTimeout(function() {
+					console.log("[socket] Timeout occured");
 					timedOut = true;
+					console.log("[socket] Firing callback(false)");
 					cb(false);
 				}, timeout);
 
 			// Setup websocket & callbacks
 			var socket = new WebSocket(WS_ENDPOINT);
 			socket.onerror = function(e) {
+				console.warn("[socket] Socket error occured (timedOut="+timedOut+")", e);
 				if (timedOut) return;
 				clearTimeout(timeoutCb);
 				if (!self.connecting) return;
+				console.log("[socket] Closing socket");
 				socket.close();
+				console.log("[socket] Firing callback(false)");
 				cb(false);
 			};
 			socket.onopen = function(e) {
+				console.warn("[socket] Socket is now open (timedOut="+timedOut+")");
 				if (timedOut) return;
 				clearTimeout(timeoutCb);
 				if (!self.connecting) return;
+				console.log("[socket] Firing callback(true,",socket,")");
 				cb(true, socket);
 			};
 
@@ -223,7 +231,9 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 			if (timedOut) return;
 			clearTimeout(timeoutCb);
 			if (!self.connecting) return;
+			console.log("[socket] Closing socket");
 			socket.close();
+			console.log("[socket] Firing callback(false)");
 			cb(false);
 		}
 	};
@@ -242,16 +252,20 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 		// reach the timeout.
 		var msLeft = timeout - (time - _startTime);
 
+		console.log("[socket] Checking socket status (_startTime=",_startTime,", _retryDelay=",_retryDelay,", time=",time,", msLeft=",msLeft,")");
+
 		// Register a callback that will be fired when we reach
 		// the timeout defined
 		var timedOut = false,
 			timeoutTimer = setTimeout(function() {
+				console.log("[socket] Check loop timed out");
 				timedOut = true;
 				cb(false);
 			}, msLeft);
 
 		// Setup probe callback
 		var probe_cb = function( state, socket ) {
+			console.log("[socket] Got probe callback: ",state);
 			if (timedOut) return;
 			// Don't fire timeout callback
 			if (state) {
@@ -264,6 +278,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 				// Otherwise clear timeout timer
 				clearTimeout(timeoutTimer);
 				// And re-schedule websocket poll
+				console.log("[socket] Scheduling re-probe in ",_retryDelay);
 				setTimeout(function() {
 					check_loop( cb, timeout, _retryDelay, _startTime );
 				}, _retryDelay);
@@ -276,6 +291,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 			probeTimeout = msLeft;
 
 		// And send probe
+		console.log("[socket] Probing socket (timeout=",probeTimeout,")");
 		probe_socket( probe_cb, probeTimeout );
 
 	};
@@ -351,9 +367,11 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 	var probe_socket_with_retries = function( probe_timeout, retries, callback ) {
 		var tries = 0,
 			do_try = function() {
+			console.log("[socket] Probe try");
 
 			// Check if we ran out of retries
 			if (++tries > retries) {
+				console.log("[socket] Ran out of retries");
 				callback(false);
 				return;
 			}
@@ -366,25 +384,30 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 					return;
 				} else {
 					// Otherwise schedule another try
+					console.log("[socket] Scheduling retry in 100ms");
 					setTimeout(do_try, 100);
 				}
 			}, probe_timeout);
 		}
 
+		console.log("[socket] Trying socket probe with ",retries," retries");
 		do_try();
 	}
 
 	// First, check if we can directly contact a socket
 	// (Probe a socket with 4 retries before reaching a decision of launching
 	//  the plug-in via URL)
+	console.log("[socket] Starting probe with 4 retries");
 	probe_socket_with_retries( 500, 4, function(state, socket) {
 		if (state) {
 			// A socket is directly available
+			console.log("[socket] Got socket");
 			socket_success(socket);
 		} else {
 
 			// We ned to do a URL launch
 			if (autoLaunch) {
+				console.log("[socket] Auto-launching");
 
 				// Create a tiny iframe for triggering the launch
 				var e = document.createElement('iframe'); 

@@ -29,10 +29,7 @@
 	return self;
 }
 
-/**
- * Open browser when focued
- */
-- (void)applicationDidBecomeActive:(NSNotification *)aNotification
+- (void)checkAndLaunchURL
 {
 	// Launch URL on focus only when allowed and only if at least
 	// 1s is passed since the URL handling was performed.
@@ -40,6 +37,22 @@
 	if (focusOnActiate && ((getMillis() - urlLaunchTimestamp) > 2000)) {
 		[self launchURL];
 	}
+}
+
+/**
+ * Open browser when focued
+ */
+- (void)applicationDidBecomeActive:(NSNotification *)aNotification
+{
+
+	// Wait some time until the getUrl kicks in, because we might
+	// have been focused before the actual URL is handled
+	delayActivateLaunch = [NSTimer 
+		scheduledTimerWithTimeInterval:0.5
+		target:self
+		selector:@selector(checkAndLaunchURL)
+		userInfo:nil
+		repeats:NO];
 
 }
 
@@ -117,7 +130,7 @@
 		[self startReap];
 
 		// Enable focusOnActiate a while later
-		delayLaunch = [NSTimer 
+		delayActivateLaunch = [NSTimer 
 			scheduledTimerWithTimeInterval:0.5
 			target:self
 			selector:@selector(activateFocusLaunch)
@@ -156,7 +169,7 @@
 		[self launchURL];
 
 		// Enable focusOnActiate a while later
-		delayLaunch = [NSTimer 
+		delayActivateLaunch = [NSTimer 
 			scheduledTimerWithTimeInterval:0.5
 			target:self
 			selector:@selector(activateFocusLaunch)
