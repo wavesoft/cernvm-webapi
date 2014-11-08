@@ -21,6 +21,7 @@
 // Everything is included in daemon.h
 // (Including cross-referencing)
 #include "daemon.h"
+#include "utilities.h"
 
 #include <vector>
 
@@ -245,7 +246,7 @@ void DaemonConnection::__callbackConfim (const std::string& title, const std::st
  */
 void DaemonConnection::__callbackAlert (const std::string& title, const std::string& body, const callbackResult& cb) {
     CRASH_REPORT_BEGIN;
-    sendEvent("interact", ArgumentList("confirm")(title)(body));
+    sendEvent("interact", ArgumentList("alert")(title)(body));
     interactionCallback = cb;
     CRASH_REPORT_END;
 }
@@ -255,7 +256,7 @@ void DaemonConnection::__callbackAlert (const std::string& title, const std::str
  */
 void DaemonConnection::__callbackLicense (const std::string& title, const std::string& body, const callbackResult& cb) {
     CRASH_REPORT_BEGIN;
-    sendEvent("interact", ArgumentList("confirm")(title)(body));
+    sendEvent("interact", ArgumentList("confirmLicense")(title)(body));
     interactionCallback = cb;
     CRASH_REPORT_END;
 }
@@ -265,7 +266,7 @@ void DaemonConnection::__callbackLicense (const std::string& title, const std::s
  */
 void DaemonConnection::__callbackLicenseURL (const std::string& title, const std::string& url, const callbackResult& cb) {
     CRASH_REPORT_BEGIN;
-    sendEvent("interact", ArgumentList("confirm")(title)(url));
+    sendEvent("interact", ArgumentList("confirmLicenseURL")(title)(url));
     interactionCallback = cb;
     CRASH_REPORT_END;
 }

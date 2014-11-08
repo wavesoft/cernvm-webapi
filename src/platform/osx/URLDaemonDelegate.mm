@@ -37,7 +37,7 @@
 	// Launch URL on focus only when allowed and only if at least
 	// 1s is passed since the URL handling was performed.
 	NSLog(@"Focusing (Delta=%d)!", getMillis() - urlLaunchTimestamp );
-	if (focusOnActiate && (getMillis() - urlLaunchTimestamp > 2000)) {
+	if (focusOnActiate && ((getMillis() - urlLaunchTimestamp) > 2000)) {
 		[self launchURL];
 	}
 

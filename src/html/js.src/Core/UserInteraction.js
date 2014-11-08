@@ -276,15 +276,11 @@ UserInteraction.displayLicenseWindow = function( title, body, isURL, cbAccept, c
 		cBody.height = 450;
 		cBody.frameBorder = 0;
 	} else {
-
-		// Add line breaks on newlines
-		body = body.replace( /\n/g, "<br />\n" );
-
 		cBody = document.createElement('div');
 		cBody.width = "100%";
 		cBody.style.height = '450px';
 		cBody.style.display = 'block';
-		cBody.innerHTML = body;
+		cBody.innerHTML = body.replace( /\n/g, "<br/>\n" );
 	}
 
 	// Prepare buttons
