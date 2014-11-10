@@ -439,7 +439,7 @@ _NS_.Socket.prototype.send = function(action, data, responseEvents, responseTime
 			if (timeoutTimer!=null) clearTimeout(timeoutTimer);
 
 			// Wait for a result event
-			if (data['name'] == 'result') {
+			if (data['type'] == 'result') {
 				// Delete callback slot
 				delete self.responseCallbacks[frameID];
 				// Fire callback
