@@ -23,7 +23,7 @@
 #define CONFIG_H
 
 // The CernVM WebAPI Version
-#define CERNVM_WEBAPI_VERSION "2.0.8"
+#define CERNVM_WEBAPI_VERSION "2.0.9"
 
 // The minimum required hypervisor version
 #define CERNVM_WEBAPI_MIN_HV_VERSION "4.1.0"
