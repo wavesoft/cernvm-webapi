@@ -106,6 +106,7 @@ int main( int argc, char ** argv ) {
 
     // Check if we were launched with a 'setup' argument
     bool launchedBySetup = (argc > 1) && (strcmp(argv[1], "setup") == 0);
+    bool launchedByService = (argc > 1) && (strcmp(argv[1], "daemon") == 0);
 
     // Start server
     long lastIdle = getMillis();
@@ -128,7 +129,7 @@ int main( int argc, char ** argv ) {
         // Exit if we are idle for 10 seconds
         else if (now - lastIdle > 10000) {
             // .. but not if we were launched by setup
-            if (!launchedBySetup) break;
+            if (!launchedBySetup && !launchedByService) break;
         }
 
         // If we have to launch a URL, do it after the first poll
