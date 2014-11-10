@@ -36,7 +36,10 @@ int main(int argc, const char * argv[])
 	// when we are launched by the setup
 	if (argc >= 2) {
 		if (!strcmp(argv[1], "setup"))
-			[delegate markAsSetup];
+			[delegate disableFirstTimeout];
+		else if (!strcmp(argv[1], "daemon")) {
+			[delegate disableReapTimer];
+		}
 	}
 
 	// Start app

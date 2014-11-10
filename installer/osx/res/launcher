@@ -1,3 +1,44 @@
 #!/bin/bash
-open /Applications/CernVM\ WebAPI.app --args setup
+
+# Prepare variables
+USER=$(ps aux | grep -i Installer\.app | grep -v grep | awk '{print $1}')
+GROUP=$(id -gn icharala)
+USER_LIB=/Users/${USER}/Library
+LAUNCH_FILE=${USER_LIB}/LaunchAgents/cern.cernvm.webapi.websocket.plist
+
+# Create launch daemon script
+cat <<EOF > ${LAUNCH_FILE}
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>cern.cernvm.webapi.service</string>
+	<key>Program</key>
+	<string>/Applications/CernVM WebAPI.app/Contents/MacOS/cernvm-webapi</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>cernvm-webapi</string>
+		<string>daemon</string>
+	</array>
+	<key>KeepAlive</key>
+	<true/>
+	<key>UserName</key>
+	<string>${USER}</string>
+	<key>GroupName</key>
+	<string>${GROUP}</string>
+	<key>StandardOutPath</key>
+	<string>/tmp/cernvm-webapi.log</string>
+</dict>
+</plist>
+EOF
+
+# Change permission
+chown ${USER}:${GROUP} ${LAUNCH_FILE}
+chmod 0644 ${LAUNCH_FILE}
+
+# Load launch script
+su ${USER} -c "launchctl load ${LAUNCH_FILE}"
+
+# We are done!
 exit 0

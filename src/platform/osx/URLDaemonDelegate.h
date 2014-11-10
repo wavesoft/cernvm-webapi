@@ -48,7 +48,9 @@
     @private bool           usedLauchURL;
     // Flag that denotes that the URL was started by the installer
     // this should disable all the timers
-    @private bool           launchedBySetup;
+    @private bool           firstTimeoutDisabled;
+    // The reap timer is disabled completely
+    @private bool           reapTimerDisabled;
     // The timestamp the last URL request was performed
     @private long           urlLaunchTimestamp;
 
@@ -85,9 +87,14 @@
 - (void)launchURL;
 
 /**
- * Prohibit launching a URL At open
+ * Prohibit timeouting before the first request
  */
-- (void)markAsSetup;
+- (void)disableFirstTimeout;
+
+/**
+ * Disable the reap timer entirely
+ */
+- (void)disableReapTimer;
 
 /**
  * Callback when a URL is requested

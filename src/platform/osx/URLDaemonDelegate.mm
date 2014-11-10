@@ -21,7 +21,8 @@
 	self = [super init];
 	if (self) {
 		self->launchedByURL = false;
-		self->launchedBySetup = false;
+		self->reapTimerDisabled = false;
+		self->firstTimeoutDisabled = false;
 		self->focusOnActiate = false;
 		self->usedLauchURL = false;
 		self->urlLaunchTimestamp = 0;
@@ -201,12 +202,12 @@
 /**
  * Disable launching URL (same effect as launchedByURL)
  */
-- (void)markAsSetup
+- (void)disableFirstTimeout
 {
 	// Mark as launched by URL (therefore we don't have to launch the URL again)
 	launchedByURL = true;
 	// Mark as launched by setup
-	launchedBySetup = true;
+	firstTimeoutDisabled = true;
 	
 }
 
@@ -215,6 +216,9 @@
  */
 - (void)startReap
 {
+	// Do not start reap timer if user called disableReapTimer()
+	if (reapTimerDisabled) return;
+
 	// Reap timer that cleans-up plugin instances
 	reapTimer = [NSTimer 
 		scheduledTimerWithTimeInterval:5
@@ -225,14 +229,26 @@
 }
 
 /**
+ * Do not start the reap timer
+ */
+- (void)disableReapTimer
+{
+	reapTimerDisabled = true;
+}
+
+/**
  * Reap server if there are no active connections
  */
 - (void)serverReap
 {
+	// Don't do anything if the reap timer is disabled
+	if (reapTimerDisabled) return;
+
+	// Check if we don't have any live connection
 	if (!webserver->hasLiveConnections()) {
 
 		// Dont' reap server if we started by setup
-		if (launchedBySetup) {
+		if (firstTimeoutDisabled) {
 			return;
 		}
 
@@ -242,8 +258,8 @@
 
 		// The moment we got an active connection, we are allowed
 		// to dismiss the process. Therefore reset any possible
-		// launchedBySetup flag
-		launchedBySetup = false;
+		// firstTimeoutDisabled flag
+		firstTimeoutDisabled = false;
 		
 	}
 }
