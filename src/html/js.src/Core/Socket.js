@@ -87,6 +87,7 @@ _NS_.Socket.prototype.__handleData = function(data) {
  */
 _NS_.Socket.prototype.send = function(action, data, responseEvents, responseTimeout) {
 	var self = this;
+	var timeoutTimer = null;
 
 	// Calculate next frame's ID
 	var frameID = "a-" + (++this.lastID);
@@ -97,10 +98,43 @@ _NS_.Socket.prototype.send = function(action, data, responseEvents, responseTime
 		'data': data || { }
 	};
 
-	// Register response callback
-	if (responseEvents) {
-		var timeoutTimer = null,
-			eventify = function(name) {
+	// Register generic reply callback
+	if (typeof(responseEvents) == 'function') {
+
+		// Register a timeout timer
+		// unless the responseTimeout is set to 0
+		if (responseTimeout !== 0) {
+			timeoutTimer = setTimeout(function() {
+
+				// Remove slot
+				delete self.responseCallbacks[frameID];
+
+				// Send error event
+				responseEvents(null, "Response timeout");
+
+			}, responseTimeout || 10000);
+		}
+
+		// Register a callback that will be fired when we receive
+		// a frame with the specified ID.
+		this.responseCallbacks[frameID] = function(data) {
+
+			// We got a response, reset timeout timer
+			if (timeoutTimer!=null) clearTimeout(timeoutTimer);
+
+			// Wait for a result event
+			if (data['name'] == 'result') {
+				// Delete callback slot
+				delete self.responseCallbacks[frameID];
+				// Fire callback
+				responseEvents(data['data']);
+			}
+
+		};
+
+	// Register event listeners callbacks
+	} else if (typeof(responseEvents) == 'object') {
+		var eventify = function(name) {
 				if (!name) return "";
 				return "on" + name[0].toUpperCase() + name.substr(1);
 			}
@@ -194,35 +228,27 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 
 			// Calculate timeout
 			if (!timeout) timeout=500;
-			console.log("[socket] Probing socket, timeout=", timeout);
 
 			// Safari bugfix: When everything else fails
 			var timedOut = false,
 				timeoutCb = setTimeout(function() {
-					console.log("[socket] Timeout occured");
 					timedOut = true;
-					console.log("[socket] Firing callback(false)");
 					cb(false);
 				}, timeout);
 
 			// Setup websocket & callbacks
 			var socket = new WebSocket(WS_ENDPOINT);
 			socket.onerror = function(e) {
-				console.warn("[socket] Socket error occured (timedOut="+timedOut+")", e);
 				if (timedOut) return;
 				clearTimeout(timeoutCb);
 				if (!self.connecting) return;
-				console.log("[socket] Closing socket");
 				socket.close();
-				console.log("[socket] Firing callback(false)");
 				cb(false);
 			};
 			socket.onopen = function(e) {
-				console.warn("[socket] Socket is now open (timedOut="+timedOut+")");
 				if (timedOut) return;
 				clearTimeout(timeoutCb);
 				if (!self.connecting) return;
-				console.log("[socket] Firing callback(true,",socket,")");
 				cb(true, socket);
 			};
 
@@ -231,9 +257,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 			if (timedOut) return;
 			clearTimeout(timeoutCb);
 			if (!self.connecting) return;
-			console.log("[socket] Closing socket");
 			socket.close();
-			console.log("[socket] Firing callback(false)");
 			cb(false);
 		}
 	};
@@ -252,20 +276,16 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 		// reach the timeout.
 		var msLeft = timeout - (time - _startTime);
 
-		console.log("[socket] Checking socket status (_startTime=",_startTime,", _retryDelay=",_retryDelay,", time=",time,", msLeft=",msLeft,")");
-
 		// Register a callback that will be fired when we reach
 		// the timeout defined
 		var timedOut = false,
 			timeoutTimer = setTimeout(function() {
-				console.log("[socket] Check loop timed out");
 				timedOut = true;
 				cb(false);
 			}, msLeft);
 
 		// Setup probe callback
 		var probe_cb = function( state, socket ) {
-			console.log("[socket] Got probe callback: ",state);
 			if (timedOut) return;
 			// Don't fire timeout callback
 			if (state) {
@@ -278,7 +298,6 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 				// Otherwise clear timeout timer
 				clearTimeout(timeoutTimer);
 				// And re-schedule websocket poll
-				console.log("[socket] Scheduling re-probe in ",_retryDelay);
 				setTimeout(function() {
 					check_loop( cb, timeout, _retryDelay, _startTime );
 				}, _retryDelay);
@@ -291,7 +310,6 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 			probeTimeout = msLeft;
 
 		// And send probe
-		console.log("[socket] Probing socket (timeout=",probeTimeout,")");
 		probe_socket( probe_cb, probeTimeout );
 
 	};
@@ -319,7 +337,11 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 			"version": _NS_.version,
 			"auth": self.authToken
 		}, function(data, type, raw) {
-			console.info("Successfuly contacted with CernVM WebAPI v" + data['version']);
+			console.info("Successful handshake with CernVM WebAPI v" + data['version']);
+
+			// Check for newer version message
+			
+
 			self.__handleOpen(data);
 		});
 
@@ -365,16 +387,9 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 	 * Prope a socket with retries if failed
 	 */
 	var probe_socket_with_retries = function( probe_timeout, retries, callback ) {
-		var tries = 0,
+		var tries = 1,
 			do_try = function() {
 			console.log("[socket] Probe try");
-
-			// Check if we ran out of retries
-			if (++tries > retries) {
-				console.log("[socket] Ran out of retries");
-				callback(false);
-				return;
-			}
 
 			// Probe for connection
 			probe_socket(function(state, socket) {
@@ -383,9 +398,18 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 					callback(state, socket);
 					return;
 				} else {
-					// Otherwise schedule another try
-					console.log("[socket] Scheduling retry in 100ms");
-					setTimeout(do_try, 100);
+
+					// Check if we ran out of retries
+					if (++tries > retries) {
+						console.log("[socket] Ran out of retries");
+						callback(false);
+						return;
+					} else {
+						// Otherwise schedule another try
+						console.log("[socket] Scheduling retry in 100ms");
+						setTimeout(do_try, 100);
+					}
+
 				}
 			}, probe_timeout);
 		}
