@@ -4,7 +4,7 @@
 USER=$(ps aux | grep -i Installer\.app | grep -v grep | awk '{print $1}')
 GROUP=$(id -gn icharala)
 USER_LIB=/Users/${USER}/Library
-LAUNCH_FILE=${USER_LIB}/LaunchAgents/cern.cernvm.webapi.websocket.plist
+LAUNCH_FILE=${USER_LIB}/LaunchAgents/cern.cernvm.webapi.service.plist
 
 # Create launch daemon script
 cat <<EOF > ${LAUNCH_FILE}

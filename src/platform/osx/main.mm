@@ -38,6 +38,7 @@ int main(int argc, const char * argv[])
 		if (!strcmp(argv[1], "setup"))
 			[delegate disableFirstTimeout];
 		else if (!strcmp(argv[1], "daemon")) {
+			[delegate disableFirstTimeout];
 			[delegate disableReapTimer];
 		}
 	}
