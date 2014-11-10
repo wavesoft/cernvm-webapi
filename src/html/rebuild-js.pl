@@ -6,7 +6,7 @@ use MIME::Base64;
 
 # The namespace of the plugin
 my $NS = "CVM";
-my $VERSION = "2.0.8";
+my $VERSION = "2.0.9";
 
 # Accepts one argument: the full path to a directory.
 # Returns: A list of files that reside in that path.

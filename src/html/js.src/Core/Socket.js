@@ -208,7 +208,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 
 	// Defaults
 	if (autoLaunch == undefined)
-		autoLaunch = true;
+		autoLaunch = false;
 
 	// Concurrency-check
 	if (this.connecting) return;
