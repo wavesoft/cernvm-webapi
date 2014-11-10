@@ -434,13 +434,20 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 				console.log("[socket] Auto-launching");
 
 				// Create a tiny iframe for triggering the launch
-				var e = document.createElement('iframe'); 
-				e.style.visibility="hidden";
-				e.style.width = "0";
-				e.style.height = "0";
-				e.style.position = "absolute";
-				e.style.left = "-1000px"; 
-				document.body.appendChild(e);
+				var e = document.getElementById(DOM_ELEMENT_ID);
+				if (!e) {
+					e = document.createElement('iframe'); 
+					e.style.width = "1";
+					e.style.height = "1";
+					e.style.position = "absolute";
+					e.style.left = "-10px";
+					e.style.top = "-10px";
+					e.id = DOM_ELEMENT_ID;
+					document.body.appendChild(e);
+				}
+
+				// Try again to get element (IE.11 bug)
+				var e = document.getElementById(DOM_ELEMENT_ID);
 				e.src = WS_URI;
 
 				// And start loop for 5 sec

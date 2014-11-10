@@ -49,3 +49,8 @@ function _stateNameFor(state) {
         return 'unknown';
     return states[state];
 }
+
+/**
+ * The unique iframe element ID for the launcher
+ */
+var DOM_ELEMENT_ID = 'cernvm-webapi-launcher-'+(Math.random().toString().substr(2));
