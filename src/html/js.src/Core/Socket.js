@@ -435,13 +435,13 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 
 				// Create a tiny iframe for triggering the launch
 				var e = document.createElement('iframe'); 
-				e.src = WS_URI;
 				e.style.visibility="hidden";
 				e.style.width = "0";
 				e.style.height = "0";
 				e.style.position = "absolute";
 				e.style.left = "-1000px"; 
 				document.body.appendChild(e);
+				e.src = WS_URI;
 
 				// And start loop for 5 sec
 				check_loop(checkloop_cb, 5000);
