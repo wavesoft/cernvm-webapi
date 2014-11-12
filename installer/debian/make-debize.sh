@@ -72,6 +72,7 @@ cat <<EOF > debian/rules
 override_dh_auto_install:
 	\$(MAKE) DESTDIR=\$\$(pwd)/debian/cernvm-webapi/usr install
 	rm -rf \$\$(pwd)/debian/cernvm-webapi/usr/lib
+	ln -s \$\$(pwd)/debian/cernvm-webapi/usr/share/applications/cernvm-webapi.desktop \$\$(pwd)/debian/cernvm-webapi/usr/share/xsessions/cernvm-webapi.desktop
 
 EOF
 
@@ -81,6 +82,7 @@ cat <<EOF > debian/postinst
 # postinst script for webpy-example
 #
 # see: dh_installdeb(1)
+
 
 # Update desktop icon
 update-desktop-database
