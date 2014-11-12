@@ -32,7 +32,7 @@ option(COVERITY_RUN "Set to ON when running this application with coverity" OFF)
 
 # CernVM Library
 project ( cernvm-webapi )
-set(VERSION "2.0.8")
+set(VERSION "2.0.9")
 
 # Include additional libraries
 include(cmake/AddCompileLinkFlags.cmake)

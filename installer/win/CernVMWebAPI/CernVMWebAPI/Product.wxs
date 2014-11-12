@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="CernVM WebAPI" Language="1033" Version="2.0.8.0" Manufacturer="PH/SFT Group, CERN" UpgradeCode="70DAC5E8-46A4-4EF3-80B3-A103AE948436">
+	<Product Id="*" Name="CernVM WebAPI" Language="1033" Version="2.0.9.0" Manufacturer="PH/SFT Group, CERN" UpgradeCode="70DAC5E8-46A4-4EF3-80B3-A103AE948436">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
@@ -22,7 +22,7 @@
     <!-- Launch WebAPI When it's finished -->
     <CustomAction Id="RunWebAPI"
                   Directory="INSTALLFOLDER"
-                  ExeCommand="[#cernvm_webapi.exe] setup"
+                  ExeCommand="[#cernvm_webapi.exe] service"
                   Execute="commit"
                   Return="asyncNoWait"
                   />
@@ -108,6 +108,22 @@
                          Value="&quot;[#cernvm_webapi.exe]&quot; &quot;%1&quot;"
                          KeyPath="yes" />
         
+        </RegistryKey>
+      
+      </Component>
+      
+      
+      <!-- Start at user log-in with user privileges -->
+      <Component Id="CernVMWebAPI_Startup" Guid="EB7DBB1A-987A-47DA-859B-FF6AF287349A">
+
+        <!-- Root folder -->
+        <RegistryKey Root="HKCU" 
+                     Key="Software\Microsoft\Windows\CurrentVersion\Run"
+                     Action="none">
+          
+          <RegistryValue Type="string" 
+                         Name="CernVM WebAPI"
+                         Value="&quot;[#cernvm_webapi.exe]&quot; service" />
         </RegistryKey>
       
       </Component>

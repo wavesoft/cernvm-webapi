@@ -28,6 +28,7 @@
 
 // Daemon components
 #include <daemon.h>
+#include <web_rpc.h>
 
 // Include windows after
 #include <windows.h>
@@ -38,6 +39,8 @@ DaemonCore *		core;
 DaemonFactory *	    factory;
 // Create a webserver that serves with the daemon factory
 CVMWebserver *		webserver;
+// RPC Handler
+WebRPCHandler *     rpcHandler;
 
 /**
  * Check if string is empty
@@ -175,6 +178,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
     // Destruct webserver components
     delete webserver;
+    delete rpcHandler;
     delete factory;
     delete core;
 
