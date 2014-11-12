@@ -761,8 +761,8 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 					e.style.width = "1";
 					e.style.height = "1";
 					e.style.position = "absolute";
-					e.style.left = "-10px";
-					e.style.top = "-10px";
+					e.style.left = "-1000px";
+					e.style.top = "-1000px";
 					e.id = DOM_ELEMENT_ID;
 					document.body.appendChild(e);
 				}
