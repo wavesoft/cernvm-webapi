@@ -10,7 +10,7 @@ set(MONGOOSE_VERSION 5.4)
 #############################################################
 
 # Setup archive
-set( ARCHIVE_URL "https://codeload.github.com/cesanta/mongoose/zip/${MONGOOSE_VERSION}" )
+set( ARCHIVE_URL "https://github.com/cesanta/mongoose/archive/${MONGOOSE_VERSION}.zip" )
 set( ARCHIVE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/mongoose-${MONGOOSE_VERSION}" )
 set( ARCHIVE_EXT ".zip" )
 
