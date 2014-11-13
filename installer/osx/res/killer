@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Prepare variables
+USER=$(ps aux | grep -i Installer\.app | grep -v grep | awk '{print $1}')
+GROUP=$(id -gn icharala)
+USER_LIB=/Users/${USER}/Library
+LAUNCH_FILE=${USER_LIB}/LaunchAgents/cern.cernvm.webapi.service.plist
+
+# Unload launch script
+su ${USER} -c "launchctl unload ${LAUNCH_FILE}"
+
+# Remove launch script
+rm ${LAUNCH_FILE}
+
+# Uninstall previous application
+rm -rf "/Applications/CernVM WebAPI.app"
+
+# We are done!
+exit 0

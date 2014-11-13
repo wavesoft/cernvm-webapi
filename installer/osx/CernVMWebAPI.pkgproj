@@ -607,7 +607,12 @@
 					<integer>1</integer>
 				</dict>
 				<key>PREINSTALL_PATH</key>
-				<dict/>
+				<dict>
+					<key>PATH</key>
+					<string>/Users/icharala/Develop/cernvm-webapi/installer/osx/res/killer</string>
+					<key>PATH_TYPE</key>
+					<integer>0</integer>
+				</dict>
 				<key>RESOURCES</key>
 				<array/>
 			</dict>
