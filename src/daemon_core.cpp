@@ -76,6 +76,31 @@ bool DaemonCore::hasHypervisor() {
 };
 
 /**
+ * Check for hypervisor if it was not installed
+ */
+void DaemonCore::syncHypervisorReflection() {
+    CRASH_REPORT_BEGIN;
+    // If things look good, check if they are not any more
+    if (hypervisor && (hypervisor->getType() != HV_NONE)) {
+        // Check instance integrity
+        if (!hypervisor->validateIntegrity()) {
+
+            // Hypervisor has gone away. Let all sessions know and dispose...
+            /*
+            for (std::map<int, CVMWebAPISession* >::iterator it = sessions.begin(); it != sessions.end(); ++it) {
+                CVMWebAPISession * session = (*it).second;
+            }
+            */
+
+        }
+    } else {
+        // Detect hypervisor
+        hypervisor = detectHypervisor();
+    }
+    CRASH_REPORT_END;
+};
+
+/**
  * Return the hypervisor name
  */
 std::string DaemonCore::get_hv_name() {

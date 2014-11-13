@@ -116,6 +116,9 @@ void DaemonConnection::handleAction( const std::string& id, const std::string& a
                 return;
             }
 
+            // Re-check hypervisor if it's missing
+            core.syncHypervisorReflection();
+
             // Check if a hypervisor is installed. If not,
             // use the installer thread.
             if (core.hypervisor && (core.hypervisor->version.compareStr(CERNVM_WEBAPI_MIN_HV_VERSION) <= 0)) {
