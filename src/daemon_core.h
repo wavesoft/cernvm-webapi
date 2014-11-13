@@ -99,6 +99,11 @@ public:
 	void 						processPeriodicJobs();
 
 	/**
+	 * Synchronize hypervisor reflection
+	 */
+	void 						syncHypervisorReflection();
+
+	/**
 	 * Return the hypervisor name
 	 */
 	std::string 				get_hv_name();
