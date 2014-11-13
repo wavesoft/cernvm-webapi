@@ -26,6 +26,7 @@
 
 // Webserver
 #include <web/webserver.h>
+#include <web_rpc.h>
 
 // Daemon components
 #include <daemon.h>
@@ -36,6 +37,8 @@ DaemonCore *		core;
 DaemonFactory *	    factory;
 // Create a webserver that serves with the daemon factory
 CVMWebserver *		webserver;
+// RPC Handler
+WebRPCHandler *     rpcHandler;
 
 /**
  * Open authenticated URL
