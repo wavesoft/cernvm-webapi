@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Version=1.0
+Terminal=false
+Name=CernVM WebAPI
+Name[en_US]=CernVM WebAPI
+Comment=CernVM WebAPI User Session Service
+Comment[en_US]=CernVM WebAPI User Session Service
+Comment[en_US.utf8]=Open the CernVM WebAPI Dashboard
+Exec=/usr/bin/cernvm-webapi daemon
+X-GNOME-Autostart-enabled=true
+X-KDE-autostart-after=panel

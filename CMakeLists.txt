@@ -280,12 +280,20 @@ if (UNIX AND NOT APPLE)
 			${CMAKE_INSTALL_PREFIX}/share/cernvm-webapi
 		)
 
-	# Desktop files (for Mime-Type registration)
+	# Desktop file for Mime-Type registration
 	install(
 		FILES
 			${PLATFORM_DIR}/cernvm-webapi.desktop
 		DESTINATION
 			${CMAKE_INSTALL_PREFIX}/share/applications
+		)
+
+	# Desktop file for user session startup
+	install(
+		FILES
+			${PLATFORM_DIR}/cernvm-webapi-startup.desktop
+		DESTINATION
+			${CMAKE_INSTALL_PREFIX}/etc/xdg/autostart
 		)
 
 endif()

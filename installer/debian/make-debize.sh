@@ -72,7 +72,6 @@ cat <<EOF > debian/rules
 override_dh_auto_install:
 	\$(MAKE) DESTDIR=\$\$(pwd)/debian/cernvm-webapi/usr install
 	rm -rf \$\$(pwd)/debian/cernvm-webapi/usr/lib
-	ln -s \$\$(pwd)/debian/cernvm-webapi/usr/share/applications/cernvm-webapi.desktop \$\$(pwd)/debian/cernvm-webapi/usr/share/xsessions/cernvm-webapi.desktop
 
 EOF
 
@@ -91,7 +90,7 @@ update-desktop-database
 X_TTY=\$(ps ax | grep bin/X | awk '{ print \$2 }' | head -n1)
 X_USER=\$(who | grep \$X_TTY | awk '{ print \$1 }' | head -n1)
 if [ ! -z "\$X_USER" ]; then
-    su -c "/usr/bin/cernvm-webapi install" \$X_USER&
+    su -c "/usr/bin/cernvm-webapi daemon" \$X_USER&
 fi
 
 # dh_installdeb will replace this with shell code automatically
