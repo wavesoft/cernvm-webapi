@@ -6,14 +6,18 @@ GROUP=$(id -gn icharala)
 USER_LIB=/Users/${USER}/Library
 LAUNCH_FILE=${USER_LIB}/LaunchAgents/cern.cernvm.webapi.service.plist
 
-# Unload launch script
-su ${USER} -c "launchctl unload ${LAUNCH_FILE}"
-
-# Remove launch script
-rm ${LAUNCH_FILE}
+# If we have launchctl script, remove it now
+if [ -f ${LAUNCH_FILE} ]; then
+	# Unload launch script
+	su ${USER} -c "launchctl unload ${LAUNCH_FILE}"
+	# Remove launch script
+	rm ${LAUNCH_FILE}
+fi
 
 # Uninstall previous application
-rm -rf "/Applications/CernVM WebAPI.app"
+if [ -d "/Applications/CernVM WebAPI.app" ]; then
+	rm -rf "/Applications/CernVM WebAPI.app"
+fi
 
 # We are done!
 exit 0
