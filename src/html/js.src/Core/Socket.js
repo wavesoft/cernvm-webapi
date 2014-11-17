@@ -324,8 +324,27 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 		// Bind extra handlers
 		self.socket = socket;
 		self.socket.onclose = function() {
-			console.warn("Remotely disconnected from CernVM WebAPI");
-			self.__handleClose();
+			console.warn("Socket disconnected");
+
+			// Hide any active user interaction - it's now useless
+			UserInteraction.hideInteraction();
+
+			// Some times (for example when you close the lid) the daemon
+			// might be disconnected. Start a quick retry loop for 2 seconds
+			// and try to resume the connection.
+			check_loop(function(status, socket) {
+
+				// If we really couldn't resume the connection, die
+				if (!status) {
+					console.error("Connection with CernVM WebAPI interrupted");
+					self.__handleClose();
+				} else {
+					// Otherwise replace the socket with the new version
+					socket_success( socket );
+				}
+
+			}, 2000);
+
 		};
 		self.socket.onmessage = function(e) {
 			self.__handleData(e.data);
@@ -340,8 +359,6 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 			console.info("Successful handshake with CernVM WebAPI v" + data['version']);
 
 			// Check for newer version message
-			
-
 			self.__handleOpen(data);
 		});
 
