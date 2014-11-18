@@ -6,12 +6,86 @@ _NS_.WebAPIPlugin = function() {
 
 	// Superclass constructor
 	_NS_.Socket.call(this);
+
+	// Open sessions
+	this._sessions = [];
+
 }
 
 /**
  * Subclass event dispatcher
  */
 _NS_.WebAPIPlugin.prototype = Object.create( _NS_.Socket.prototype );
+
+/**
+ * Reheat the connection if it went offline
+ */
+_NS_.WebAPIPlugin.prototype.__reheat = function( socket ) {
+	var self = this,
+		already_closed = false;
+
+	// Reset response callbacks
+	this.responseCallbacks = {};
+
+	// Reopen valid connections
+	for (var i=0; i<this._sessions.length; i++) {
+		var session = this._sessions[i].ref,
+			vmcp = this._sessions[i].vmcp;
+
+		if (session.__valid) {
+
+			// Send requestSession
+			this.send("requestSession", {
+				"vmcp": vmcp
+			}, {
+				onSucceed : function( msg, session_id ) {
+					console.log("Session ", session_id, " reheated");
+
+					// Update session ID reference
+					session.session_id = session_id;
+
+					// Receive events with id=session_id
+					self.responseCallbacks[session_id] = function(data) {
+						session.handleEvent(data);
+					}
+
+					// Send sync message
+					session.sync();
+
+				},
+				onFailed: function( msg, code ) {
+					console.warn("Unable to reheat session ", session_id);
+
+					// If a single vmcp failed to re-open after
+					// a re-heat, consider the connection closed,
+					// so the handling application has to restart,
+
+					if (already_closed) return;
+					self.__handleClose();
+					already_closed = true;
+
+				},
+				// Progress feedbacks
+				onLengthyTask: function( msg, isLengthy ) {
+					// Control the occupied window
+					_NS_.UserInteraction.controlOccupied( isLengthy, msg );
+				},
+				onProgress: function( msg, percent ) {
+					self.__fire("progress", [msg, percent]);
+				},
+				onStarted: function( msg ) {
+					self.__fire("started", [msg]);
+				},
+				onCompleted: function( msg ) {
+					self.__fire("completed", [msg]);
+				}
+
+			});
+
+		}
+	}
+
+}
 
 /**
  * Stop the CernVM WebAPI Service
@@ -40,6 +114,11 @@ _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
 				// Fire the ok callback only when we are initialized
 				if (cbOk) cbOk(session);
 
+			});
+
+			self._sessions.push({
+				'vmcp': vmcp,
+				'ref': session
 			});
 
 			// Receive events with id=session_id
@@ -88,7 +167,7 @@ _NS_.WebAPIPlugin.prototype.enumSessions = function(callback) {
 	var self = this;
 	if (!callback) return;
 
-	// Send requestSession
+	// Send enumSessions
 	this.send("enumSessions", { }, {
 
 		// Basic responses
@@ -111,7 +190,7 @@ _NS_.WebAPIPlugin.prototype.controlSession = function(session_id, action, callba
 	var self = this;
 	if (!callback) return;
 
-	// Send requestSession
+	// Send controlSession
 	this.send("controlSession", {
 		"session_id" : session_id,
 		"action" : action

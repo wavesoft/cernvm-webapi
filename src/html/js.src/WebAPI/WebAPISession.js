@@ -204,6 +204,7 @@ _NS_.WebAPISession.prototype.handleEvent = function(data) {
 
 _NS_.WebAPISession.prototype.start = function( values ) {
 	// Send a start message
+	if (!this.__valid) return;
 	this.socket.send("start", {
 		"session_id": this.session_id,
 		"parameters": values || { }
@@ -212,6 +213,7 @@ _NS_.WebAPISession.prototype.start = function( values ) {
 
 _NS_.WebAPISession.prototype.stop = function() {
 	// Send a stop message
+	if (!this.__valid) return;
 	this.socket.send("stop", {
 		"session_id": this.session_id
 	})
@@ -219,6 +221,7 @@ _NS_.WebAPISession.prototype.stop = function() {
 
 _NS_.WebAPISession.prototype.pause = function() {
 	// Send a pause message
+	if (!this.__valid) return;
 	this.socket.send("pause", {
 		"session_id": this.session_id
 	})
@@ -226,6 +229,7 @@ _NS_.WebAPISession.prototype.pause = function() {
 
 _NS_.WebAPISession.prototype.resume = function() {
 	// Send a resume message
+	if (!this.__valid) return;
 	this.socket.send("resume", {
 		"session_id": this.session_id
 	})
@@ -233,6 +237,7 @@ _NS_.WebAPISession.prototype.resume = function() {
 
 _NS_.WebAPISession.prototype.reset = function() {
 	// Send a reset message
+	if (!this.__valid) return;
 	this.socket.send("reset", {
 		"session_id": this.session_id
 	})
@@ -240,6 +245,7 @@ _NS_.WebAPISession.prototype.reset = function() {
 
 _NS_.WebAPISession.prototype.hibernate = function() {
 	// Send a hibernate message
+	if (!this.__valid) return;
 	this.socket.send("hibernate", {
 		"session_id": this.session_id
 	})
@@ -249,11 +255,22 @@ _NS_.WebAPISession.prototype.close = function() {
 	// Send a close message
 	this.socket.send("close", {
 		"session_id": this.session_id
+	});
+	// Mark session as invalid
+	this.__valid = false;
+}
+
+_NS_.WebAPISession.prototype.sync = function() {
+	// Send a sync message
+	if (!this.__valid) return;
+	this.socket.send("sync", {
+		"session_id": this.session_id
 	})
 }
 
 _NS_.WebAPISession.prototype.getAsync = function(parameter, cb) {
 	// Get a session parameter
+	if (!this.__valid) return;
 	this.socket.send("get", {
 		"session_id": this.session_id,
 		"key": parameter
@@ -266,6 +283,7 @@ _NS_.WebAPISession.prototype.getAsync = function(parameter, cb) {
 
 _NS_.WebAPISession.prototype.setAsync = function(parameter, value, cb) {
 	// Update a session parameter
+	if (!this.__valid) return;
 	this.socket.send("set", {
 		"session_id": this.session_id,
 		"key": parameter,
@@ -281,6 +299,7 @@ _NS_.WebAPISession.prototype.setAsync = function(parameter, value, cb) {
  * Return the cached value of the property specified
  */
 _NS_.WebAPISession.prototype.getProperty = function(name) {
+	if (!this.__valid) return;
     if (!name) return "";
     if (this.__properties[name] == undefined) return "";
     return this.__properties[name];
@@ -290,6 +309,7 @@ _NS_.WebAPISession.prototype.getProperty = function(name) {
  * Update local and remote properties
  */
 _NS_.WebAPISession.prototype.setProperty = function(name, value) {
+	if (!this.__valid) return;
     if (!name) return "";
 
     // Update cache
@@ -305,6 +325,7 @@ _NS_.WebAPISession.prototype.setProperty = function(name, value) {
 }
 
 _NS_.WebAPISession.prototype.openRDPWindow = function(parameter, cb) {
+	if (!this.__valid) return;
 	var self = this;
 
 	// If we have the rdpURL in proerties, prefer that

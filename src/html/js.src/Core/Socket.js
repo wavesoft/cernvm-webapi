@@ -32,6 +32,13 @@ _NS_.Socket = function() {
 _NS_.Socket.prototype = Object.create( _NS_.EventDispatcher.prototype );
 
 /**
+ * Forward function for WebAPIPlugin : Reheat a connection
+ */
+_NS_.Socket.prototype.__reheat = function( socket ) {
+
+}
+
+/**
  * Cleanup after shutdown/close
  */
 _NS_.Socket.prototype.__handleClose = function() {
@@ -332,6 +339,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 			// Some times (for example when you close the lid) the daemon
 			// might be disconnected. Start a quick retry loop for 2 seconds
 			// and try to resume the connection.
+			self.connecting = true;
 			check_loop(function(status, socket) {
 
 				// If we really couldn't resume the connection, die
@@ -341,6 +349,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 				} else {
 					// Otherwise replace the socket with the new version
 					socket_success( socket );
+					self.__reheat(socket);
 				}
 
 			}, 2000);

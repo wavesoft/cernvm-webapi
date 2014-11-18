@@ -353,6 +353,13 @@ _NS_.Socket = function() {
 _NS_.Socket.prototype = Object.create( _NS_.EventDispatcher.prototype );
 
 /**
+ * Forward function for WebAPIPlugin : Reheat a connection
+ */
+_NS_.Socket.prototype.__reheat = function( socket ) {
+
+}
+
+/**
  * Cleanup after shutdown/close
  */
 _NS_.Socket.prototype.__handleClose = function() {
@@ -645,8 +652,29 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 		// Bind extra handlers
 		self.socket = socket;
 		self.socket.onclose = function() {
-			console.warn("Remotely disconnected from CernVM WebAPI");
-			self.__handleClose();
+			console.warn("Socket disconnected");
+
+			// Hide any active user interaction - it's now useless
+			UserInteraction.hideInteraction();
+
+			// Some times (for example when you close the lid) the daemon
+			// might be disconnected. Start a quick retry loop for 2 seconds
+			// and try to resume the connection.
+			self.connecting = true;
+			check_loop(function(status, socket) {
+
+				// If we really couldn't resume the connection, die
+				if (!status) {
+					console.error("Connection with CernVM WebAPI interrupted");
+					self.__handleClose();
+				} else {
+					// Otherwise replace the socket with the new version
+					socket_success( socket );
+					self.__reheat(socket);
+				}
+
+			}, 2000);
+
 		};
 		self.socket.onmessage = function(e) {
 			self.__handleData(e.data);
@@ -661,8 +689,6 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 			console.info("Successful handshake with CernVM WebAPI v" + data['version']);
 
 			// Check for newer version message
-			
-
 			self.__handleOpen(data);
 		});
 
@@ -1330,12 +1356,86 @@ _NS_.WebAPIPlugin = function() {
 
 	// Superclass constructor
 	_NS_.Socket.call(this);
+
+	// Open sessions
+	this._sessions = [];
+
 }
 
 /**
  * Subclass event dispatcher
  */
 _NS_.WebAPIPlugin.prototype = Object.create( _NS_.Socket.prototype );
+
+/**
+ * Reheat the connection if it went offline
+ */
+_NS_.WebAPIPlugin.prototype.__reheat = function( socket ) {
+	var self = this,
+		already_closed = false;
+
+	// Reset response callbacks
+	this.responseCallbacks = {};
+
+	// Reopen valid connections
+	for (var i=0; i<this._sessions.length; i++) {
+		var session = this._sessions[i].ref,
+			vmcp = this._sessions[i].vmcp;
+
+		if (session.__valid) {
+
+			// Send requestSession
+			this.send("requestSession", {
+				"vmcp": vmcp
+			}, {
+				onSucceed : function( msg, session_id ) {
+					console.log("Session ", session_id, " reheated");
+
+					// Update session ID reference
+					session.session_id = session_id;
+
+					// Receive events with id=session_id
+					self.responseCallbacks[session_id] = function(data) {
+						session.handleEvent(data);
+					}
+
+					// Send sync message
+					session.sync();
+
+				},
+				onFailed: function( msg, code ) {
+					console.warn("Unable to reheat session ", session_id);
+
+					// If a single vmcp failed to re-open after
+					// a re-heat, consider the connection closed,
+					// so the handling application has to restart,
+
+					if (already_closed) return;
+					self.__handleClose();
+					already_closed = true;
+
+				},
+				// Progress feedbacks
+				onLengthyTask: function( msg, isLengthy ) {
+					// Control the occupied window
+					_NS_.UserInteraction.controlOccupied( isLengthy, msg );
+				},
+				onProgress: function( msg, percent ) {
+					self.__fire("progress", [msg, percent]);
+				},
+				onStarted: function( msg ) {
+					self.__fire("started", [msg]);
+				},
+				onCompleted: function( msg ) {
+					self.__fire("completed", [msg]);
+				}
+
+			});
+
+		}
+	}
+
+}
 
 /**
  * Stop the CernVM WebAPI Service
@@ -1364,6 +1464,11 @@ _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
 				// Fire the ok callback only when we are initialized
 				if (cbOk) cbOk(session);
 
+			});
+
+			self._sessions.push({
+				'vmcp': vmcp,
+				'ref': session
 			});
 
 			// Receive events with id=session_id
@@ -1412,7 +1517,7 @@ _NS_.WebAPIPlugin.prototype.enumSessions = function(callback) {
 	var self = this;
 	if (!callback) return;
 
-	// Send requestSession
+	// Send enumSessions
 	this.send("enumSessions", { }, {
 
 		// Basic responses
@@ -1435,7 +1540,7 @@ _NS_.WebAPIPlugin.prototype.controlSession = function(session_id, action, callba
 	var self = this;
 	if (!callback) return;
 
-	// Send requestSession
+	// Send controlSession
 	this.send("controlSession", {
 		"session_id" : session_id,
 		"action" : action
@@ -1658,6 +1763,7 @@ _NS_.WebAPISession.prototype.handleEvent = function(data) {
 
 _NS_.WebAPISession.prototype.start = function( values ) {
 	// Send a start message
+	if (!this.__valid) return;
 	this.socket.send("start", {
 		"session_id": this.session_id,
 		"parameters": values || { }
@@ -1666,6 +1772,7 @@ _NS_.WebAPISession.prototype.start = function( values ) {
 
 _NS_.WebAPISession.prototype.stop = function() {
 	// Send a stop message
+	if (!this.__valid) return;
 	this.socket.send("stop", {
 		"session_id": this.session_id
 	})
@@ -1673,6 +1780,7 @@ _NS_.WebAPISession.prototype.stop = function() {
 
 _NS_.WebAPISession.prototype.pause = function() {
 	// Send a pause message
+	if (!this.__valid) return;
 	this.socket.send("pause", {
 		"session_id": this.session_id
 	})
@@ -1680,6 +1788,7 @@ _NS_.WebAPISession.prototype.pause = function() {
 
 _NS_.WebAPISession.prototype.resume = function() {
 	// Send a resume message
+	if (!this.__valid) return;
 	this.socket.send("resume", {
 		"session_id": this.session_id
 	})
@@ -1687,6 +1796,7 @@ _NS_.WebAPISession.prototype.resume = function() {
 
 _NS_.WebAPISession.prototype.reset = function() {
 	// Send a reset message
+	if (!this.__valid) return;
 	this.socket.send("reset", {
 		"session_id": this.session_id
 	})
@@ -1694,6 +1804,7 @@ _NS_.WebAPISession.prototype.reset = function() {
 
 _NS_.WebAPISession.prototype.hibernate = function() {
 	// Send a hibernate message
+	if (!this.__valid) return;
 	this.socket.send("hibernate", {
 		"session_id": this.session_id
 	})
@@ -1703,11 +1814,22 @@ _NS_.WebAPISession.prototype.close = function() {
 	// Send a close message
 	this.socket.send("close", {
 		"session_id": this.session_id
+	});
+	// Mark session as invalid
+	this.__valid = false;
+}
+
+_NS_.WebAPISession.prototype.sync = function() {
+	// Send a sync message
+	if (!this.__valid) return;
+	this.socket.send("sync", {
+		"session_id": this.session_id
 	})
 }
 
 _NS_.WebAPISession.prototype.getAsync = function(parameter, cb) {
 	// Get a session parameter
+	if (!this.__valid) return;
 	this.socket.send("get", {
 		"session_id": this.session_id,
 		"key": parameter
@@ -1720,6 +1842,7 @@ _NS_.WebAPISession.prototype.getAsync = function(parameter, cb) {
 
 _NS_.WebAPISession.prototype.setAsync = function(parameter, value, cb) {
 	// Update a session parameter
+	if (!this.__valid) return;
 	this.socket.send("set", {
 		"session_id": this.session_id,
 		"key": parameter,
@@ -1735,6 +1858,7 @@ _NS_.WebAPISession.prototype.setAsync = function(parameter, value, cb) {
  * Return the cached value of the property specified
  */
 _NS_.WebAPISession.prototype.getProperty = function(name) {
+	if (!this.__valid) return;
     if (!name) return "";
     if (this.__properties[name] == undefined) return "";
     return this.__properties[name];
@@ -1744,6 +1868,7 @@ _NS_.WebAPISession.prototype.getProperty = function(name) {
  * Update local and remote properties
  */
 _NS_.WebAPISession.prototype.setProperty = function(name, value) {
+	if (!this.__valid) return;
     if (!name) return "";
 
     // Update cache
@@ -1759,6 +1884,7 @@ _NS_.WebAPISession.prototype.setProperty = function(name, value) {
 }
 
 _NS_.WebAPISession.prototype.openRDPWindow = function(parameter, cb) {
+	if (!this.__valid) return;
 	var self = this;
 
 	// If we have the rdpURL in proerties, prefer that

@@ -144,6 +144,13 @@ void CVMWebAPISession::handleAction( CVMCallbackFw& cb, const std::string& actio
 		sendStateVariables();
 
 	//////////////////////////////////
+	} else if (action == "sync") {
+	//////////////////////////////////
+
+		// When synchronized, get the state variables
+		sendStateVariables();
+
+	//////////////////////////////////
 	} else if (action == "get") {
 	//////////////////////////////////
 
