@@ -62,6 +62,7 @@ int isEmpty(LPSTR string)
  */
 void openAuthenticatedURL()
 {
+/*
   // Request a new auth token
   std::string authToken = core->newAuthKey();
 
@@ -72,7 +73,7 @@ void openAuthenticatedURL()
   // Get URL string
   std::string url = oss.str();
   ShellExecute(NULL,"open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
-
+*/
 }
 
 /**

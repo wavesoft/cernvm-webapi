@@ -43,7 +43,7 @@ public:
 	 * Constructor
 	 */
 	DaemonConnection( const std::string& domain, const std::string uri, DaemonCore& core )
-		: WebsocketAPI(domain, uri), core(core), privileged(false), userInteraction(), interactionCallback()
+		: WebsocketAPI(domain, uri), core(core), privileged(false), userInteraction(), interactionCallback(), runningThreadsMutex()
 	{
 	    CRASH_REPORT_BEGIN;
 
@@ -95,6 +95,11 @@ protected:
 	 * for privileged operations
 	 */
 	bool 	privileged;
+
+    /**
+     * Accessor of runninThreads
+     */
+    boost::mutex		runningThreadsMutex;
 
     // Throttling protection
     long	throttleTimestamp;

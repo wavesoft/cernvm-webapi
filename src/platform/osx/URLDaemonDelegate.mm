@@ -278,6 +278,9 @@
 - (void)launchURL
 {
 
+	// Disabled for now
+	/*
+
 	// Generate an authentication token
 	std::string authToken = core->newAuthKey();
 
@@ -288,6 +291,7 @@
 	// Open again the management interface
 	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:url]]; 
 
+	*/
 }
 
 /**

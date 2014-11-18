@@ -41,7 +41,10 @@ void DaemonConnection::cleanup() {
 
     // Abort and join all threads
     runningThreads.interrupt_all();
-    runningThreads.join_all();
+    {
+        boost::unique_lock<boost::mutex> lock(periodicJobsMutex);
+        runningThreads.join_all();
+    }
 
     // Release all sessions by this connection
     core.releaseConnectionSessions( *this );
@@ -394,6 +397,9 @@ void DaemonConnection::requestSession_thread( boost::thread ** thread, const std
 	HVInstancePtr hv = core.hypervisor;
     boost::thread *thisThread = *thread;
     int res;
+
+    // We are in a critical section, so nobody should touch periodicJobsMutex
+    boost::unique_lock<boost::mutex> lock(periodicJobsMutex);
 
     // Create the object where we can forward the events
     CVMCallbackFw cb( *this, eventID );

@@ -45,6 +45,7 @@ WebRPCHandler *     rpcHandler;
  */
 void openAuthenticatedURL()
 {
+/*
   // Request a new auth token
   std::string authToken = core->newAuthKey();
 
@@ -55,6 +56,7 @@ void openAuthenticatedURL()
   // Get URL string
   std::string url = oss.str();
   system(url.c_str());
+*/
 }
 
 /**
