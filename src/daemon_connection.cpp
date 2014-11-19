@@ -42,7 +42,7 @@ void DaemonConnection::cleanup() {
     // Abort and join all threads
     runningThreads.interrupt_all();
     {
-        boost::unique_lock<boost::mutex> lock(runningThreadsMutex);
+        DrainWaitLock lock(threadDrain); // Wait until nobody is playing with the runningThreads
         runningThreads.join_all();
     }
 
@@ -64,7 +64,7 @@ void DaemonConnection::handleAction( const std::string& id, const std::string& a
     crashReportAddInfo( "web-action", action );
 
     // This is a critical section for runningThreadsMute
-    boost::unique_lock<boost::mutex> lock(runningThreadsMutex);
+    DrainUseLock lock(threadDrain);
 
     // =============================
     //  Common actions
@@ -287,15 +287,13 @@ void DaemonConnection::handleAction_thread( boost::thread** thread, CVMWebAPISes
     CRASH_REPORT_BEGIN;
     boost::thread *thisThread = *thread;
     CVMCallbackFw cb( *this, eventID );
+    DrainUseLock lock(threadDrain);
+
     try {
         // Handle action
         session->handleAction(cb, action, parameters);
         // Remove this thread from the active threads
-        {
-            // This is a critical section for runningThreadsMute
-            boost::unique_lock<boost::mutex> lock(runningThreadsMutex);
-            runningThreads.remove_thread(thisThread);
-        }
+        runningThreads.remove_thread(thisThread);
     } catch (boost::thread_interrupted &e) {
         // 
     }
@@ -307,6 +305,8 @@ void DaemonConnection::handleAction_thread( boost::thread** thread, CVMWebAPISes
  */
 void DaemonConnection::installHV_andRequestSession_thread( boost::thread ** thread, const std::string& eventID, const std::string& vmcpURL ) {
     CRASH_REPORT_BEGIN;
+    DrainUseLock lock(threadDrain);
+
     try {
 
         boost::thread *thisThread = *thread;
@@ -406,7 +406,7 @@ void DaemonConnection::requestSession_thread( boost::thread ** thread, const std
     int res;
 
     // We are in a critical section, so nobody should touch threadsMutex
-    boost::unique_lock<boost::mutex> lock(runningThreadsMutex);
+    DrainUseLock lock(threadDrain);
 
     // Create the object where we can forward the events
     CVMCallbackFw cb( *this, eventID );

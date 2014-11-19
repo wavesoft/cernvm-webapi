@@ -32,6 +32,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
+#include <utilities.h>
 
 /**
  * Websocket Session
@@ -43,7 +44,7 @@ public:
 	 * Constructor
 	 */
 	DaemonConnection( const std::string& domain, const std::string uri, DaemonCore& core )
-		: WebsocketAPI(domain, uri), core(core), privileged(false), userInteraction(), interactionCallback(), runningThreadsMutex()
+		: WebsocketAPI(domain, uri), core(core), privileged(false), userInteraction(), interactionCallback(), threadDrain()
 	{
 	    CRASH_REPORT_BEGIN;
 
@@ -91,15 +92,15 @@ protected:
 	boost::thread_group runningThreads;
 
 	/**
+	 * The drain assistance semaphore (declared in utilities.h)
+	 */
+	DrainSemaphore 		threadDrain;
+
+	/**
 	 * A flag that defines if this session is authenticated
 	 * for privileged operations
 	 */
 	bool 	privileged;
-
-    /**
-     * Accessor of runninThreads
-     */
-    boost::mutex		runningThreadsMutex;
 
     // Throttling protection
     long	throttleTimestamp;

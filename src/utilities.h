@@ -30,10 +30,86 @@
 #include <CernVM/Hypervisor.h>
 #include <CernVM/ProgressFeedback.h>
 
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/locks.hpp>
+#include <boost/thread/condition_variable.hpp>
+
 /**
  * Compile and return a Json::Value with all the state information
  * for the given session
  */
 Json::Value sessionStateInfoToJSON( HVSessionPtr hvSession );
+
+/**
+ * Drain Semaphore is a synchronization mechanism used by the daemon_connection
+ * class. It's purpose is to wait for all thread operations before it attempts
+ * to join them.
+ *
+ */
+class DrainSemaphore {
+public:
+	DrainSemaphore() : accessMutex(), drainCondition(), usageCounter(0) { };
+
+	/**
+	 * Increment the usage
+	 */
+	void increment() {
+        boost::unique_lock<boost::mutex> lock(accessMutex);
+        usageCounter++;
+	}
+
+	/**
+	 * Decrement usage
+	 */
+	void decrement() {
+	    {
+	        boost::unique_lock<boost::mutex> lock(accessMutex);
+	        usageCounter--;
+	    }
+	    // Notify condition when we reached zero
+	    if (usageCounter == 0)
+		    drainCondition.notify_all();
+	}
+
+	/**
+	 * Wait until usages reaches 0
+	 */
+	void wait() {
+		boost::unique_lock<boost::mutex> lock(accessMutex);
+		while(usageCounter > 0) {
+			drainCondition.wait(lock);
+		}
+	}
+
+private:
+	boost::mutex 					accessMutex;
+	boost::condition_variable 		drainCondition;
+	int 							usageCounter;
+};
+
+/**
+ * This class waits in scope until the DrainSemaphore reaches zero.
+ */
+class DrainWaitLock {
+public:
+	DrainWaitLock( DrainSemaphore& sem ) {
+		sem.wait();
+	}
+};
+
+/**
+ * This class increments the DrainSemaphore while it remains in scope. 
+ */
+class DrainUseLock {
+public:
+	DrainUseLock(DrainSemaphore& semRef ) : sem( &semRef ) {
+		sem->increment();
+	}
+	~DrainUseLock() {
+		sem->decrement();
+	}
+private:
+	DrainSemaphore *	sem;
+};
 
 #endif /* end of include guard: WEBAPI_UTILITIES_H */
