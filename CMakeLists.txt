@@ -29,7 +29,7 @@ endif()
 option(LOGGING "Set to ON to enable verbose logging on screen" OFF)
 option(CRASH_REPORTING "Set to ON to enable crash reporting" OFF)
 option(COVERITY_RUN "Set to ON when running this application with coverity" OFF)
-option(INSTALL_ETC "" CACHE STRING "This should be defined for the install phase. It should point to the system's /etc directory")
+set(INSTALL_ETC "" CACHE STRING "This should be defined for the install phase. It should point to the system's /etc directory")
 
 # CernVM Library
 project ( cernvm-webapi )
