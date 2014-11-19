@@ -10,7 +10,7 @@
 
 foreach my $i (0 .. $#ARGV) {
   my $f = $ARGV[$i];
-  $f=$1 if ($f =~ /([^:]+):/);
+  $f=$1 if ($f =~ /^(.*):/);
   open FD, '<:raw', $f or die "Cannot open $f: $!\n";
   printf("static const unsigned char v%d[] = {", $i);
   my $byte;
