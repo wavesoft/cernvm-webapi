@@ -19,7 +19,7 @@ UPSTREAM_VERSION=$(cat ${GIT_DIR}/cernvm-webapi/src/config.h | grep -i CERNVM_WE
 cat <<EOF > ${GIT_DIR}/Makefile
 BUILDDIR = build
 SOURCE_DIR = cernvm-webapi
-CMAKE_BIN = cmake
+CMAKE_BIN = $(which cmake)
 
 all: binary
 
