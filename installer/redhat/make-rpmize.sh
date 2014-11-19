@@ -51,6 +51,7 @@ rmdir %{buildroot}/usr/lib
 %files
 %{_bindir}/*
 %{_datadir}/*
+/etc/xdg/autostart/cernvm-webapi-startup.desktop
 
 %preun
 

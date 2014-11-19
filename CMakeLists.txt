@@ -293,7 +293,7 @@ if (UNIX AND NOT APPLE)
 		FILES
 			${PLATFORM_DIR}/cernvm-webapi-startup.desktop
 		DESTINATION
-			${CMAKE_INSTALL_PREFIX}/etc/xdg/autostart
+			/etc/xdg/autostart
 		)
 
 endif()
