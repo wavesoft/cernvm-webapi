@@ -19,7 +19,7 @@ UPSTREAM_VERSION=$(cat ${GIT_DIR}/cernvm-webapi/src/config.h | grep -i CERNVM_WE
 cat <<EOF > ${GIT_DIR}/Makefile
 BUILDDIR = build
 SOURCE_DIR = cernvm-webapi
-CMAKE_BIN = cmake
+CMAKE_BIN = $(which cmake)
 
 all: binary
 
@@ -53,5 +53,6 @@ mv ${GIT_DIR}/{cernvm-webapi,libcernvm,Makefile,LICENSE,README.md} ${GIT_DIR}/${
 tar -zcf cernvm-webapi_${UPSTREAM_VERSION}.orig.tar.gz -C "${GIT_DIR}" ${ARCHIVE_FOLDER} 2>/dev/null >/dev/null
 
 # Move archive dir to the current dir
-rm -rf "${GIT_DIR}"
+mv "${GIT_DIR}/${ARCHIVE_FOLDER}" "${ARCHIVE_FOLDER}"
+rmdir "${GIT_DIR}"
 echo ${ARCHIVE_FOLDER}

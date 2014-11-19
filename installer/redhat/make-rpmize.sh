@@ -52,13 +52,18 @@ rmdir %{buildroot}/usr/lib
 %{_bindir}/*
 %{_datadir}/*
 
+%preun
+
+# Kill all lingering cernvm-webapi processes
+killall cernvm-webapi 2>/dev/null >/dev/null
+
 %post
 
 # Check who's running X and run cernvm-webapi as that user
 X_TTY=\$(ps ax | grep bin/X | awk '{ print \$2 }' | head -n1)
 X_USER=\$(who | grep \$X_TTY | awk '{ print \$1 }' | head -n1)
 if [ ! -z "\$X_USER" ]; then
-    su -c "/usr/bin/cernvm-webapi install" \$X_USER&
+    su -c "/usr/bin/cernvm-webapi daemon" \$X_USER&
 fi
 
 %changelog

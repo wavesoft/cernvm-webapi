@@ -13,11 +13,25 @@
 
     <DirectoryRef Id="TARGETDIR">
       <Merge Id="VCRedist" SourceFile="C:\Program Files (x86)\Common Files\Merge Modules\Microsoft_VC110_CRT_x86.msm" DiskId="1" Language="0"/>      
+
+      <Directory Id="WindowsFolder" Name="WINDOWS"/>
+
     </DirectoryRef>
     
     <Feature Id="VCRedist" Title="Visual C++ 11.0 Runtime" AllowAdvertise="no" Display="hidden" Level="1">
       <MergeRef Id="VCRedist"/>
     </Feature>                    
+    
+    <!-- Kill WebAPI when installation starts -->
+    <Property Id="QtExecCmdLine"
+              Value='"[WindowsFolder]\System32\taskkill.exe" /F /IM cernvm-webapi.exe'
+              />
+    <CustomAction Id="KillWebAPI"
+                  BinaryKey="WixCA"
+                  DllEntry="CAQuietExec"
+                  Execute="immediate"
+                  Return="ignore" />
+                  
     
     <!-- Launch WebAPI When it's finished -->
     <CustomAction Id="RunWebAPI"
@@ -26,8 +40,11 @@
                   Execute="commit"
                   Return="asyncNoWait"
                   />
+    
+    <!-- Install procedures -->
     <InstallExecuteSequence>
       <Custom Action="RunWebAPI" Before="InstallFinalize" />
+      <Custom Action="KillWebAPI" After="InstallValidate" />
     </InstallExecuteSequence>
 
   </Product>
@@ -69,6 +86,7 @@
               Checksum="yes" />
         
       </Component>
+      
 
       <!-- CernVM WebAPI Resources -->
       <!--
