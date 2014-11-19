@@ -324,7 +324,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 	/**
 	 * Callback to handle a successful pick of socket
 	 */
-	var socket_success = function( socket ) {
+	var socket_success = function( socket, reheat ) {
 		self.connecting = false;
 		self.connected = true;
 
@@ -348,8 +348,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 					self.__handleClose();
 				} else {
 					// Otherwise replace the socket with the new version
-					socket_success( socket );
-					self.__reheat(socket);
+					socket_success( socket, true );
 				}
 
 			}, 2000);
@@ -366,9 +365,12 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 			"auth": self.authToken
 		}, function(data, type, raw) {
 			console.info("Successful handshake with CernVM WebAPI v" + data['version']);
-
 			// Check for newer version message
 			self.__handleOpen(data);
+			// Keep version information
+			self.version = data['version'];
+			// If we are reheating, handle reheat now
+			if (reheat) self.__reheat(socket);
 		});
 
 		// We managed to connect, we do have an API installed

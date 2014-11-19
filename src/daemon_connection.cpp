@@ -42,7 +42,7 @@ void DaemonConnection::cleanup() {
     // Abort and join all threads
     runningThreads.interrupt_all();
     {
-        boost::unique_lock<boost::mutex> lock(periodicJobsMutex);
+        boost::unique_lock<boost::mutex> lock(runningThreadsMutex);
         runningThreads.join_all();
     }
 
@@ -62,6 +62,9 @@ void DaemonConnection::handleAction( const std::string& id, const std::string& a
     // Useful information for crash reporting
     crashReportAddInfo( "domain", domain );
     crashReportAddInfo( "web-action", action );
+
+    // This is a critical section for runningThreadsMute
+    boost::unique_lock<boost::mutex> lock(runningThreadsMutex);
 
     // =============================
     //  Common actions
@@ -288,7 +291,11 @@ void DaemonConnection::handleAction_thread( boost::thread** thread, CVMWebAPISes
         // Handle action
         session->handleAction(cb, action, parameters);
         // Remove this thread from the active threads
-        runningThreads.remove_thread(thisThread);
+        {
+            // This is a critical section for runningThreadsMute
+            boost::unique_lock<boost::mutex> lock(runningThreadsMutex);
+            runningThreads.remove_thread(thisThread);
+        }
     } catch (boost::thread_interrupted &e) {
         // 
     }
@@ -398,8 +405,8 @@ void DaemonConnection::requestSession_thread( boost::thread ** thread, const std
     boost::thread *thisThread = *thread;
     int res;
 
-    // We are in a critical section, so nobody should touch periodicJobsMutex
-    boost::unique_lock<boost::mutex> lock(periodicJobsMutex);
+    // We are in a critical section, so nobody should touch threadsMutex
+    boost::unique_lock<boost::mutex> lock(runningThreadsMutex);
 
     // Create the object where we can forward the events
     CVMCallbackFw cb( *this, eventID );

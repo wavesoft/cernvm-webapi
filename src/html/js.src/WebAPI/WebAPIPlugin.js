@@ -48,13 +48,15 @@ _NS_.WebAPIPlugin.prototype.__reheat = function( socket ) {
 					self.responseCallbacks[session_id] = function(data) {
 						session.handleEvent(data);
 					}
-
+					
 					// Send sync message
-					session.sync();
+					setTimeout(function() {
+						session.sync();
+					}, 100);
 
 				},
 				onFailed: function( msg, code ) {
-					console.warn("Unable to reheat session ", session_id);
+					console.warn("Unable to reheat a saved session!");
 
 					// If a single vmcp failed to re-open after
 					// a re-heat, consider the connection closed,
