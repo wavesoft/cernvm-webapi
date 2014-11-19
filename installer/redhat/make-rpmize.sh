@@ -44,7 +44,7 @@ make %{?_smp_mflags}
 
 %install
 rm -rf  %{buildroot}
-make install DESTDIR=%{buildroot}/usr
+make install DESTDIR=%{buildroot}/usr ETCDIR=%{buildroot}
 rm %{buildroot}/usr/lib/libcurl.a
 rmdir %{buildroot}/usr/lib
 

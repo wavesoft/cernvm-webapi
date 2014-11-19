@@ -70,7 +70,7 @@ cat <<EOF > debian/rules
 	dh \$@
 
 override_dh_auto_install:
-	\$(MAKE) DESTDIR=\$\$(pwd)/debian/cernvm-webapi/usr install
+	\$(MAKE) DESTDIR=\$\$(pwd)/debian/cernvm-webapi/usr ETCDIR=\$\$(pwd)/debian/cernvm-webapi install
 	rm -rf \$\$(pwd)/debian/cernvm-webapi/usr/lib
 
 EOF
