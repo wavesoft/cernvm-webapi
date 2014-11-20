@@ -1,4 +1,3 @@
-r
 # CernVM WebAPI Components
 
 The following diagram displays the various components taking place in a typical CernVM WebAPI usage scenario:
