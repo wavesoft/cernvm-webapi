@@ -73,9 +73,28 @@ Upon a successfuly request of a session, the user can create and control the Vir
  27. Possible events regarding state change or parameter change are forwarded back to the javascript library in the form of "event" messages.
  28. The javascript library will fire the appropriate callback function when received.
 
+# User Input Code Location
+
+User provides input in various locations, both in in the *CernVM WebAPI* daemon and the `libCernVM` library. There are sanitization routines for every single point of input and listed below.
+
+## User Input Sources
+
+ * **HTTP Socket** - There is a web server running in the endpoint `127.0.0.1:5624`, listening for user input. They are handled either as regular HTTP requests or as WebSocket data. All socket input is handled by the function `CVMWebserver::api_handler`. All the HTTP-Protocol-Level sanitization happens by the *Mongoose* library.
+     - Websocket data are handled by the `WebsocketAPI::handleRawData` function.
+     - Hard-coded static resources are served by the `find_embedded_file` function, generated at build time by the `tools/mkdata.pl` script.
+     - Additional URLs are handled by a staticURLHandler, such as `WebRPCHandler`.
+ * **Websocket Protocol** - The function `handleRawData` handles incoming command frames from the WebSocket in form of JSON messages. The input is parsed by the `jsoncpp` library and the sanitization and validation is handled by it.
+ * **VMCP Protocol** - The function `DaemonConnection::requestSession_thread` fetches the information from the VMCP endpoint, using the `DownloadProvider::downloadText` function. It then parses the input using the `jsoncpp` library. Simiilarly, the sanitization and validation is handled by the library.
+
+## Critical Points
+
+The following are the most critical parts where user input reaches the system:
+
+ * **Configuration Files** - The configuration file is allocated for every session. This is stored on `<AppData>/CernVM/WebAPI/cache/run/*.conf`. The user-provider name never reaches the file name, but rather a UUID is allocated for each session. 
+ * **System Command Execution** - The `VBoxSession` class call system commands in order to control the instance. Only one user-defined alphanumeric parameter reahes the `sysExec()` function: the `name` parameter from the VMCP responder. The sanitization check is performed in the `HVInstance::sessionOpen` function.
+
 # The VBoxSession Finite State Machine
 
 The following diagram shows the states of the VBoxSession Finite-State machine:
 
 ![](https://github.com/wavesoft/cernvm-webapi/blob/master/doc/vboxsession-fsm.jpg)
-
