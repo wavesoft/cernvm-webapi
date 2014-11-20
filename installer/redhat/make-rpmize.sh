@@ -55,6 +55,7 @@ make install DESTDIR=%{buildroot}/usr SYSCONFDIR=%{buildroot}/etc
 
 # Kill all lingering cernvm-webapi processes
 killall cernvm-webapi 2>/dev/null >/dev/null
+exit 0
 
 %post
 
@@ -64,6 +65,7 @@ X_USER=\$(who | grep \$X_TTY | awk '{ print \$1 }' | head -n1)
 if [ ! -z "\$X_USER" ]; then
     su -c "/usr/bin/cernvm-webapi daemon" \$X_USER&
 fi
+exit 0
 
 %changelog
 EOF
