@@ -28,3 +28,4 @@ test
 extern/mongoose/mongoose-*
 installer/win/CernVMWebAPI/CernVMWebAPI/bin/*
 installer/win/CernVMWebAPI/CernVMWebAPI/obj/*
+*.~vsd
