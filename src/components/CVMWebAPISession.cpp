@@ -252,8 +252,16 @@ void CVMWebAPISession::enablePeriodicJobs( bool status ) {
  * Abort session
  */
 void CVMWebAPISession::abort() {
-	boost::unique_lock<boost::mutex> lock(periodicJobsMutex);
-	isAborting = true;
+
+	// Raise the isAborting flag
+	{
+		boost::unique_lock<boost::mutex> lock(periodicJobsMutex);
+		isAborting = true;
+	}
+
+	// Abort any download provider 
+	downloadProvider->abort();
+
 }
 
 /**

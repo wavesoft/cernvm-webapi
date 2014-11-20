@@ -25,13 +25,16 @@ all: binary
 
 prepare:
 	mkdir -p \$(BUILDDIR)
-	cd \$(BUILDDIR); \$(CMAKE_BIN) -DSYSTEM_OPENSSL=ON -DCMAKE_BUILD_TYPE=Release -DCRASH_REPORTING=ON -DTARGET_ARCH=$(uname -p) -DCMAKE_INSTALL_PREFIX=\$(DESTDIR) -DSYSCONF_INSTALL_DIR=\$(SYSCONFDIR) ../\$(SOURCE_DIR)
+	cd \$(BUILDDIR); \$(CMAKE_BIN) -DSYSTEM_OPENSSL=ON -DCMAKE_BUILD_TYPE=Release -DCRASH_REPORTING=ON -DTARGET_ARCH=$(uname -p) -DCMAKE_INSTALL_PREFIX=\$(DESTDIR) ../\$(SOURCE_DIR)
 
 binary: prepare
 	make -C \$(BUILDDIR)
 
 install: 
 	cd \$(BUILDDIR); \$(CMAKE_BIN) -P cmake_install.cmake
+	rm \$(DESTDIR)/lib/libcurl.a
+	rmdir \$(DESTDIR)/lib
+	mv \$(DESTDIR)/etc \$(SYSCONFDIR)/
 
 clean:
 	rm -rf \$(BUILDDIR)

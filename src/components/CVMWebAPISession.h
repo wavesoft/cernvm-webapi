@@ -63,6 +63,10 @@ public:
         FiniteTaskPtr ft = boost::make_shared<FiniteTask>();
         callbackForwarder.listen( ft );
 
+        // Clone the download provider in order to provide a multi-threaded support
+        downloadProvider = DownloadProvider::Default()->clone();
+        hvSession->setDownloadProvider(downloadProvider);
+
         // That's currently a VBoxSession-only feature
         boost::static_pointer_cast<VBoxSession>(hvSession)->FSMUseProgress( ft, "Serving request" );
 
@@ -141,6 +145,11 @@ public:
 	 * The websocket connection used for I/O
 	 */
 	DaemonConnection& 	connection;
+
+	/**
+	 * The custom DownloadProvider for this thread
+	 */
+	DownloadProviderPtr	downloadProvider;
 
 	/**
 	 * The encapsulated hypervisor session pointer

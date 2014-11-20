@@ -71,7 +71,6 @@ cat <<EOF > debian/rules
 
 override_dh_auto_install:
 	\$(MAKE) DESTDIR=\$\$(pwd)/debian/cernvm-webapi/usr SYSCONFDIR=\$\$(pwd)/debian/cernvm-webapi install
-	rm -rf \$\$(pwd)/debian/cernvm-webapi/usr/lib
 
 EOF
 

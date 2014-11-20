@@ -44,9 +44,7 @@ make %{?_smp_mflags}
 
 %install
 rm -rf  %{buildroot}
-make install DESTDIR=%{buildroot}/usr SYSCONFDIR=%{buildroot}
-rm %{buildroot}/usr/lib/libcurl.a
-rmdir %{buildroot}/usr/lib
+make install DESTDIR=%{buildroot}/usr SYSCONFDIR=%{buildroot}/etc
 
 %files
 %{_bindir}/*
