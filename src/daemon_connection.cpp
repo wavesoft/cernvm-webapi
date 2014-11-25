@@ -342,6 +342,7 @@ void DaemonConnection::installHV_andRequestSession_thread( boost::thread ** thre
         // Install hypervisor
         int ans = installHypervisor(
                     core.downloadProvider,
+                    core.keystore,
                     userInteraction,
                     pTasks,
                     2

@@ -33,7 +33,7 @@ set(SYSCONF_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/etc" CACHE STRING "The /etc con
 
 # CernVM Library
 project ( cernvm-webapi )
-set(VERSION "2.0.10")
+set(VERSION "2.0.11")
 
 # Include additional libraries
 include(cmake/AddCompileLinkFlags.cmake)
