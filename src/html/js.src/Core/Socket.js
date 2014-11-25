@@ -365,10 +365,14 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 			"auth": self.authToken
 		}, function(data, type, raw) {
 			console.info("Successful handshake with CernVM WebAPI v" + data['version']);
-			// Check for newer version message
-			self.__handleOpen(data);
 			// Keep version information
 			self.version = data['version'];
+			// Check if the library is newer and prompt for update
+			if (_verCompare(_NS_.version, self.version) > 0) {
+				UserInteraction.alertUpgrade("You are using an old version of CernVM WebAPI. Click here to upgrade to <strong>" + _NS_.version + "</strong>.");
+			}
+			// Check for newer version message
+			self.__handleOpen(data);
 			// If we are reheating, handle reheat now
 			if (reheat) self.__reheat(socket);
 		});

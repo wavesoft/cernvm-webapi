@@ -14,7 +14,6 @@ var __pluginSingleton = null,
  * Core namespace
  */
 _NS_.debugLogging = true;
-_NS_.version = '1.0'
 
 /**
  * Let CVMWeb that the page is loaded (don't register page loaded)
@@ -178,6 +177,15 @@ function _stateNameFor(state) {
     if ((state < 0) || (state>=states.length))
         return 'unknown';
     return states[state];
+}
+
+/**
+ * Compare versions
+ */
+function _verCompare(v1, v2) {
+    var p1 = v1.split("."), d1 = p1[2] + p1[1]*100 + p1[0]*10000,
+        p2 = v2.split("."), d2 = p2[2] + p2[1]*100 + p2[0]*10000;
+    return d1 - d2;
 }
 
 /**
@@ -686,10 +694,14 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 			"auth": self.authToken
 		}, function(data, type, raw) {
 			console.info("Successful handshake with CernVM WebAPI v" + data['version']);
-			// Check for newer version message
-			self.__handleOpen(data);
 			// Keep version information
 			self.version = data['version'];
+			// Check if the library is newer and prompt for update
+			if (_verCompare(_NS_.version, self.version) > 0) {
+				UserInteraction.alertUpgrade("You are using an old version of CernVM WebAPI. Click here to upgrade to <strong>" + _NS_.version + "</strong>.");
+			}
+			// Check for newer version message
+			self.__handleOpen(data);
 			// If we are reheating, handle reheat now
 			if (reheat) self.__reheat(socket);
 		});
@@ -913,6 +925,89 @@ UserInteraction.createButton = function( title, baseColor ) {
 }
 
 /**
+ * Style the specified frame
+ */
+UserInteraction.styleFrame = function( frame ) {
+	frame.style.backgroundColor = "#FCFCFC";
+	frame.style.border = "solid 1px #E6E6E6";
+	frame.style.borderRadius 
+		= frame.style.webkitBorderRadius 
+		= frame.style.mozBorderRadius 
+		= "5px";
+	frame.style.boxShadow 
+		= frame.style.webkitBoxShadow 
+		= frame.style.mozBoxShadow 
+		= "1px 2px 4px 1px rgba(0,0,0,0.2)";
+	frame.style.padding = "10px";
+	frame.style.fontFamily = "Verdana, Geneva, sans-serif";
+	frame.style.fontSize = "14px";
+	frame.style.color = "#666"
+}
+
+/**
+ * Create a framed growl, used for version upgrade notification
+ */
+UserInteraction.createGrowlWindow = function( config ) {
+
+	if (!config) config={};
+	var body    	= config['body']    || "",
+		href 		= config['href'] 	|| "",
+		target 		= config['target'] 	|| "",
+		iconSrc    	= config['icon']    || false, 
+		cbClick 	= config['onClick'] || false;
+
+	var growl = document.createElement('a'),
+		icon = document.createElement('img'),
+		content = document.createElement('div')
+
+	// Setup icon
+	growl.appendChild(icon);
+	icon.style.position = "absolute";
+	icon.style.left = "6px";
+	icon.style.top = "12px";
+	icon.src = iconSrc || ICON_ALERT;
+
+	// Setup content
+	growl.appendChild(content);
+	content.style.position = "absolute";
+	content.style.left = "45px";
+	content.style.top = "8px";
+	content.style.width = "300px";
+	content.style.height = "42px";
+	content.style.fontSize = "14px";
+	content.style.color = "#333"
+	content.innerHTML = body;
+
+	// Setup frame
+	growl.style.position = "absolute";
+	growl.style.display = "block";
+	growl.style.top = "10px";
+	growl.style.right = "10px";
+	growl.style.zIndex = 60000;
+	growl.style.width = "350px";
+	growl.style.height = "60px";
+	growl.style.backgroundImage = ICON_INSTALL;
+	growl.style.backgroundPosition = "bottom left";
+	growl.style.textDecoration = "none";
+	growl.href = href;
+	growl.target = target;
+
+	// Frame style
+	UserInteraction.styleFrame(growl);
+
+	// Setup callbacks
+	growl.onclick = function() {
+	   document.body.removeChild(growl);
+		if (cbClick) cbClick();
+	}
+
+	// Place element on body
+	document.body.appendChild(growl);
+	return growl;
+
+}
+
+/**
  * Create a framed window, used for various reasons
  */
 UserInteraction.createFramedWindow = function( config ) {
@@ -948,20 +1043,7 @@ UserInteraction.createFramedWindow = function( config ) {
 	content.style.marginTop = 0;
 
 	// Frame style
-	content.style.backgroundColor = "#FCFCFC";
-	content.style.border = "solid 1px #E6E6E6";
-	content.style.borderRadius 
-		= content.style.webkitBorderRadius 
-		= content.style.mozBorderRadius 
-		= "5px";
-	content.style.boxShadow 
-		= content.style.webkitBoxShadow 
-		= content.style.mozBoxShadow 
-		= "1px 2px 4px 1px rgba(0,0,0,0.2)";
-	content.style.padding = "10px";
-	content.style.fontFamily = "Verdana, Geneva, sans-serif";
-	content.style.fontSize = "14px";
-	content.style.color = "#666;"
+	UserInteraction.styleFrame(content);
 	content.style.width = "70%";
 
 	// Style header
@@ -1132,6 +1214,22 @@ UserInteraction.displayLicenseWindow = function( title, body, isURL, cbAccept, c
 	
 	// Return window
 	return win;
+}
+
+/** 
+ * Display a growl message
+ */
+UserInteraction.alertUpgrade = function( body, callback ) {
+
+	// Create growl frame
+	UserInteraction.createGrowlWindow({
+		'body' 	 : body,
+		'icon' 	 : ICON_INSTALL,
+		'cbClick': callback,
+		'target' : '_blank',
+		'href' 	 : 'http://cernvm.cern.ch/releases/webapi/install'
+	});
+
 }
 
 /** 

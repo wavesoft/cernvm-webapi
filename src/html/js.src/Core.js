@@ -9,7 +9,6 @@ var __pluginSingleton = null,
  * Core namespace
  */
 _NS_.debugLogging = true;
-_NS_.version = '1.0'
 
 /**
  * Let CVMWeb that the page is loaded (don't register page loaded)

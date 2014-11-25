@@ -51,6 +51,15 @@ function _stateNameFor(state) {
 }
 
 /**
+ * Compare versions
+ */
+function _verCompare(v1, v2) {
+    var p1 = v1.split("."), d1 = p1[2] + p1[1]*100 + p1[0]*10000,
+        p2 = v2.split("."), d2 = p2[2] + p2[1]*100 + p2[0]*10000;
+    return d1 - d2;
+}
+
+/**
  * The unique iframe element ID for the launcher
  */
 var DOM_ELEMENT_ID = 'cernvm-webapi-launcher-'+(Math.random().toString().substr(2));
