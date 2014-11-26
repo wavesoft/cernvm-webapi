@@ -126,6 +126,12 @@ public:
 	bool 										running;
 
 	/**
+	 * Global flag that lets sessions know that an installation is already in progress
+	 */
+	bool 										installInProgress;
+
+
+	/**
 	 * The domain keystore
 	 */
 	DomainKeystore								keystore;

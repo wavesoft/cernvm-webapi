@@ -90,6 +90,11 @@ public:
 	 */
 	void 					sendRawData( const std::string& data );
 
+	/**
+	 * Request to disconnect from the socket.
+	 */
+	void 					disconnect() { connected = false; };
+
 protected:
 
 	/**

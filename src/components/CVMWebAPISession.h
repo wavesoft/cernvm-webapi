@@ -127,6 +127,11 @@ public:
 	void 				sendStateVariables();
 
 	/**
+	 * Send a failure message
+	 */
+	void 				sendFailure( const std::string& message );
+
+	/**
 	 * Abort session by setting he aborted flag
 	 */
 	void 				abort();

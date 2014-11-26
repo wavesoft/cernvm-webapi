@@ -32,7 +32,7 @@
 /**
  * Initialize daemon code
  */
-DaemonCore::DaemonCore(): authKeys(), sessions(), keystore(), config() {
+DaemonCore::DaemonCore(): authKeys(), sessions(), keystore(), config(), installInProgress(false) {
     CRASH_REPORT_BEGIN;
 
 	// Initialize local config
@@ -86,11 +86,25 @@ void DaemonCore::syncHypervisorReflection() {
         if (!hypervisor->validateIntegrity()) {
 
             // Hypervisor has gone away. Let all sessions know and dispose...
-            /*
             for (std::map<int, CVMWebAPISession* >::iterator it = sessions.begin(); it != sessions.end(); ++it) {
                 CVMWebAPISession * session = (*it).second;
+
+                // Let session know that a hypervisor is uninstalled
+                session->sendFailure("Hypervisor was uninstalled");
+
+                // Disconnect socket
+                session->connection.disconnect();
+
+                // Dispose
+                session->abort();
+                delete session;
             }
-            */
+                
+            // Remove all sessions
+            sessions.clear();
+
+            // Release hypervisor pointer
+            hypervisor = NULL;
 
         }
     } else {

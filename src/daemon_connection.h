@@ -44,7 +44,7 @@ public:
 	 * Constructor
 	 */
 	DaemonConnection( const std::string& domain, const std::string uri, DaemonCore& core )
-		: WebsocketAPI(domain, uri), core(core), privileged(false), userInteraction(), interactionCallback(), threadDrain()
+		: WebsocketAPI(domain, uri), core(core), privileged(false), userInteraction(), interactionCallback(), threadDrain(), installInProgress(false)
 	{
 	    CRASH_REPORT_BEGIN;
 
@@ -59,7 +59,6 @@ public:
 	    throttleTimestamp = 0;
 	    throttleDenies = 0;
 	    throttleBlock = false;
-	    installInProgress = false;
 
 	    CRASH_REPORT_END;
 	};
@@ -102,6 +101,12 @@ protected:
 	 */
 	bool 	privileged;
 
+	/**
+	 * Flag that denotes that an installation was started
+	 * by this session.
+	 */
+	bool 	installInProgress;
+
     // Throttling protection
     long	throttleTimestamp;
     int 	throttleDenies;
@@ -129,11 +134,6 @@ private:
 	void requestSession_thread 					( boost::thread** t, const std::string& eventID, const std::string& vmcpURL );
 	void installHV_andRequestSession_thread 	( boost::thread ** thread, const std::string& eventID, const std::string& vmcpURL );
 	void handleAction_thread 					( boost::thread** t, CVMWebAPISession* session, const std::string& id, const std::string& action, ParameterMapPtr parameters );
-
-	/**
-	 * Flag to mark an installation in progress
-	 */
-	bool installInProgress;
 
 };
 

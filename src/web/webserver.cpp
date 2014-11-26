@@ -24,6 +24,8 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+
+#include <CernVM/Utilities.h>
 #include <CernVM/CrashReport.h>
 
 using namespace std;

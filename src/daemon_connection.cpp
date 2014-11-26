@@ -46,6 +46,13 @@ void DaemonConnection::cleanup() {
         runningThreads.join_all();
     }
 
+    // If an installation was initiated by this session, it was just
+    // aborted. Clear the installation flag
+    if (installInProgress) {
+        installInProgress = false;
+        core.installInProgress = false;
+    }
+
     // Release all sessions by this connection
     core.releaseConnectionSessions( *this );
     
@@ -137,12 +144,13 @@ void DaemonConnection::handleAction( const std::string& id, const std::string& a
             } else {
 
                 // If we are already installing, warn the user
-                if (installInProgress) {
+                if (core.installInProgress) {
                     cb.fire("failed", ArgumentList( "A hypervisor installation is in progress please wait until it's finished and try again." )( HVE_USAGE_ERROR ));
                     return;
                 }
 
                 // Mark installation in progress
+                core.installInProgress = true;
                 installInProgress = true;
 
                 // Try to install first and then open session
@@ -329,6 +337,7 @@ void DaemonConnection::installHV_andRequestSession_thread( boost::thread ** thre
         if (userInteraction->confirm(pTitle, pMessage) != UI_OK) {
             cb.fire("failed", ArgumentList( "You must have a hypervisor installed in your system to continue." )( HVE_USAGE_ERROR ));
             runningThreads.remove_thread(thisThread);
+            core.installInProgress = false;
             installInProgress = false;
 
             // Check if user navigated away with the 
@@ -352,6 +361,7 @@ void DaemonConnection::installHV_andRequestSession_thread( boost::thread ** thre
         // interaction prompt in place
         if (userInteraction->aborted) {
             runningThreads.remove_thread(thisThread);
+            core.installInProgress = false;
             installInProgress = false;
             userInteraction->abortHandled();
             return;
@@ -359,8 +369,13 @@ void DaemonConnection::installHV_andRequestSession_thread( boost::thread ** thre
 
         // Check for error cases
         if (ans != HVE_OK) {
-            cb.fire("failed", ArgumentList( "We were unable to install a hypervisor in your system. Please try again manually." )( HVE_USAGE_ERROR ));
+            if ((ans == HVE_NOT_VALIDATED) || (ans == HVE_NOT_TRUSTED)) {
+                cb.fire("failed", ArgumentList( "Integrity validation of the hypervisor configuration failed. Please try again later." )( HVE_USAGE_ERROR ));
+            } else {
+                cb.fire("failed", ArgumentList( "We were unable to install a hypervisor in your system. Please try again manually." )( HVE_USAGE_ERROR ));
+            }
             runningThreads.remove_thread(thisThread);
+            core.installInProgress = false;
             installInProgress = false;
             return;
         }
@@ -375,6 +390,7 @@ void DaemonConnection::installHV_andRequestSession_thread( boost::thread ** thre
             core.hypervisor->loadSessions();
 
             // Request session in the same thread
+            core.installInProgress = false;
             installInProgress = false;
             this->requestSession_thread( &thisThread, eventID, vmcpURL );
 
@@ -384,6 +400,7 @@ void DaemonConnection::installHV_andRequestSession_thread( boost::thread ** thre
         } else {
             cb.fire("failed", ArgumentList( "The hypervisor isntallation completed but we were not able to detect it! Please try again later or try to re-install it manually." )( HVE_USAGE_ERROR ));
             runningThreads.remove_thread(thisThread);
+            core.installInProgress = false;
             installInProgress = false;
             return;
         }
@@ -435,7 +452,7 @@ void DaemonConnection::requestSession_thread( boost::thread ** thread, const std
         // =======================================================================
 
         // Wait for delaied hypervisor initiation
-        hv->waitTillReady( pInit->begin<FiniteTask>( "Initializing hypervisor" ), userInteraction );
+        hv->waitTillReady( core.keystore, pInit->begin<FiniteTask>( "Initializing hypervisor" ), userInteraction );
 
         // Check if user navigated away with the 
         // interaction prompt in place

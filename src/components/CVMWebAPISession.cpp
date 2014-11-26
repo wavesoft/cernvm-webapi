@@ -249,6 +249,13 @@ void CVMWebAPISession::enablePeriodicJobs( bool status ) {
 }
 
 /**
+ * Send a failure message
+ */
+void CVMWebAPISession::sendFailure( const std::string& message ) {
+	connection.sendEvent( "failure", ArgumentList(message), uuid_str );
+}
+
+/**
  * Abort session
  */
 void CVMWebAPISession::abort() {
