@@ -104,7 +104,7 @@ void DaemonCore::syncHypervisorReflection() {
             sessions.clear();
 
             // Release hypervisor pointer
-            hypervisor = NULL;
+            hypervisor.reset();
 
         }
     } else {
