@@ -12,6 +12,6 @@ goto end
 set BUILDDIR=build_vs2012_t100_xp-%CONFIG%
 if not exist "%BUILDDIR%" mkdir "%BUILDDIR%"
 cd "%BUILDDIR%"
-cmake -DCMAKE_BUILD_TYPE=%CONFIG% -DCRASH_REPORTING=ON -DTARGET_ARCH="i386" -G"Visual Studio 11" -T"v110_xp" ..
+cmake -DCMAKE_BUILD_TYPE=%CONFIG% -DCRASH_REPORTING=OFF -DTARGET_ARCH="i386" -G"Visual Studio 11" -T"v110_xp" ..
 
 :end
