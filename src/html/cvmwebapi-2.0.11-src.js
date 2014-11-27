@@ -1919,7 +1919,7 @@ _NS_.WebAPISession.prototype.close = function() {
 		"session_id": this.session_id
 	});
 	// Mark session as invalid
-	this.__valid = false;
+	//this.__valid = false;
 }
 
 _NS_.WebAPISession.prototype.sync = function() {
