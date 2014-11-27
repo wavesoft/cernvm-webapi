@@ -33,16 +33,17 @@ _NS_.launchRDP = function( rdpURL, resolution ) {
             bpp  = parseInt(res_parts[2]);
     }
 
+    // Calculate position on screen
+    var left = (screen.width - width)/2,
+    	top = (screen.height - (height+100))/2;
+
     // Open web-RDP client from CernVM
     var w = window.open(
         'http://cernvm.cern.ch/releases/webapi/webrdp/webclient.html#' + rdpURL + ',' + width + ',' + height, 
         'WebRDPClient', 
-        'width=' + width + ',height=' + (height+100)
+        'width=' + width + ',height=' + (height+100),
+        ',left=' + left + ',top=' + top
     );
-
-    // Align, center and focus
-    w.moveTo( (screen.width - width)/2, (screen.height - (height+100))/2 );
-    setTimeout(function() { w.focus() }, 100);
     w.focus();
 
     // Return window for further processing

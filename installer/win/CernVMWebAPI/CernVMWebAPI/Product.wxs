@@ -1,27 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="CernVM WebAPI" Language="1033" Version="2.0.10.0" Manufacturer="PH/SFT Group, CERN" UpgradeCode="70DAC5E8-46A4-4EF3-80B3-A103AE948436">
+	<Product Id="*" Name="CernVM WebAPI" Language="1033" Version="2.0.11.0" Manufacturer="PH/SFT Group, CERN" UpgradeCode="70DAC5E8-46A4-4EF3-80B3-A103AE948436">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
-		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <!-- Uninstall previous versions -->
+		<MajorUpgrade 
+      Schedule="afterInstallValidate"
+      DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
 		<MediaTemplate EmbedCab="yes" />
 
+    <!-- Publishable features -->
 		<Feature Id="ProductFeature" Title="CernVM WebAPI" Level="1">
 			<ComponentGroupRef Id="ProductComponents" />
 			<ComponentGroupRef Id="ProductShortcuts" />
 		</Feature>
 
+    <!-- Visual C++ 11 redistributables -->
     <DirectoryRef Id="TARGETDIR">
       <Merge Id="VCRedist" SourceFile="C:\Program Files (x86)\Common Files\Merge Modules\Microsoft_VC110_CRT_x86.msm" DiskId="1" Language="0"/>      
-
       <Directory Id="WindowsFolder" Name="WINDOWS"/>
-
     </DirectoryRef>
-    
     <Feature Id="VCRedist" Title="Visual C++ 11.0 Runtime" AllowAdvertise="no" Display="hidden" Level="1">
       <MergeRef Id="VCRedist"/>
-    </Feature>                    
+    </Feature>               
     
+    <!-- Kill running process -->
+    <CustomAction Id='KillWebAPI' 
+                  Directory='INSTALLFOLDER' 
+                  Execute='immediate' 
+                  ExeCommand='"[WindowsFolder]\System32\taskkill.exe" /F /IM cernvm-webapi.exe' 
+                  Return='ignore'
+                  />
+
     <!-- Launch WebAPI When it's finished -->
     <CustomAction Id="RunWebAPI"
                   Directory="INSTALLFOLDER"
@@ -32,7 +42,12 @@
     
     <!-- Install procedures -->
     <InstallExecuteSequence>
+      
+      <!-- Run CernVM WebAPI after setup -->
       <Custom Action="RunWebAPI" Before="InstallFinalize" />
+      <!-- Kill CernVM WebAPI upon initialization -->
+      <Custom Action="KillWebAPI" Before="InstallValidate" />
+    
     </InstallExecuteSequence>
 
   </Product>
@@ -42,14 +57,15 @@
     <!-- Directories for the project -->
 		<Directory Id="TARGETDIR" Name="SourceDir">
 			
+      <!-- /Program Files -->
       <Directory Id="ProgramFilesFolder">
         <Directory Id="CERNFOLDER" Name="CERN">
   				<Directory Id="INSTALLFOLDER" Name="CernVMWebAPI">
-            <Directory Id="RESFOLDER" Name="res" />
           </Directory>
         </Directory>
 			</Directory>
       
+      <!-- System menu -->
       <Directory Id="ProgramMenuFolder">
         <Directory Id="MENUFOLDER" Name="CernVM WebAPI" />
       </Directory>
@@ -69,7 +85,7 @@
       <Component Id="CernVMWebAPI" Guid="7D61F9E4-BB23-4D39-BD3E-948FE16D8E0F">
         
         <File Id="cernvm_webapi.exe" 
-              Source="..\..\..\..\build_vs2012_t100_xp\Release\cernvm-webapi.exe" 
+              Source="..\..\..\..\build_vs2012_t100_xp-Release\Release\cernvm-webapi.exe" 
               KeyPath="yes" 
               Checksum="yes" />
         
@@ -77,18 +93,7 @@
       
 
       <!-- CernVM WebAPI Resources -->
-      <!--
-      <Component Id="CernVMWebAPI_Res" Guid="1D0962EC-65C4-45F6-9DCC-5F4CAACC19AA">
-        
-        <File Id="control.html" 
-              Source="..\..\..\..\src\html\control.html" 
-              KeyPath="yes" 
-              Checksum="yes" />
-        <File Id="cvmwebapi_2.0.0.js" 
-              Source="..\..\..\..\src\html\cvmwebapi-2.0.0.js" />
-        
-      </Component>
-      -->
+      <!-- (They are now embedded in the binary) -->
       
       <!-- CernVM WebAPI association with the URI protocol -->
       <Component Id="CernVMWebAPI_URI" Guid="A26E8A26-AAE3-40AB-A970-F54DDDFA723C">
@@ -146,9 +151,9 @@
 
         <!-- Dashboard and uninstall icon -->
         <Shortcut Id="OpenDashboard" 
-                  Name="CernVM WebAPI Dashboard" 
+                  Name="CernVM WebAPI" 
                   Target="[#cernvm_webapi.exe]" 
-                  Description="Open the CernVM WebAPI Dashboard"
+                  Description="Start CernVM WebAPI Service"
                   WorkingDirectory="APPLICATIONROOTDIRECTORY" />
         <Shortcut Id="UninstallProduct"
                   Name="Uninstall CernVM WebAPI"
