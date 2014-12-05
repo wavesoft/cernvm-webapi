@@ -7,7 +7,7 @@ var occupiedWindow = null;
 /**
  * The private WebAPI Interaction class
  */
-var UserInteraction = _NS_.UserInteraction = function( socket ) {
+var UserInteraction = function( socket ) {
 	var self = this;
 	this.socket = socket;
 	this.onResize = null;

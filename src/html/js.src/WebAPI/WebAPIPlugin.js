@@ -2,10 +2,10 @@
 /**
  * WebAPI Socket handler
  */
-_NS_.WebAPIPlugin = function() {
+var WebAPIPlugin = function() {
 
 	// Superclass constructor
-	_NS_.Socket.call(this);
+	Socket.call(this);
 
 	// Open sessions
 	this._sessions = [];
@@ -15,12 +15,15 @@ _NS_.WebAPIPlugin = function() {
 /**
  * Subclass event dispatcher
  */
-_NS_.WebAPIPlugin.prototype = Object.create( _NS_.Socket.prototype );
+WebAPIPlugin.prototype = Object.create( Socket.prototype );
+
+// Hint for minimization
+var WebAPIPluginPrototype = WebAPIPlugin.prototype;
 
 /**
- * Reheat the connection if it went offline
+ * Attempt to reheat the connection if it went offline
  */
-_NS_.WebAPIPlugin.prototype.__reheat = function( socket ) {
+WebAPIPluginPrototype.__reheat = function( socket ) {
 	var self = this,
 		already_closed = false;
 
@@ -70,7 +73,7 @@ _NS_.WebAPIPlugin.prototype.__reheat = function( socket ) {
 				// Progress feedbacks
 				onLengthyTask: function( msg, isLengthy ) {
 					// Control the occupied window
-					_NS_.UserInteraction.controlOccupied( isLengthy, msg );
+					UserInteraction.controlOccupied( isLengthy, msg );
 				},
 				onProgress: function( msg, percent ) {
 					self.__fire("progress", [msg, percent]);
@@ -92,14 +95,14 @@ _NS_.WebAPIPlugin.prototype.__reheat = function( socket ) {
 /**
  * Stop the CernVM WebAPI Service
  */
-_NS_.WebAPIPlugin.prototype.stopService = function() {
+WebAPIPluginPrototype.stopService = function() {
 	this.send("stopService");
 }
 
 /**
  * Open a session and call the cbOk when ready
  */
-_NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
+WebAPIPluginPrototype.requestSession = function(vmcp, cbOk, cbFail) {
 	var self = this;
 
 	// Send requestSession
@@ -111,7 +114,7 @@ _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
 		onSucceed : function( msg, session_id ) {
 
 			// Create a new session object
-			var session = new _NS_.WebAPISession( self, session_id, function() {
+			var session = new WebAPISession( self, session_id, function() {
 				
 				// Fire the ok callback only when we are initialized
 				if (cbOk) cbOk(session);
@@ -141,7 +144,7 @@ _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
 		onLengthyTask: function( msg, isLengthy ) {
 
 			// Control the occupied window
-			_NS_.UserInteraction.controlOccupied( isLengthy, msg );
+			UserInteraction.controlOccupied( isLengthy, msg );
 
 		},
 
@@ -165,7 +168,7 @@ _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
  * Enumerate the running vitual machines
  * (Available only if the session is privileged)
  */
-_NS_.WebAPIPlugin.prototype.enumSessions = function(callback) {
+WebAPIPluginPrototype.enumSessions = function(callback) {
 	var self = this;
 	if (!callback) return;
 
@@ -188,7 +191,7 @@ _NS_.WebAPIPlugin.prototype.enumSessions = function(callback) {
  * Control a session with the given ID
  * (Available only if the session is privileged)
  */
-_NS_.WebAPIPlugin.prototype.controlSession = function(session_id, action, callback) {
+WebAPIPluginPrototype.controlSession = function(session_id, action, callback) {
 	var self = this;
 	if (!callback) return;
 

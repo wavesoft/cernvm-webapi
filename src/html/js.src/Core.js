@@ -20,7 +20,7 @@ _NS_.markPageLoaded = function() {
 /**
  * Helper function to start RDP client using the flash API from CernVM
  */
-_NS_.launchRDP = function( rdpURL, resolution ) {
+var launchRDP = function( rdpURL, resolution ) {
 
     // Process resolution parameter
     var width=800, height=600, bpp=24;
@@ -64,7 +64,7 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 	var fn_start = function() {
 
 		// Create a CernVM WebAPI Plugin Instance
-		var instance = new _NS_.WebAPIPlugin();
+		var instance = new WebAPIPlugin();
 
 		// Connect and wait for status
 		instance.connect(function( hasAPI ) {
@@ -93,7 +93,7 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 				// Periodic polling, waiting for the installation to complete
 				var pollFunction = function() {
 					// Check if we have API now
-					instance = new _NS_.WebAPIPlugin();
+					instance = new WebAPIPlugin();
 					instance.connect(function(hasAPI) {
 						if (hasAPI) {
 							cbOK( instance );

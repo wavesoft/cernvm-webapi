@@ -25,7 +25,7 @@ _NS_.markPageLoaded = function() {
 /**
  * Helper function to start RDP client using the flash API from CernVM
  */
-_NS_.launchRDP = function( rdpURL, resolution ) {
+var launchRDP = function( rdpURL, resolution ) {
 
     // Process resolution parameter
     var width=800, height=600, bpp=24;
@@ -69,7 +69,7 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 	var fn_start = function() {
 
 		// Create a CernVM WebAPI Plugin Instance
-		var instance = new _NS_.WebAPIPlugin();
+		var instance = new WebAPIPlugin();
 
 		// Connect and wait for status
 		instance.connect(function( hasAPI ) {
@@ -98,7 +98,7 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 				// Periodic polling, waiting for the installation to complete
 				var pollFunction = function() {
 					// Check if we have API now
-					instance = new _NS_.WebAPIPlugin();
+					instance = new WebAPIPlugin();
 					instance.connect(function(hasAPI) {
 						if (hasAPI) {
 							cbOK( instance );
@@ -195,14 +195,17 @@ function _verCompare(v1, v2) {
  */
 var DOM_ELEMENT_ID = 'cernvm-webapi-launcher-'+(Math.random().toString().substr(2));
 
-_NS_.EventDispatcher = function(e) {
+var EventDispatcher = function(e) {
     this.events = { };
 };
+
+// Hint for minimization
+var EventDispatcherPrototype = EventDispatcher.prototype;
 
 /**
  * Fire an event to the registered handlers
  */
-_NS_.EventDispatcher.prototype.__fire = function( name, args ) {
+EventDispatcherPrototype.__fire = function( name, args ) {
     if (_NS_.debugLogging) console.log("Firing",name,"(", args, ")");
     if (this.events[name] == undefined) return;
     var callbacks = this.events[name];
@@ -214,7 +217,7 @@ _NS_.EventDispatcher.prototype.__fire = function( name, args ) {
 /**
  * Register a listener on the given event
  */
-_NS_.EventDispatcher.prototype.addEventListener = function( name, listener ) {
+EventDispatcherPrototype.addEventListener = function( name, listener ) {
     if (this.events[name] == undefined) this.events[name]=[];
     this.events[name].push( listener );
 };
@@ -222,7 +225,7 @@ _NS_.EventDispatcher.prototype.addEventListener = function( name, listener ) {
 /**
  * Unregister a listener from the given event
  */
-_NS_.EventDispatcher.prototype.removeEventListener = function( name, listener ) {
+EventDispatcherPrototype.removeEventListener = function( name, listener ) {
     if (this.events[name] == undefined) return;
     var i = this.events[name].indexOf(listener);
     if (i<0) return;
@@ -326,17 +329,17 @@ var SessionFlags = function( o ) {
 /**
  * WebAPI Socket handler
  */
-_NS_.ProgressFeedback = function() {
+var ProgressFeedback = function() {
 	
 };
 
 /**
  * WebAPI Socket handler
  */
-_NS_.Socket = function() {
+var Socket = function() {
 
 	// Superclass constructor
-	_NS_.EventDispatcher.call(this);
+	EventDispatcher.call(this);
 
 	// The user interaction handler
 	this.interaction = new UserInteraction(this);
@@ -360,19 +363,22 @@ _NS_.Socket = function() {
 /**
  * Subclass event dispatcher
  */
-_NS_.Socket.prototype = Object.create( _NS_.EventDispatcher.prototype );
+Socket.prototype = Object.create( EventDispatcher.prototype );
+
+// Hint for minimization
+var SocketPrototype = Socket.prototype;
 
 /**
  * Forward function for WebAPIPlugin : Reheat a connection
  */
-_NS_.Socket.prototype.__reheat = function( socket ) {
+SocketPrototype.__reheat = function( socket ) {
 
 }
 
 /**
  * Cleanup after shutdown/close
  */
-_NS_.Socket.prototype.__handleClose = function() {
+SocketPrototype.__handleClose = function() {
 
 	// Fire the disconnected event
 	this.__fire("disconnected", []);
@@ -385,14 +391,14 @@ _NS_.Socket.prototype.__handleClose = function() {
 /**
  * Handle connection acknowlegement
  */
-_NS_.Socket.prototype.__handleOpen = function(data) {
+SocketPrototype.__handleOpen = function(data) {
 	this.__fire("connected", data['version']);
 }
 
 /**
  * Handle raw incoming data
  */
-_NS_.Socket.prototype.__handleData = function(data) {
+SocketPrototype.__handleData = function(data) {
 	var o = JSON.parse(data);
 
 	// Forward all the frames of the given ID to the
@@ -423,7 +429,7 @@ _NS_.Socket.prototype.__handleData = function(data) {
 /**
  * Send a JSON frame
  */
-_NS_.Socket.prototype.send = function(action, data, responseEvents, responseTimeout) {
+SocketPrototype.send = function(action, data, responseEvents, responseTimeout) {
 	var self = this;
 	var timeoutTimer = null;
 
@@ -525,7 +531,7 @@ _NS_.Socket.prototype.send = function(action, data, responseEvents, responseTime
 /**
  * Close connection
  */
-_NS_.Socket.prototype.close = function() {
+SocketPrototype.close = function() {
 	if (!this.connected) return;
 
 	// Disconnect
@@ -540,7 +546,7 @@ _NS_.Socket.prototype.close = function() {
 /**
  * Establish connection
  */
-_NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
+SocketPrototype.connect = function( cbAPIState, autoLaunch ) {
 	var self = this;
 	if (this.connected) return;
 
@@ -869,7 +875,7 @@ var occupiedWindow = null;
 /**
  * The private WebAPI Interaction class
  */
-var UserInteraction = _NS_.UserInteraction = function( socket ) {
+var UserInteraction = function( socket ) {
 	var self = this;
 	this.socket = socket;
 	this.onResize = null;
@@ -1549,10 +1555,10 @@ var XHRequest = {
 /**
  * WebAPI Socket handler
  */
-_NS_.WebAPIPlugin = function() {
+var WebAPIPlugin = function() {
 
 	// Superclass constructor
-	_NS_.Socket.call(this);
+	Socket.call(this);
 
 	// Open sessions
 	this._sessions = [];
@@ -1562,12 +1568,15 @@ _NS_.WebAPIPlugin = function() {
 /**
  * Subclass event dispatcher
  */
-_NS_.WebAPIPlugin.prototype = Object.create( _NS_.Socket.prototype );
+WebAPIPlugin.prototype = Object.create( Socket.prototype );
+
+// Hint for minimization
+var WebAPIPluginPrototype = WebAPIPlugin.prototype;
 
 /**
- * Reheat the connection if it went offline
+ * Attempt to reheat the connection if it went offline
  */
-_NS_.WebAPIPlugin.prototype.__reheat = function( socket ) {
+WebAPIPluginPrototype.__reheat = function( socket ) {
 	var self = this,
 		already_closed = false;
 
@@ -1617,7 +1626,7 @@ _NS_.WebAPIPlugin.prototype.__reheat = function( socket ) {
 				// Progress feedbacks
 				onLengthyTask: function( msg, isLengthy ) {
 					// Control the occupied window
-					_NS_.UserInteraction.controlOccupied( isLengthy, msg );
+					UserInteraction.controlOccupied( isLengthy, msg );
 				},
 				onProgress: function( msg, percent ) {
 					self.__fire("progress", [msg, percent]);
@@ -1639,14 +1648,14 @@ _NS_.WebAPIPlugin.prototype.__reheat = function( socket ) {
 /**
  * Stop the CernVM WebAPI Service
  */
-_NS_.WebAPIPlugin.prototype.stopService = function() {
+WebAPIPluginPrototype.stopService = function() {
 	this.send("stopService");
 }
 
 /**
  * Open a session and call the cbOk when ready
  */
-_NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
+WebAPIPluginPrototype.requestSession = function(vmcp, cbOk, cbFail) {
 	var self = this;
 
 	// Send requestSession
@@ -1658,7 +1667,7 @@ _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
 		onSucceed : function( msg, session_id ) {
 
 			// Create a new session object
-			var session = new _NS_.WebAPISession( self, session_id, function() {
+			var session = new WebAPISession( self, session_id, function() {
 				
 				// Fire the ok callback only when we are initialized
 				if (cbOk) cbOk(session);
@@ -1688,7 +1697,7 @@ _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
 		onLengthyTask: function( msg, isLengthy ) {
 
 			// Control the occupied window
-			_NS_.UserInteraction.controlOccupied( isLengthy, msg );
+			UserInteraction.controlOccupied( isLengthy, msg );
 
 		},
 
@@ -1712,7 +1721,7 @@ _NS_.WebAPIPlugin.prototype.requestSession = function(vmcp, cbOk, cbFail) {
  * Enumerate the running vitual machines
  * (Available only if the session is privileged)
  */
-_NS_.WebAPIPlugin.prototype.enumSessions = function(callback) {
+WebAPIPluginPrototype.enumSessions = function(callback) {
 	var self = this;
 	if (!callback) return;
 
@@ -1735,7 +1744,7 @@ _NS_.WebAPIPlugin.prototype.enumSessions = function(callback) {
  * Control a session with the given ID
  * (Available only if the session is privileged)
  */
-_NS_.WebAPIPlugin.prototype.controlSession = function(session_id, action, callback) {
+WebAPIPluginPrototype.controlSession = function(session_id, action, callback) {
 	var self = this;
 	if (!callback) return;
 
@@ -1761,10 +1770,10 @@ _NS_.WebAPIPlugin.prototype.controlSession = function(session_id, action, callba
 /**
  * WebAPI Socket handler
  */
-_NS_.WebAPISession = function( socket, session_id, init_callback ) {
+var WebAPISession = function( socket, session_id, init_callback ) {
 
 	// Superclass initialize
-	_NS_.EventDispatcher.call(this);
+	EventDispatcher.call(this);
 
 	// Keep references
 	this.socket = socket;
@@ -1866,12 +1875,15 @@ _NS_.WebAPISession = function( socket, session_id, init_callback ) {
 /**
  * Subclass event dispatcher
  */
-_NS_.WebAPISession.prototype = Object.create( _NS_.EventDispatcher.prototype );
+WebAPISession.prototype = Object.create( EventDispatcher.prototype );
+
+// Hint for minimization
+var WebAPISessionPrototype = WebAPISession.prototype;
 
 /**
  * Handle incoming event
  */
-_NS_.WebAPISession.prototype.handleEvent = function(data) {
+WebAPISessionPrototype.handleEvent = function(data) {
 
 	// Take this opportunity to update some of our local cached data
 	if (data['name'] == 'stateVariables') {
@@ -1905,7 +1917,7 @@ _NS_.WebAPISession.prototype.handleEvent = function(data) {
 		if (flags & F_NO_VIRTUALIZATION != 0) {
 
 			// Display some information to the user
-			_NS_.UserInteraction.alert(
+			UserInteraction.alert(
 				"Virtualization Failure",
 				"<p>The hypervisor was unable to use your hardware's virtualization capabilities. This happens either if you have an old hardware (more than 4 years old) or if the <strong>Virtualization Technology</strong> features is disabled from your <strong>BIOS</strong>.</p>" +
 				"<p>There are various articles on the internet on how to enable this option from your BIOS. <a target=\"_blank\" href=\"http://www.sysprobs.com/disable-enable-virtualization-technology-bios\">You can read this article for example.</a></p>"
@@ -1920,7 +1932,7 @@ _NS_.WebAPISession.prototype.handleEvent = function(data) {
 	} else if (data['name'] == 'lengthyTask') {
 
 		// Control the occupied window
-		_NS_.UserInteraction.controlOccupied( data['data'][1], data['data'][0] );
+		UserInteraction.controlOccupied( data['data'][1], data['data'][0] );
 
 	} else if (data['name'] == 'apiStateChanged' ) {
 
@@ -1960,7 +1972,7 @@ _NS_.WebAPISession.prototype.handleEvent = function(data) {
 	this.__fire(data['name'], data['data']);
 }
 
-_NS_.WebAPISession.prototype.start = function( values ) {
+WebAPISessionPrototype.start = function( values ) {
 	// Send a start message
 	if (!this.__valid) return;
 	this.socket.send("start", {
@@ -1969,7 +1981,7 @@ _NS_.WebAPISession.prototype.start = function( values ) {
 	})
 }
 
-_NS_.WebAPISession.prototype.stop = function() {
+WebAPISessionPrototype.stop = function() {
 	// Send a stop message
 	if (!this.__valid) return;
 	this.socket.send("stop", {
@@ -1977,7 +1989,7 @@ _NS_.WebAPISession.prototype.stop = function() {
 	})
 }
 
-_NS_.WebAPISession.prototype.pause = function() {
+WebAPISessionPrototype.pause = function() {
 	// Send a pause message
 	if (!this.__valid) return;
 	this.socket.send("pause", {
@@ -1985,7 +1997,7 @@ _NS_.WebAPISession.prototype.pause = function() {
 	})
 }
 
-_NS_.WebAPISession.prototype.resume = function() {
+WebAPISessionPrototype.resume = function() {
 	// Send a resume message
 	if (!this.__valid) return;
 	this.socket.send("resume", {
@@ -1993,7 +2005,7 @@ _NS_.WebAPISession.prototype.resume = function() {
 	})
 }
 
-_NS_.WebAPISession.prototype.reset = function() {
+WebAPISessionPrototype.reset = function() {
 	// Send a reset message
 	if (!this.__valid) return;
 	this.socket.send("reset", {
@@ -2001,7 +2013,7 @@ _NS_.WebAPISession.prototype.reset = function() {
 	})
 }
 
-_NS_.WebAPISession.prototype.hibernate = function() {
+WebAPISessionPrototype.hibernate = function() {
 	// Send a hibernate message
 	if (!this.__valid) return;
 	this.socket.send("hibernate", {
@@ -2009,7 +2021,7 @@ _NS_.WebAPISession.prototype.hibernate = function() {
 	})
 }
 
-_NS_.WebAPISession.prototype.close = function() {
+WebAPISessionPrototype.close = function() {
 	// Send a close message
 	this.socket.send("close", {
 		"session_id": this.session_id
@@ -2018,7 +2030,7 @@ _NS_.WebAPISession.prototype.close = function() {
 	//this.__valid = false;
 }
 
-_NS_.WebAPISession.prototype.sync = function() {
+WebAPISessionPrototype.sync = function() {
 	// Send a sync message
 	if (!this.__valid) return;
 	this.socket.send("sync", {
@@ -2026,7 +2038,7 @@ _NS_.WebAPISession.prototype.sync = function() {
 	})
 }
 
-_NS_.WebAPISession.prototype.getAsync = function(parameter, cb) {
+WebAPISessionPrototype.getAsync = function(parameter, cb) {
 	// Get a session parameter
 	if (!this.__valid) return;
 	this.socket.send("get", {
@@ -2039,7 +2051,7 @@ _NS_.WebAPISession.prototype.getAsync = function(parameter, cb) {
 	})
 }
 
-_NS_.WebAPISession.prototype.setAsync = function(parameter, value, cb) {
+WebAPISessionPrototype.setAsync = function(parameter, value, cb) {
 	// Update a session parameter
 	if (!this.__valid) return;
 	this.socket.send("set", {
@@ -2056,7 +2068,7 @@ _NS_.WebAPISession.prototype.setAsync = function(parameter, value, cb) {
 /**
  * Return the cached value of the property specified
  */
-_NS_.WebAPISession.prototype.getProperty = function(name) {
+WebAPISessionPrototype.getProperty = function(name) {
 	if (!this.__valid) return;
     if (!name) return "";
     if (this.__properties[name] == undefined) return "";
@@ -2066,7 +2078,7 @@ _NS_.WebAPISession.prototype.getProperty = function(name) {
 /**
  * Update local and remote properties
  */
-_NS_.WebAPISession.prototype.setProperty = function(name, value) {
+WebAPISessionPrototype.setProperty = function(name, value) {
 	if (!this.__valid) return;
     if (!name) return "";
 
@@ -2082,7 +2094,7 @@ _NS_.WebAPISession.prototype.setProperty = function(name, value) {
 
 }
 
-_NS_.WebAPISession.prototype.openRDPWindow = function(parameter, cb) {
+WebAPISessionPrototype.openRDPWindow = function(parameter, cb) {
 	if (!this.__valid) return;
 	var self = this;
 
@@ -2092,14 +2104,14 @@ _NS_.WebAPISession.prototype.openRDPWindow = function(parameter, cb) {
 
 		// Open the RDP window
 		var parts = this.__config['rdpURL'].split("@");
-		this.__lastRDPWindow = _NS_.launchRDP( parts[0], parts[1] )
+		this.__lastRDPWindow = launchRDP( parts[0], parts[1] )
 
 	} else {
 
 		// Otherwise request asynchronously the rdpURL
 		this.getAsync("rdpURL", function(info) {
 			var parts = info.split("@");
-			self.__lastRDPWindow = _NS_.launchRDP( parts[0], parts[1] )
+			self.__lastRDPWindow = launchRDP( parts[0], parts[1] )
 		});		
 
 	}

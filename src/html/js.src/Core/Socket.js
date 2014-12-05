@@ -31,17 +31,20 @@ var Socket = function() {
  */
 Socket.prototype = Object.create( EventDispatcher.prototype );
 
+// Hint for minimization
+var SocketPrototype = Socket.prototype;
+
 /**
  * Forward function for WebAPIPlugin : Reheat a connection
  */
-Socket.prototype.__reheat = function( socket ) {
+SocketPrototype.__reheat = function( socket ) {
 
 }
 
 /**
  * Cleanup after shutdown/close
  */
-Socket.prototype.__handleClose = function() {
+SocketPrototype.__handleClose = function() {
 
 	// Fire the disconnected event
 	this.__fire("disconnected", []);
@@ -54,14 +57,14 @@ Socket.prototype.__handleClose = function() {
 /**
  * Handle connection acknowlegement
  */
-Socket.prototype.__handleOpen = function(data) {
+SocketPrototype.__handleOpen = function(data) {
 	this.__fire("connected", data['version']);
 }
 
 /**
  * Handle raw incoming data
  */
-Socket.prototype.__handleData = function(data) {
+SocketPrototype.__handleData = function(data) {
 	var o = JSON.parse(data);
 
 	// Forward all the frames of the given ID to the
@@ -92,7 +95,7 @@ Socket.prototype.__handleData = function(data) {
 /**
  * Send a JSON frame
  */
-Socket.prototype.send = function(action, data, responseEvents, responseTimeout) {
+SocketPrototype.send = function(action, data, responseEvents, responseTimeout) {
 	var self = this;
 	var timeoutTimer = null;
 
@@ -194,7 +197,7 @@ Socket.prototype.send = function(action, data, responseEvents, responseTimeout) 
 /**
  * Close connection
  */
-Socket.prototype.close = function() {
+SocketPrototype.close = function() {
 	if (!this.connected) return;
 
 	// Disconnect
@@ -209,7 +212,7 @@ Socket.prototype.close = function() {
 /**
  * Establish connection
  */
-Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
+SocketPrototype.connect = function( cbAPIState, autoLaunch ) {
 	var self = this;
 	if (this.connected) return;
 

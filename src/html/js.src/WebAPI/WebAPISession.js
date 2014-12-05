@@ -3,10 +3,10 @@
 /**
  * WebAPI Socket handler
  */
-_NS_.WebAPISession = function( socket, session_id, init_callback ) {
+var WebAPISession = function( socket, session_id, init_callback ) {
 
 	// Superclass initialize
-	_NS_.EventDispatcher.call(this);
+	EventDispatcher.call(this);
 
 	// Keep references
 	this.socket = socket;
@@ -108,12 +108,15 @@ _NS_.WebAPISession = function( socket, session_id, init_callback ) {
 /**
  * Subclass event dispatcher
  */
-_NS_.WebAPISession.prototype = Object.create( _NS_.EventDispatcher.prototype );
+WebAPISession.prototype = Object.create( EventDispatcher.prototype );
+
+// Hint for minimization
+var WebAPISessionPrototype = WebAPISession.prototype;
 
 /**
  * Handle incoming event
  */
-_NS_.WebAPISession.prototype.handleEvent = function(data) {
+WebAPISessionPrototype.handleEvent = function(data) {
 
 	// Take this opportunity to update some of our local cached data
 	if (data['name'] == 'stateVariables') {
@@ -147,7 +150,7 @@ _NS_.WebAPISession.prototype.handleEvent = function(data) {
 		if (flags & F_NO_VIRTUALIZATION != 0) {
 
 			// Display some information to the user
-			_NS_.UserInteraction.alert(
+			UserInteraction.alert(
 				"Virtualization Failure",
 				"<p>The hypervisor was unable to use your hardware's virtualization capabilities. This happens either if you have an old hardware (more than 4 years old) or if the <strong>Virtualization Technology</strong> features is disabled from your <strong>BIOS</strong>.</p>" +
 				"<p>There are various articles on the internet on how to enable this option from your BIOS. <a target=\"_blank\" href=\"http://www.sysprobs.com/disable-enable-virtualization-technology-bios\">You can read this article for example.</a></p>"
@@ -162,7 +165,7 @@ _NS_.WebAPISession.prototype.handleEvent = function(data) {
 	} else if (data['name'] == 'lengthyTask') {
 
 		// Control the occupied window
-		_NS_.UserInteraction.controlOccupied( data['data'][1], data['data'][0] );
+		UserInteraction.controlOccupied( data['data'][1], data['data'][0] );
 
 	} else if (data['name'] == 'apiStateChanged' ) {
 
@@ -202,7 +205,7 @@ _NS_.WebAPISession.prototype.handleEvent = function(data) {
 	this.__fire(data['name'], data['data']);
 }
 
-_NS_.WebAPISession.prototype.start = function( values ) {
+WebAPISessionPrototype.start = function( values ) {
 	// Send a start message
 	if (!this.__valid) return;
 	this.socket.send("start", {
@@ -211,7 +214,7 @@ _NS_.WebAPISession.prototype.start = function( values ) {
 	})
 }
 
-_NS_.WebAPISession.prototype.stop = function() {
+WebAPISessionPrototype.stop = function() {
 	// Send a stop message
 	if (!this.__valid) return;
 	this.socket.send("stop", {
@@ -219,7 +222,7 @@ _NS_.WebAPISession.prototype.stop = function() {
 	})
 }
 
-_NS_.WebAPISession.prototype.pause = function() {
+WebAPISessionPrototype.pause = function() {
 	// Send a pause message
 	if (!this.__valid) return;
 	this.socket.send("pause", {
@@ -227,7 +230,7 @@ _NS_.WebAPISession.prototype.pause = function() {
 	})
 }
 
-_NS_.WebAPISession.prototype.resume = function() {
+WebAPISessionPrototype.resume = function() {
 	// Send a resume message
 	if (!this.__valid) return;
 	this.socket.send("resume", {
@@ -235,7 +238,7 @@ _NS_.WebAPISession.prototype.resume = function() {
 	})
 }
 
-_NS_.WebAPISession.prototype.reset = function() {
+WebAPISessionPrototype.reset = function() {
 	// Send a reset message
 	if (!this.__valid) return;
 	this.socket.send("reset", {
@@ -243,7 +246,7 @@ _NS_.WebAPISession.prototype.reset = function() {
 	})
 }
 
-_NS_.WebAPISession.prototype.hibernate = function() {
+WebAPISessionPrototype.hibernate = function() {
 	// Send a hibernate message
 	if (!this.__valid) return;
 	this.socket.send("hibernate", {
@@ -251,7 +254,7 @@ _NS_.WebAPISession.prototype.hibernate = function() {
 	})
 }
 
-_NS_.WebAPISession.prototype.close = function() {
+WebAPISessionPrototype.close = function() {
 	// Send a close message
 	this.socket.send("close", {
 		"session_id": this.session_id
@@ -260,7 +263,7 @@ _NS_.WebAPISession.prototype.close = function() {
 	//this.__valid = false;
 }
 
-_NS_.WebAPISession.prototype.sync = function() {
+WebAPISessionPrototype.sync = function() {
 	// Send a sync message
 	if (!this.__valid) return;
 	this.socket.send("sync", {
@@ -268,7 +271,7 @@ _NS_.WebAPISession.prototype.sync = function() {
 	})
 }
 
-_NS_.WebAPISession.prototype.getAsync = function(parameter, cb) {
+WebAPISessionPrototype.getAsync = function(parameter, cb) {
 	// Get a session parameter
 	if (!this.__valid) return;
 	this.socket.send("get", {
@@ -281,7 +284,7 @@ _NS_.WebAPISession.prototype.getAsync = function(parameter, cb) {
 	})
 }
 
-_NS_.WebAPISession.prototype.setAsync = function(parameter, value, cb) {
+WebAPISessionPrototype.setAsync = function(parameter, value, cb) {
 	// Update a session parameter
 	if (!this.__valid) return;
 	this.socket.send("set", {
@@ -298,7 +301,7 @@ _NS_.WebAPISession.prototype.setAsync = function(parameter, value, cb) {
 /**
  * Return the cached value of the property specified
  */
-_NS_.WebAPISession.prototype.getProperty = function(name) {
+WebAPISessionPrototype.getProperty = function(name) {
 	if (!this.__valid) return;
     if (!name) return "";
     if (this.__properties[name] == undefined) return "";
@@ -308,7 +311,7 @@ _NS_.WebAPISession.prototype.getProperty = function(name) {
 /**
  * Update local and remote properties
  */
-_NS_.WebAPISession.prototype.setProperty = function(name, value) {
+WebAPISessionPrototype.setProperty = function(name, value) {
 	if (!this.__valid) return;
     if (!name) return "";
 
@@ -324,7 +327,7 @@ _NS_.WebAPISession.prototype.setProperty = function(name, value) {
 
 }
 
-_NS_.WebAPISession.prototype.openRDPWindow = function(parameter, cb) {
+WebAPISessionPrototype.openRDPWindow = function(parameter, cb) {
 	if (!this.__valid) return;
 	var self = this;
 
@@ -334,14 +337,14 @@ _NS_.WebAPISession.prototype.openRDPWindow = function(parameter, cb) {
 
 		// Open the RDP window
 		var parts = this.__config['rdpURL'].split("@");
-		this.__lastRDPWindow = _NS_.launchRDP( parts[0], parts[1] )
+		this.__lastRDPWindow = launchRDP( parts[0], parts[1] )
 
 	} else {
 
 		// Otherwise request asynchronously the rdpURL
 		this.getAsync("rdpURL", function(info) {
 			var parts = info.split("@");
-			self.__lastRDPWindow = _NS_.launchRDP( parts[0], parts[1] )
+			self.__lastRDPWindow = launchRDP( parts[0], parts[1] )
 		});		
 
 	}
