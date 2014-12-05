@@ -113,6 +113,11 @@ int main( int argc, char ** argv ) {
     bool launchedBySetup = (argc > 1) && (strcmp(argv[1], "setup") == 0);
     bool launchedByService = (argc > 1) && (strcmp(argv[1], "daemon") == 0);
 
+    // Currently by default we launch as a service
+    if (argc < 2) {
+        launchedByService = true;
+    }
+
     // Start server
     long lastIdle = getMillis();
     long lastCronTime = lastIdle;

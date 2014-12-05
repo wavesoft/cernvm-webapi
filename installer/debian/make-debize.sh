@@ -103,11 +103,18 @@ cat <<EOF > debian/postinst
 # Update desktop icon
 update-desktop-database
 
-# Check who's running X and run cernvm-webapi as that user
-X_TTY=\$(ps ax | grep bin/X | awk '{ print \$2 }' | head -n1)
-X_USER=\$(who | grep \$X_TTY | awk '{ print \$1 }' | head -n1)
-if [ ! -z "\$X_USER" ]; then
-    su -c "/usr/bin/cernvm-webapi daemon" \$X_USER&
+# If we are root, switch to the first X user
+if [ $(id -u) -eq 0 ]; then
+	# Check who's running X and run cernvm-webapi as that user
+	X_TTY=\$(ps ax | grep bin/X | awk '{ print \$2 }' | head -n1)
+	X_USER=\$(who | grep \$X_TTY | awk '{ print \$1 }' | head -n1)
+	if [ ! -z "\$X_USER" ]; then
+	    su -c "/usr/bin/cernvm-webapi daemon" \$X_USER&
+	else
+		echo "WARNING! Could not locate your account name. Please start /usr/bin/cernvm-webapi manually!"
+	fi
+else
+	/usr/bin/cernvm-webapi daemon&
 fi
 
 # dh_installdeb will replace this with shell code automatically

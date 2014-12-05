@@ -25,6 +25,7 @@ build*
 test
 
 # Exclude archives from the extern
+andreas/*
 extern/mongoose/mongoose-*
 installer/win/CernVMWebAPI/CernVMWebAPI/bin/*
 installer/win/CernVMWebAPI/CernVMWebAPI/obj/*
