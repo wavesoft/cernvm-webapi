@@ -138,7 +138,8 @@ var HV_VIRTUALBOX = 1;
  * Websocket configuration
  */
 var WS_ENDPOINT = "ws://127.0.0.1:5624",
-    WS_URI = "cernvm-webapi://launch";
+    WS_URI = "cernvm-webapi://launch",
+    PROBE_ENDPOINT = "http://127.0.0.1:5624/info";
 
 /**
  * Session bit flags
@@ -552,6 +553,29 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 	this.connecting = true;
 
 	/**
+	 * Lightweight probing, using HTTP GET on the /info endpoint
+	 * instead of WebSockets. This is practical on Firefox, where
+	 * each websocket attempt causes a blocking delay
+	 */
+	var light_probe = function(cb) {
+
+		// Send request
+		XHRequest.request(
+			PROBE_ENDPOINT,
+			function(data, error) {
+				if (data == null) {
+					// Fire error callback
+					cb(false);
+				} else {
+					// Fire success callback
+					cb(true);
+				}	
+			}
+		);
+
+	}
+
+	/**
 	 * Socket probing function
 	 *
 	 * This function tries to open a websocket and fires the callback
@@ -746,34 +770,45 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 	};
 
 	/**
-	 * Prope a socket with retries if failed
+	 * Lightweight probing with retries
 	 */
-	var probe_socket_with_retries = function( probe_timeout, retries, callback ) {
+	var light_probe_with_retries = function( probe_timeout, retries, callback ) {
 		var tries = 1,
+			do_retry = function() {
+				// Check if we ran out of retries
+				if (++tries > retries) {
+					console.log("[socket] Ran out of retries");
+					callback(false);
+					return;
+				} else {
+					// Otherwise schedule another try
+					console.log("[socket] Scheduling retry in 100ms");
+					setTimeout(do_try, 100);
+				}
+			},
 			do_try = function() {
 			console.log("[socket] Probe try");
 
-			// Probe for connection
-			probe_socket(function(state, socket) {
-				if (state) {
-					// If we got a socket, we are done
-					callback(state, socket);
-					return;
+			// Perform a lightweight probe
+			light_probe(function(status) {
+				// If we got a socket, perform a socket probe
+				if (status) {
+					// Probe for connection
+					probe_socket(function(state, socket) {
+						if (state) {
+							// If we got a socket, we are done
+							callback(state, socket);
+						} else {
+							// Otherwise retry
+							do_retry();
+						}
+					}, probe_timeout);
 				} else {
-
-					// Check if we ran out of retries
-					if (++tries > retries) {
-						console.log("[socket] Ran out of retries");
-						callback(false);
-						return;
-					} else {
-						// Otherwise schedule another try
-						console.log("[socket] Scheduling retry in 100ms");
-						setTimeout(do_try, 100);
-					}
-
+					// Otherwise retry
+					do_retry();
 				}
-			}, probe_timeout);
+			});
+
 		}
 
 		console.log("[socket] Trying socket probe with ",retries," retries");
@@ -784,7 +819,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 	// (Probe a socket with 4 retries before reaching a decision of launching
 	//  the plug-in via URL)
 	console.log("[socket] Starting probe with 4 retries");
-	probe_socket_with_retries( 500, 4, function(state, socket) {
+	light_probe_with_retries( 500, 4, function(state, socket) {
 		if (state) {
 			// A socket is directly available
 			console.log("[socket] Got socket");
@@ -1450,6 +1485,67 @@ UserInteraction.prototype.handleInteractionEvent = function( data ) {
 
 
 }
+/**
+ * Cross-browser implementation of XML HTTP Request
+ */
+var XHRequest = {
+
+	/**
+	 * Cross-browser XML HTTP factory objects
+	 */
+	XMLHttpFactories:  [
+	    function () {return new XMLHttpRequest()},
+	    function () {return new ActiveXObject("Msxml2.XMLHTTP")},
+	    function () {return new ActiveXObject("Msxml2.XMLHTTP.3.0")},
+	    function () {return new ActiveXObject("Msxml2.XMLHTTP.6.0")},
+	    function () {return new ActiveXObject("Msxml3.XMLHTTP")},
+	    function () {return new ActiveXObject("Microsoft.XMLHTTP")}
+	],
+
+	/**
+	 * Send an XML HTTP Request
+	 */
+	request: function(url,callback,postData) {
+	    var req = this.createXMLHTTPObject();
+	    if (!req) return;
+	    var method = (postData) ? "POST" : "GET";
+	    req.open(method,url,true);
+	    if (postData)
+	        req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+	    req.onreadystatechange = function () {
+	        if (req.readyState != 4) return;
+	        if (req.status != 200 && req.status != 304) {
+	        	callback(null, req.status);
+	            return;
+	        }
+	        callback(req.responseText);
+	    }
+	    req.ontimeout = function() {
+	    	callback(null, false);
+	    }
+	    if (req.readyState == 4) return;
+	    req.send(postData);
+	},
+
+	/**
+	 * XML HTTP Object fractory for the different cases
+	 */
+	createXMLHTTPObject: function() {
+	    var xmlhttp = false;
+	    for (var i=0;i<this.XMLHttpFactories.length;i++) {
+	        try {
+	            xmlhttp = this.XMLHttpFactories[i]();
+	        }
+	        catch (e) {
+	            continue;
+	        }
+	        break;
+	    }
+	    return xmlhttp;
+	}
+
+
+};
 /**
  * WebAPI Socket handler
  */

@@ -2,10 +2,10 @@
 /**
  * WebAPI Socket handler
  */
-_NS_.Socket = function() {
+var Socket = function() {
 
 	// Superclass constructor
-	_NS_.EventDispatcher.call(this);
+	EventDispatcher.call(this);
 
 	// The user interaction handler
 	this.interaction = new UserInteraction(this);
@@ -29,19 +29,19 @@ _NS_.Socket = function() {
 /**
  * Subclass event dispatcher
  */
-_NS_.Socket.prototype = Object.create( _NS_.EventDispatcher.prototype );
+Socket.prototype = Object.create( EventDispatcher.prototype );
 
 /**
  * Forward function for WebAPIPlugin : Reheat a connection
  */
-_NS_.Socket.prototype.__reheat = function( socket ) {
+Socket.prototype.__reheat = function( socket ) {
 
 }
 
 /**
  * Cleanup after shutdown/close
  */
-_NS_.Socket.prototype.__handleClose = function() {
+Socket.prototype.__handleClose = function() {
 
 	// Fire the disconnected event
 	this.__fire("disconnected", []);
@@ -54,14 +54,14 @@ _NS_.Socket.prototype.__handleClose = function() {
 /**
  * Handle connection acknowlegement
  */
-_NS_.Socket.prototype.__handleOpen = function(data) {
+Socket.prototype.__handleOpen = function(data) {
 	this.__fire("connected", data['version']);
 }
 
 /**
  * Handle raw incoming data
  */
-_NS_.Socket.prototype.__handleData = function(data) {
+Socket.prototype.__handleData = function(data) {
 	var o = JSON.parse(data);
 
 	// Forward all the frames of the given ID to the
@@ -92,7 +92,7 @@ _NS_.Socket.prototype.__handleData = function(data) {
 /**
  * Send a JSON frame
  */
-_NS_.Socket.prototype.send = function(action, data, responseEvents, responseTimeout) {
+Socket.prototype.send = function(action, data, responseEvents, responseTimeout) {
 	var self = this;
 	var timeoutTimer = null;
 
@@ -194,7 +194,7 @@ _NS_.Socket.prototype.send = function(action, data, responseEvents, responseTime
 /**
  * Close connection
  */
-_NS_.Socket.prototype.close = function() {
+Socket.prototype.close = function() {
 	if (!this.connected) return;
 
 	// Disconnect
@@ -209,7 +209,7 @@ _NS_.Socket.prototype.close = function() {
 /**
  * Establish connection
  */
-_NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
+Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 	var self = this;
 	if (this.connected) return;
 
@@ -220,6 +220,29 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 	// Concurrency-check
 	if (this.connecting) return;
 	this.connecting = true;
+
+	/**
+	 * Lightweight probing, using HTTP GET on the /info endpoint
+	 * instead of WebSockets. This is practical on Firefox, where
+	 * each websocket attempt causes a blocking delay
+	 */
+	var light_probe = function(cb) {
+
+		// Send request
+		XHRequest.request(
+			PROBE_ENDPOINT,
+			function(data, error) {
+				if (data == null) {
+					// Fire error callback
+					cb(false);
+				} else {
+					// Fire success callback
+					cb(true);
+				}	
+			}
+		);
+
+	}
 
 	/**
 	 * Socket probing function
@@ -416,34 +439,45 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 	};
 
 	/**
-	 * Prope a socket with retries if failed
+	 * Lightweight probing with retries
 	 */
-	var probe_socket_with_retries = function( probe_timeout, retries, callback ) {
+	var light_probe_with_retries = function( probe_timeout, retries, callback ) {
 		var tries = 1,
+			do_retry = function() {
+				// Check if we ran out of retries
+				if (++tries > retries) {
+					console.log("[socket] Ran out of retries");
+					callback(false);
+					return;
+				} else {
+					// Otherwise schedule another try
+					console.log("[socket] Scheduling retry in 100ms");
+					setTimeout(do_try, 100);
+				}
+			},
 			do_try = function() {
 			console.log("[socket] Probe try");
 
-			// Probe for connection
-			probe_socket(function(state, socket) {
-				if (state) {
-					// If we got a socket, we are done
-					callback(state, socket);
-					return;
+			// Perform a lightweight probe
+			light_probe(function(status) {
+				// If we got a socket, perform a socket probe
+				if (status) {
+					// Probe for connection
+					probe_socket(function(state, socket) {
+						if (state) {
+							// If we got a socket, we are done
+							callback(state, socket);
+						} else {
+							// Otherwise retry
+							do_retry();
+						}
+					}, probe_timeout);
 				} else {
-
-					// Check if we ran out of retries
-					if (++tries > retries) {
-						console.log("[socket] Ran out of retries");
-						callback(false);
-						return;
-					} else {
-						// Otherwise schedule another try
-						console.log("[socket] Scheduling retry in 100ms");
-						setTimeout(do_try, 100);
-					}
-
+					// Otherwise retry
+					do_retry();
 				}
-			}, probe_timeout);
+			});
+
 		}
 
 		console.log("[socket] Trying socket probe with ",retries," retries");
@@ -454,7 +488,7 @@ _NS_.Socket.prototype.connect = function( cbAPIState, autoLaunch ) {
 	// (Probe a socket with 4 retries before reaching a decision of launching
 	//  the plug-in via URL)
 	console.log("[socket] Starting probe with 4 retries");
-	probe_socket_with_retries( 500, 4, function(state, socket) {
+	light_probe_with_retries( 500, 4, function(state, socket) {
 		if (state) {
 			// A socket is directly available
 			console.log("[socket] Got socket");

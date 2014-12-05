@@ -8,7 +8,8 @@ var HV_VIRTUALBOX = 1;
  * Websocket configuration
  */
 var WS_ENDPOINT = "ws://127.0.0.1:5624",
-    WS_URI = "cernvm-webapi://launch";
+    WS_URI = "cernvm-webapi://launch",
+    PROBE_ENDPOINT = "http://127.0.0.1:5624/info";
 
 /**
  * Session bit flags
