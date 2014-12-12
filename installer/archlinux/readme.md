@@ -2,10 +2,9 @@ Archlinux
 =========
 If order to participate to the challenge on Archlinux, you'll need `virtualbox` and `cernvm-webapi`.
 
-1. Install `virtualbox` and its kernel module as root.
+1. Install the dependencies, `virtualbox` and its kernel module as root.
 
-		# pacman -S virtualbox
-		# pacman -S virtualbox-host-modules
+		# pacman -S gcc cmake gksu virtualbox virtualbox-host-modules
 
 	* If you have a custom kernel, you'll need to build the kernel module yourself.
 
