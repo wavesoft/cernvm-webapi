@@ -29,7 +29,7 @@ If order to participate to the challenge on Archlinux, you'll need `virtualbox` 
 
 4. Install `cernvm-webapi`. If everything when well, the package should be created and you only need to install it as root.
 
-		# pacman -U cernvm-webapi
+		# pacman -U cernvm-webapi-*
 
 5. Start `cernvm-webapi`, it can be run as a normal user even thought it is going to ask for root access.
 
