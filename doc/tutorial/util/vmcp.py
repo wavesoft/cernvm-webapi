@@ -148,7 +148,7 @@ class VMCPSigner:
 
 			# 3) URL-Encode values
 			# 4) Represent in key=value\n format
-			strBuffer += "%s=%s\n" % ( str(k).lower(), urllib.quote(str(v)) )
+			strBuffer += "%s=%s\n" % ( str(k).lower(), urllib.quote(str(v),'~') )
 
 		# 5) Append Salt
 		strBuffer += salt
