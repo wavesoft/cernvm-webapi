@@ -3,6 +3,8 @@ cernvm-webapi
 
 CernVM WebAPI Based on URI-Handlers
 
+Visit the wiki page for tutorials and more information : (https://github.com/wavesoft/cernvm-webapi/wiki)[https://github.com/wavesoft/cernvm-webapi/wiki]
+
 Building
 ========
 
