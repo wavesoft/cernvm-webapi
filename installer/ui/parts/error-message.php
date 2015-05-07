@@ -12,14 +12,9 @@
 		<div class="container-fluid text-center">
 			<br />
 			<h1 class="webapi-header"><img src="img/icon-cernvm.png" alt="CernVM Logo" /> CernVM <span>WebAPI</span></h1>
-			<p>You need to install the CernVM WebAPI plugin to get started.</p>
 			<br />
 			<div class="webapi-well alert alert-danger">
-				<p>The CernVM WebAPI Plugin is currently not availble on the <strong><?= $PLATFORM_NAME; ?></strong> platform.</p>
-			</div>
-			<div class="webapi-message">
-				<br />
-				<p><a href="https://github.com/wavesoft/cernvm-webapi#building">You can still build it from sources if you like</a></p>
+				<p><?php echo $PLATFORM['message']; ?></p>
 			</div>
 
 			<div class="webapi-footer">

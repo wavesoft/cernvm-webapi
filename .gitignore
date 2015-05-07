@@ -36,3 +36,4 @@ doc/tutorial/server.py
 doc/tutorial/static/index.html
 
 *.pyc
+*.DS_Store

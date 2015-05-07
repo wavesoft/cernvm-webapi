@@ -16,29 +16,42 @@
 				<p>You need to install the CernVM WebAPI app to get started.</p>
 				<br />
 				<div class="webapi-well well">
-					<p>We could not detect your platform?</p>
-					<div class="btn-group">
-						<a href="?plaf=windows" class="btn btn-lg btn-default"><img style="width:32px" src="img/plaf-windows.png" alt="Windows" /></a>
-						<a href="?plaf=macintosh" class="btn btn-lg btn-default"><img style="width:32px" src="img/plaf-macintosh.png" alt="Macintosh" /></a>
-						<a href="?plaf=linux" class="btn btn-lg btn-default"><img style="width:32px" src="img/plaf-linux-generic.png" alt="Linux" /></a>
-					</div>
+					<p><a id="install-btn" class="btn btn-primary btn-lg" href="<?= $FILES[0]['href']; ?>">Install app</a></p>
+					<small>Version <em><?= $FILES[0]['version']; ?></em> for <?= $PLATFORM['title']; ?></small>
 				</div>
 			</div>
 			<div id="pane-standby">
+				<p>This message will automatically go away when the plug-in is installed.</p>
+				<br />
+				<div class="webapi-instructions">
+					<ol>
+					<?php
+					foreach ($BROWSER['guidelines'] as $msg) {
 
+						// Replace filename
+						$msg = str_replace('%', $FILES[0]['name'], $msg);
+
+						// Render li
+						echo "						<li>$msg</li>\n";
+
+					}
+					?>
+					</ol>
+				</div>
+				<p class="footer-label"><a target="_blank" href="<?= $FILES[0]['href']; ?>">Click here to retry the download if it failed.</a></p>
 			</div>
 			<div class="webapi-footer">
 				<a href="http://cernvm.cern.ch/portal" target="_blank">Learn more information about the CernVM technology</a>
 			</div>
 		</div>
 		<?php
-		if (strtolower($USER['browser']) == 'msie') {
+		if ($BROWSER['group'] == 'msie') {
 		?> 
 			<script type="text/vbscript" language="vbscript">
 			Sub LaunchInstaller()
 				Dim Installer
 				Set Installer = CreateObject("WindowsInstaller.Installer")
-				Installer.InstallProduct "http://labs.wavesoft.gr/webapi/<?= $PLATFORM_PACKAGES[0]['href']; ?>", ""
+				Installer.InstallProduct "http://labs.wavesoft.gr/webapi/<?= $FILES[0]['href']; ?>", ""
 			End Sub
 			</script>
 			<script type="text/javascript" language="javascript">
