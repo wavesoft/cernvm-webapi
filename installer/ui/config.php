@@ -86,8 +86,8 @@ $PLATFORMS = array(
 
 				// Match ALL this patterns for picking a file
 				'match-files' => array(
-					$FILE_ARCH_64,
-					'/\.exe/'
+					/* 32-bit binaries also work on 64-bit */
+					'/\.exe|\.msi/'
 					)
 				),
 
@@ -100,7 +100,7 @@ $PLATFORMS = array(
 
 				'match-files' => array(
 					$FILE_ARCH_32,
-					'/\.exe/'
+					'/\.exe|\.msi/'
 					)
 				)
 
@@ -228,7 +228,7 @@ $PLATFORMS = array(
 
 				// Files to match
 				'match-files' => array(
-					$FILE_ARCH_64,
+					$FILE_ARCH_32,
 					'/\.rpm|\.deb/'
 					),
 

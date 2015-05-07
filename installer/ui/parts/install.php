@@ -16,8 +16,8 @@
 				<p>You need to install the CernVM WebAPI app to get started.</p>
 				<br />
 				<div class="webapi-well well">
-					<p><a id="install-btn" class="btn btn-primary btn-lg" href="<?= $FILES[0]['href']; ?>">Install app</a></p>
-					<small>Version <em><?= $FILES[0]['version']; ?></em> for <?= $PLATFORM['title']; ?></small>
+					<p><a id="install-btn" class="btn btn-primary btn-lg" href="<?php echo $FILES[0]['href']; ?>">Install app</a></p>
+					<small>Version <em><?php echo $FILES[0]['version']; ?></em> for <?php echo $PLATFORM['title']; ?></small>
 				</div>
 			</div>
 			<div id="pane-standby">
@@ -38,7 +38,7 @@
 					?>
 					</ol>
 				</div>
-				<p class="footer-label"><a target="_blank" href="<?= $FILES[0]['href']; ?>">Click here to retry the download if it failed.</a></p>
+				<p class="footer-label"><a target="_blank" href="<?php echo $FILES[0]['href']; ?>">Click here to retry the download if it failed.</a></p>
 			</div>
 			<div class="webapi-footer">
 				<a href="http://cernvm.cern.ch/portal" target="_blank">Learn more information about the CernVM technology</a>
@@ -51,7 +51,7 @@
 			Sub LaunchInstaller()
 				Dim Installer
 				Set Installer = CreateObject("WindowsInstaller.Installer")
-				Installer.InstallProduct "http://labs.wavesoft.gr/webapi/<?= $FILES[0]['href']; ?>", ""
+				Installer.InstallProduct "http://labs.wavesoft.gr/webapi/<?php echo $FILES[0]['href']; ?>", ""
 			End Sub
 			</script>
 			<script type="text/javascript" language="javascript">

@@ -384,17 +384,13 @@ if (isset($PLATFORM['match-files'])) {
 # RENDERING LOGIC
 ################################################################################
 
-?>
-<!--
-<?php
+/*
 echo 'PLATFORM = '; print_r($PLATFORM);
 echo 'BROWSER = ';print_r($BROWSER);
 echo 'FILES = ';print_r($FILES);
 echo 'UA_DETECT = ';print_r($USER_AGENT);
 echo 'USER_AGENT = "' . $_SERVER['HTTP_USER_AGENT'] . '"\n';
-?>
--->
-<?php
+*/
 
 // Get the page to render
 $page = "install";
@@ -408,7 +404,7 @@ if (!file_exists('parts/'.$page.'.php')) {
 }
 
 // Check for empty install page
-if (($page == "install") && (count($FILES) == 0)) {
+if ((($page == "install") || ($page == "install-list")) && (count($FILES) == 0)) {
 	$page = 'error-no-files';	
 }
 

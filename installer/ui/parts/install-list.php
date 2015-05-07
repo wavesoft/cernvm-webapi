@@ -35,10 +35,8 @@
 									// Match files for this list item
 									$m_files = filter_files( $FILES, $li['match_files'] );
 
-									// Pick disabled class
-									if (count($m_files) == 0) {
-										echo '<a class="install-btn btn btn-primary disabled" href="#">'.$li['title'].'</a>';
-									} else {
+									// Don't show missing types
+									if (count($m_files) > 0) {
 										echo '<a class="install-btn btn btn-primary" href="'.$m_files[0]['href'].'">'.$li['title'].'</a>';
 									}
 
@@ -48,7 +46,7 @@
 							?>
 						</div>
 					</div>
-					<small>Version <em><?= $FILES[0]['version']; ?></em> for <?= $PLATFORM['title']; ?></small>
+					<small>Version <em><?php echo $FILES[0]['version']; ?></em> for <?php echo $PLATFORM['title']; ?></small>
 				</div>
 			</div>
 			<div id="pane-standby">
@@ -66,7 +64,7 @@
 					?>
 					</ol>
 				</div>
-				<p class="footer-label"><a target="_blank" href="<?= $FILES[0]['href']; ?>">Click here to retry the download if it failed.</a></p>
+				<p class="footer-label"><a target="_blank" href="<?php echo $FILES[0]['href']; ?>">Click here to retry the download if it failed.</a></p>
 			</div>
 			<div class="webapi-footer">
 				<a href="http://cernvm.cern.ch/portal" target="_blank">Learn more information about the CernVM technology</a>

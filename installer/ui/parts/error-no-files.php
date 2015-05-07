@@ -15,7 +15,7 @@
 			<p>You need to install the CernVM WebAPI plugin to get started.</p>
 			<br />
 			<div class="webapi-well alert alert-danger">
-				<p>The CernVM WebAPI Plugin is currently not availble on the <strong><?= $PLATFORM['title']; ?></strong> platform.</p>
+				<p>The CernVM WebAPI Plugin is currently not availble on the <strong><?php echo $PLATFORM['title']; ?></strong> platform.</p>
 			</div>
 			<div class="webapi-message">
 				<br />
