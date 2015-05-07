@@ -1,0 +1,3 @@
+[submodule "extern/libcernvm"]
+	path = extern/libcernvm
+	url = https://github.com/wavesoft/libcernvm.git

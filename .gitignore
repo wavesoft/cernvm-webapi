@@ -37,3 +37,7 @@ doc/tutorial/static/index.html
 
 *.pyc
 *.DS_Store
+
+doc/tutorial/cms-ODA-user-data.txt
+
+doc/tutorial/hendrik.py
