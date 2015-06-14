@@ -738,7 +738,7 @@ SocketPrototype.connect = function( cbAPIState, autoLaunch ) {
 		});
 
 		// We managed to connect, we do have an API installed
-		if (cbAPIState) cbAPIState(true);
+		if (cbAPIState && !reheat) cbAPIState(true);
 
 	};
 
