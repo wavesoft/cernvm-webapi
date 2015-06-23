@@ -452,9 +452,6 @@ void CVMWebAPISession::sendStateVariables() {
     if (isAborting) return;
 	Json::Value root;
 
-	// Synchronize parameters file
-	hvSession->parameters->sync();
-
 	// Populate core protocol fields
 	root["type"] = "event";
 	root["name"] = "stateVariables";
