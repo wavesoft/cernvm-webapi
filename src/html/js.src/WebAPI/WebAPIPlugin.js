@@ -212,3 +212,12 @@ WebAPIPluginPrototype.controlSession = function(session_id, action, callback) {
 	});
 
 };
+
+/**
+ * Synchronize the state of all session objects
+ */
+WebAPIPluginPrototype.syncSessions = function() {
+	for (var i=0; i<this._sessions.length; i++) {
+		this._sessions[i].ref.sync();
+	}
+};

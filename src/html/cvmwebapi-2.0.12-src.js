@@ -16,7 +16,7 @@ var __pluginSingleton = null,
 _NS_.debugLogging = true;
 
 /**
- * Let CVMWeb that the page is loaded (don't register page loaded)
+ * Let CVMWeb know that the page is loaded (don't register page loaded)
  */
 _NS_.markPageLoaded = function() {
     __pageLoaded = true;
@@ -70,6 +70,11 @@ _NS_.startCVMWebAPI = function( cbOK, cbFail, unused ) {
 
 		// Create a CernVM WebAPI Plugin Instance
 		var instance = new WebAPIPlugin();
+
+		// Register synchronization when focused the page
+		window.addEventListener('focus', function() {
+			instance.syncSessions();
+		});
 
 		// Connect and wait for status
 		instance.connect(function( hasAPI ) {
@@ -1764,6 +1769,15 @@ WebAPIPluginPrototype.controlSession = function(session_id, action, callback) {
 
 	});
 
+};
+
+/**
+ * Synchronize the state of all session objects
+ */
+WebAPIPluginPrototype.syncSessions = function() {
+	for (var i=0; i<this._sessions.length; i++) {
+		this._sessions[i].ref.sync();
+	}
 };
 
 
