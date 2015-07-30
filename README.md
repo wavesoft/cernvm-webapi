@@ -30,9 +30,10 @@ Assuming that you have all the required dependencies in place you can prepare yo
 Here is a step-by step guide for building cernvm-webapi:
 
     mkdir cernvm
-    git clone https://github.com/wavesoft/libcernvm
     git clone https://github.com/wavesoft/cernvm-webapi
     cd cernvm-webapi
+	git submodule init
+	git submodule update
 
 According to your system, (here for 64-bit linux)
 
