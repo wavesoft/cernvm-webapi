@@ -92,7 +92,7 @@ int CVMWebserver::api_handler(struct mg_connection *conn) {
 
             // Initialize a new connection if such connection
             // does not exist.
-            boost::mutex::scoped_lock lock(self->connMutex);
+			std::unique_lock<std::mutex> localLock(self->connMutex);
             c = new CVMWebserverConnection( self->factory.createHandler(domain, url) );
             c->isIterated = true;
             self->connections[conn] = c;
@@ -256,7 +256,7 @@ CVMWebserver::~CVMWebserver() {
 
 	// Destroy connections
     {
-        boost::mutex::scoped_lock lock(connMutex);
+		std::unique_lock<std::mutex> localLock(connMutex);
 
         std::map<mg_connection*, CVMWebserverConnection*>::iterator it;
         for (it=connections.begin(); it!=connections.end(); ++it) {
@@ -301,8 +301,8 @@ void CVMWebserver::poll( const int timeout) {
 
     // Mark all the connections as 'not iterated'
     {
-        boost::mutex::scoped_lock lock(connMutex);
-        std::map<mg_connection*, CVMWebserverConnection*>::iterator it;
+		std::unique_lock<std::mutex> localLock(connMutex);
+		std::map<mg_connection*, CVMWebserverConnection*>::iterator it;
         for (it=connections.begin(); it!=connections.end(); ++it) {
             CVMWebserverConnection * c = it->second;
             c->isIterated = false;
@@ -317,8 +317,8 @@ void CVMWebserver::poll( const int timeout) {
 
     // Find dead connections
     {
-        boost::mutex::scoped_lock lock(connMutex);
-        std::map<mg_connection*, CVMWebserverConnection*>::iterator it;
+		std::unique_lock<std::mutex> localLock(connMutex);
+		std::map<mg_connection*, CVMWebserverConnection*>::iterator it;
         for (it=connections.begin(); it!=connections.end(); ++it) {
             CVMWebserverConnection * c = it->second;
 
@@ -372,9 +372,9 @@ void CVMWebserver::start() {
 bool CVMWebserver::hasLiveConnections() {
     CRASH_REPORT_BEGIN;
     try {
-        boost::mutex::scoped_lock lock(connMutex);
-        return !connections.empty();
-    } catch (boost::lock_error&) {
+		std::unique_lock<std::mutex> localLock(connMutex);
+		return !connections.empty();
+    } catch (exception e) {
         return connections.empty();
     }
     CRASH_REPORT_END;

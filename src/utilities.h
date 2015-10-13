@@ -30,9 +30,11 @@
 #include <CernVM/Hypervisor.h>
 #include <CernVM/ProgressFeedback.h>
 
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/locks.hpp>
-#include <boost/thread/condition_variable.hpp>
+//#include <boost/thread/mutex.hpp>
+//#include <boost/thread/locks.hpp>
+//#include <boost/thread/condition_variable.hpp>
+#include <mutex>
+#include <condition_variable>
 
 /**
  * Compile and return a Json::Value with all the state information
@@ -54,7 +56,7 @@ public:
 	 * Increment the usage
 	 */
 	void increment() {
-        boost::unique_lock<boost::mutex> lock(accessMutex);
+        std::unique_lock<std::mutex> lock(accessMutex);
         usageCounter++;
 	}
 
@@ -63,7 +65,7 @@ public:
 	 */
 	void decrement() {
 	    {
-	        boost::unique_lock<boost::mutex> lock(accessMutex);
+	        std::unique_lock<std::mutex> lock(accessMutex);
 	        usageCounter--;
 	    }
 	    // Notify condition when we reached zero
@@ -75,15 +77,15 @@ public:
 	 * Wait until usages reaches 0
 	 */
 	void wait() {
-		boost::unique_lock<boost::mutex> lock(accessMutex);
+		std::unique_lock<std::mutex> lock(accessMutex);
 		while(usageCounter > 0) {
 			drainCondition.wait(lock);
 		}
 	}
 
 private:
-	boost::mutex 					accessMutex;
-	boost::condition_variable 		drainCondition;
+	std::mutex 						accessMutex;
+	std::condition_variable 		drainCondition;
 	int 							usageCounter;
 };
 

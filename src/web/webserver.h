@@ -23,8 +23,11 @@
 #define WEBSERVER_H
 
 #include <mongoose.h>
-#include <boost/thread/mutex.hpp>
+//#include <boost/thread/mutex.hpp>
 #include <config.h>
+
+#include <thread>
+#include <mutex>
 
 #include <string>
 #include <map>
@@ -182,7 +185,7 @@ private:
 	/**
 	 * Mutex for accessing the connections array
 	 */
-	boost::mutex connMutex;
+	std::mutex connMutex;
 
 	/**
 	 * The mongoose server instance

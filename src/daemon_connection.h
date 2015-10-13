@@ -29,9 +29,13 @@
 #include <CernVM/Callbacks.h>
 #include <CernVM/CrashReport.h>
 
-#include <boost/make_shared.hpp>
-#include <boost/bind.hpp>
-#include <boost/thread.hpp>
+//#include <boost/make_shared.hpp>
+//#include <boost/bind.hpp>
+//#include <boost/thread.hpp>
+#include <memory>
+#include <functional>
+#include <thread>
+
 #include <utilities.h>
 
 /**
@@ -47,13 +51,14 @@ public:
 		: WebsocketAPI(domain, uri), core(core), privileged(false), userInteraction(), interactionCallback(), threadDrain(), installInProgress(false)
 	{
 	    CRASH_REPORT_BEGIN;
+		using namespace std::placeholders;
 
 		// Prepare user interaction
-		userInteraction = boost::make_shared<UserInteraction>();
-		userInteraction->setConfirmHandler( boost::bind( &DaemonConnection::__callbackConfim, this, _1, _2, _3 ) );
-		userInteraction->setAlertHandler( boost::bind( &DaemonConnection::__callbackAlert, this, _1, _2, _3 ) );
-		userInteraction->setLicenseHandler( boost::bind( &DaemonConnection::__callbackLicense, this, _1, _2, _3 ) );
-		userInteraction->setLicenseURLHandler( boost::bind( &DaemonConnection::__callbackLicenseURL, this, _1, _2, _3 ) );
+		userInteraction = std::make_shared<UserInteraction>();
+		userInteraction->setConfirmHandler(std::bind(&DaemonConnection::__callbackConfim, this, _1, _2, _3));
+		userInteraction->setAlertHandler(std::bind(&DaemonConnection::__callbackAlert, this, _1, _2, _3));
+		userInteraction->setLicenseHandler(std::bind(&DaemonConnection::__callbackLicense, this, _1, _2, _3));
+		userInteraction->setLicenseURLHandler(std::bind(&DaemonConnection::__callbackLicenseURL, this, _1, _2, _3));
 
 		// Reset throttling parameters
 	    throttleTimestamp = 0;
@@ -88,7 +93,7 @@ protected:
 	/**
 	 * Bookkeeping of running threads (for clean shutdown)
 	 */
-	boost::thread_group runningThreads;
+	std::vector<std::thread *> runningThreads;
 
 	/**
 	 * The drain assistance semaphore (declared in utilities.h)
@@ -131,9 +136,9 @@ private:
 	/**
 	 * RequestSession Thread
 	 */
-	void requestSession_thread 					( boost::thread** t, const std::string& eventID, const std::string& vmcpURL );
-	void installHV_andRequestSession_thread 	( boost::thread ** thread, const std::string& eventID, const std::string& vmcpURL );
-	void handleAction_thread 					( boost::thread** t, CVMWebAPISession* session, const std::string& id, const std::string& action, ParameterMapPtr parameters );
+	void requestSession_thread 					( std::thread** t, const std::string& eventID, const std::string& vmcpURL );
+	void installHV_andRequestSession_thread 	( std::thread ** thread, const std::string& eventID, const std::string& vmcpURL );
+	void handleAction_thread 					( std::thread** t, CVMWebAPISession* session, const std::string& id, const std::string& action, ParameterMapPtr parameters );
 
 };
 

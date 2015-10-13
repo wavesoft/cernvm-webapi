@@ -162,14 +162,15 @@ void WebsocketAPI::sendEvent( const std::string& event, const VariantArgList& ar
 
 	// Populate json fields
 	for (std::vector< VariantArg >::const_iterator it = argVariants.begin(); it != argVariants.end(); ++it) {
-		if ( const int* pi = boost::get<int>( &(*it) ) )
-			data.append( *pi );
-		else if ( const double* pi = boost::get<double>( &(*it) ) )
-			data.append( *pi );
-		else if ( const float* pi = boost::get<float>( &(*it) ) )
-			data.append( *pi );
-		else if ( const std::string* pi = boost::get<std::string>( &(*it) ) )
-			data.append( *pi );
+		
+		if ((*it).is<int>())
+			data.append(mapbox::util::get<int>(*it) );
+		else if ((*it).is<double>())
+			data.append(mapbox::util::get<double>(*it));
+		else if ((*it).is<float>())
+			data.append(mapbox::util::get<float>(*it));
+		else if ((*it).is<std::string>())
+			data.append(mapbox::util::get<std::string>(*it));
 	}
 	root["data"] = data;
 

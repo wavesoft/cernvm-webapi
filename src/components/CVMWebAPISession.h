@@ -45,14 +45,15 @@ public:
 		  periodicJobsThreadPtr(NULL), apiPortDownCounter(0), isAborting(false), periodicJobsMutex()
 	{ 
 	    CRASH_REPORT_BEGIN;
+		using namespace std::placeholders;
 
 		// Disable by default periodic jobs
 		acceptPeriodicJobs = false;
 
 		// Handle state changes
-        hStateChanged = hvSession->on( "stateChanged", boost::bind( &CVMWebAPISession::__cbStateChanged, this, _1 ) );
-        hResChanged = hvSession->on( "resolutionChanged", boost::bind( &CVMWebAPISession::__cbResolutionChanged, this, _1 ) );
-        hFailure = hvSession->on( "failure", boost::bind( &CVMWebAPISession::__cbFailure, this, _1 ) );
+        hStateChanged = hvSession->on( "stateChanged", std::bind( &CVMWebAPISession::__cbStateChanged, this, _1 ) );
+		hResChanged = hvSession->on("resolutionChanged", std::bind(&CVMWebAPISession::__cbResolutionChanged, this, _1));
+		hFailure = hvSession->on("failure", std::bind(&CVMWebAPISession::__cbFailure, this, _1));
 
         // Enable progress feedback to the HVSessionPtr FSM.
         //
@@ -60,7 +61,7 @@ public:
         // make callbackForwarder to listen for it's progress events, and then
         // give the progress feedback object for use by the FSM  
         //
-        FiniteTaskPtr ft = boost::make_shared<FiniteTask>();
+		FiniteTaskPtr ft = std::make_shared<FiniteTask>();
         callbackForwarder.listen( ft );
 
         // Clone the download provider in order to provide a multi-threaded support
@@ -68,7 +69,7 @@ public:
         hvSession->setDownloadProvider(downloadProvider);
 
         // That's currently a VBoxSession-only feature
-        boost::static_pointer_cast<VBoxSession>(hvSession)->FSMUseProgress( ft, "Serving request" );
+		std::static_pointer_cast<VBoxSession>(hvSession)->FSMUseProgress(ft, "Serving request");
 
         CVMWA_LOG("Debug", "Session initialized with ID " << uuid << " (str:" << uuid_str << ")");
 
@@ -183,7 +184,7 @@ private:
 	/**
 	 * The pointer to the thread that runs the periodic job
 	 */
-	boost::thread* 	periodicJobsThreadPtr;
+	std::thread* 		periodicJobsThreadPtr;
 
 	/**
 	 * The daemon's core state manager
@@ -239,7 +240,7 @@ private:
     /**
      * Periodic jobs mutex
      */
-    boost::mutex		periodicJobsMutex;
+	std::mutex			periodicJobsMutex;
 
 };
 

@@ -25,7 +25,8 @@
 #include "web/webserver.h"
 #include "web/api.h"
 
-#include <boost/shared_ptr.hpp>
+//#include <boost/shared_ptr.hpp>
+#include <memory>
 
 // Forward declarations for the entire project
 class DaemonCore;
@@ -35,7 +36,7 @@ class DaemonFactory;
 class CVMCallbackFw;
 class CVMWebAPISession;
 
-typedef boost::shared_ptr< CVMWebAPISession >	CVMWebAPISessionPtr;
+typedef std::shared_ptr< CVMWebAPISession >	CVMWebAPISessionPtr;
 
 // Include implementations
 #include "daemon_core.h"

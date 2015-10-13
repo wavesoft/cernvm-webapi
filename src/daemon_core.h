@@ -23,7 +23,8 @@
 #define DAEMON_CORE_H
 
 #include "daemon.h"
-#include <boost/shared_ptr.hpp>
+#include <memory>
+//#include <boost/shared_ptr.hpp>
 
 #include <CernVM/Hypervisor.h>
 #include <CernVM/DomainKeystore.h>
