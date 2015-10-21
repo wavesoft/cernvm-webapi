@@ -283,7 +283,7 @@ void CVMWebAPISession::processPeriodicJobs() {
 	// Delete previous thread instance
 	if (periodicJobsThreadPtr != NULL) {
 		// Stop managing this thread
-		threads::unmanage(periodicJobsThreadPtr);
+		threads::join(periodicJobsThreadPtr);
 		delete periodicJobsThreadPtr;
 	}
 
@@ -385,7 +385,7 @@ void CVMWebAPISession::__cbFailure( VariantArgList& args ) {
 	connection.sendEvent( "failure", args, uuid_str );
 
 	// Poweroff the vm in particular cases
-	if ( (failureFlags & HFL_NO_VIRTUALIZATION != 0) ) {
+	if ( ((failureFlags & HFL_NO_VIRTUALIZATION) != 0) ) {
 		hvSession->stop();
 	}
 
