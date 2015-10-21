@@ -262,7 +262,7 @@ void CVMWebAPISession::abort() {
 
 	// Raise the isAborting flag
 	{
-		boost::unique_lock<boost::mutex> lock(periodicJobsMutex);
+		std::unique_lock<std::mutex> lock(periodicJobsMutex);
 		isAborting = true;
 	}
 
@@ -281,14 +281,14 @@ void CVMWebAPISession::processPeriodicJobs() {
 	if (periodicsRunning) return;
 
 	// Delete previous thread instance
-	if (periodicJobsThreadPtr != NULL)
+	if (periodicJobsThreadPtr != NULL) {
+		// Stop managing this thread
+		threads::unmanage(periodicJobsThreadPtr);
 		delete periodicJobsThreadPtr;
+	}
 
 	// Create new periodic jobs thread
-	try {
-		periodicJobsThreadPtr = new boost::thread( boost::bind( &CVMWebAPISession::periodicJobsThread, this ) );
-	} catch (boost::thread_resource_error& e) {
-	}
+	periodicJobsThreadPtr = threads::make_interruptible( new std::thread( std::bind( &CVMWebAPISession::periodicJobsThread, this ) ) );
 
 	CRASH_REPORT_END;
 }
@@ -298,7 +298,7 @@ void CVMWebAPISession::processPeriodicJobs() {
  */
 void CVMWebAPISession::periodicJobsThread() {
 	CRASH_REPORT_BEGIN;
-	boost::unique_lock<boost::mutex> lock(periodicJobsMutex);
+	std::unique_lock<std::mutex> lock(periodicJobsMutex);
     if (isAborting) return;
 
 	try {
@@ -366,11 +366,6 @@ void CVMWebAPISession::periodicJobsThread() {
         CVMWA_LOG("CRITICAL", "Object pointer access error on restructed object");
         periodicsRunning = false;
 
-	} catch (boost::thread_interrupted &e) {
-		
-		// We are interrupted
-		periodicsRunning = false;
-
 	}
 
 	CRASH_REPORT_END;
@@ -384,7 +379,7 @@ void CVMWebAPISession::__cbFailure( VariantArgList& args ) {
     if (isAborting) return;
 
 	// Check if we switched to a state where API is not available any more
-	int failureFlags = boost::get<int>(args[0]);
+	int failureFlags = mapbox::util::get<int>(args[0]);
 
 	// Forward the failure to the UI
 	connection.sendEvent( "failure", args, uuid_str );
@@ -409,7 +404,7 @@ void CVMWebAPISession::__cbStateChanged( VariantArgList& args ) {
 	connection.sendEvent( "stateChanged", args, uuid_str );
 
 	// Check if we switched to a state where API is not available any more
-	int sessionState = boost::get<int>(args[0]);
+	int sessionState = mapbox::util::get<int>(args[0]);
     std::string apiHost = hvSession->local->get("apiHost", "127.0.0.1");
     std::string apiPort = hvSession->local->get("apiPort", "80");
     std::string apiURL = "http://" + apiHost + ":" + apiPort;
@@ -431,9 +426,9 @@ void CVMWebAPISession::__cbResolutionChanged( VariantArgList& args ) {
     if (isAborting) return;
 
 	// Get resolution information
-	int width = boost::get<int>(args[0]),
-		height = boost::get<int>(args[1]),
-		bpp = boost::get<int>(args[2]);
+	int width = mapbox::util::get<int>(args[0]),
+		height = mapbox::util::get<int>(args[1]),
+		bpp = mapbox::util::get<int>(args[2]);
 
 	// Send state variables
 	connection.sendEvent( "resolutionChanged", ArgumentList(width)(height)(bpp), uuid_str );

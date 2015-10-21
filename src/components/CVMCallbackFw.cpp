@@ -45,10 +45,11 @@ CVMCallbackFw::~CVMCallbackFw() {
  */
 void CVMCallbackFw::listen( FiniteTaskPtr cb ) {
 	CRASH_REPORT_BEGIN;
+	using namespace std::placeholders;
 
 	// Register an anyEvent receiver and keep the slot reference
 	listening.push_back(
-		new DisposableDelegate( cb, boost::bind( &CVMCallbackFw::fire, this, _1, _2 ) )
+		new DisposableDelegate( cb, std::bind( &CVMCallbackFw::fire, this, _1, _2 ) )
 	);
 		
 	CRASH_REPORT_END;

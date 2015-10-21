@@ -26,6 +26,7 @@
 #include <CernVM/ProgressFeedback.h>
 #include <CernVM/Utilities.h>
 #include <CernVM/CrashReport.h>
+#include <CernVM/Threads.h>
 
 #include <CernVM/Hypervisor/Virtualbox/VBoxSession.h>
 
@@ -87,8 +88,8 @@ public:
 		if (periodicJobsThreadPtr != NULL) {
 
 			// Join periodic threads
-			if (periodicsRunning)
-				periodicJobsThreadPtr->join();
+			threads::interrupt(periodicJobsThreadPtr);
+			threads::join(periodicJobsThreadPtr);
 
 			// Delete pointer
 			delete periodicJobsThreadPtr;

@@ -298,14 +298,11 @@ void DaemonConnection::handleAction_thread( std::thread** thread, CVMWebAPISessi
     CVMCallbackFw cb( *this, eventID );
     DrainUseLock lock(threadDrain);
 
-    try {
-        // Handle action
-        session->handleAction(cb, action, parameters);
-        // Remove this thread from the active threads
-        threads::remove_one(runningThreads, thisThread);
-    } catch (std::thread_interrupted &e) {
-        // 
-    }
+    // Handle action
+    session->handleAction(cb, action, parameters);
+    // Remove this thread from the active threads
+    threads::remove_one(runningThreads, thisThread);
+
     CRASH_REPORT_END;
 }
 
@@ -316,101 +313,94 @@ void DaemonConnection::installHV_andRequestSession_thread( std::thread ** thread
     CRASH_REPORT_BEGIN;
     DrainUseLock lock(threadDrain);
 
-    try {
+    std::thread *thisThread = *thread;
+    CVMWA_LOG("Debug", "installHV_andRequestSession_thread: " << thisThread);
 
-        std::thread *thisThread = *thread;
-        CVMWA_LOG("Debug", "installHV_andRequestSession_thread: " << thisThread);
+    // Create a progress feedback
+    CVMCallbackFw cb( *this, eventID );
+    FiniteTaskPtr pTasks = std::make_shared<FiniteTask>();
+    cb.listen( pTasks );
 
-        // Create a progress feedback
-        CVMCallbackFw cb( *this, eventID );
-        FiniteTaskPtr pTasks = std::make_shared<FiniteTask>();
-        cb.listen( pTasks );
+    // Pick a message to prompt
+    std::string pTitle = "Hypervisor required";
+    std::string pMessage = "For this website to work you must have a hypervisor installed in your system. Would you like us to install VirtualBox for you?";
+    if (core.hypervisor && core.hypervisor->version.compareStr(CERNVM_WEBAPI_MIN_HV_VERSION) > 0) {
+        pTitle = "Hypervisor too old";
+        pMessage = "It seems that your current VirtualBox installation (version " + core.hypervisor->version.verString + ") is too old and not properly supported by the CernVM WebAPI. Would you like us to install the latest version for you?";
+    }
 
-        // Pick a message to prompt
-        std::string pTitle = "Hypervisor required";
-        std::string pMessage = "For this website to work you must have a hypervisor installed in your system. Would you like us to install VirtualBox for you?";
-        if (core.hypervisor && core.hypervisor->version.compareStr(CERNVM_WEBAPI_MIN_HV_VERSION) > 0) {
-            pTitle = "Hypervisor too old";
-            pMessage = "It seems that your current VirtualBox installation (version " + core.hypervisor->version.verString + ") is too old and not properly supported by the CernVM WebAPI. Would you like us to install the latest version for you?";
-        }
-
-        // Prompt the user first
-        if (userInteraction->confirm(pTitle, pMessage) != UI_OK) {
-            cb.fire("failed", ArgumentList( "You must have a hypervisor installed in your system to continue." )( HVE_USAGE_ERROR ));
-            threads::remove_one(runningThreads, thisThread);
-            core.installInProgress = false;
-            installInProgress = false;
-
-            // Check if user navigated away with the 
-            // interaction prompt in place
-            if (userInteraction->aborted)
-                userInteraction->abortHandled();
-
-            return;
-        }
-
-        // Install hypervisor
-        int ans = installHypervisor(
-                    core.downloadProvider,
-                    core.keystore,
-                    userInteraction,
-                    pTasks,
-                    2
-                );
+    // Prompt the user first
+    if (userInteraction->confirm(pTitle, pMessage) != UI_OK) {
+        cb.fire("failed", ArgumentList( "You must have a hypervisor installed in your system to continue." )( HVE_USAGE_ERROR ));
+        threads::remove_one(runningThreads, thisThread);
+        core.installInProgress = false;
+        installInProgress = false;
 
         // Check if user navigated away with the 
         // interaction prompt in place
-        if (userInteraction->aborted) {
-            threads::remove_one(runningThreads, thisThread);
-            core.installInProgress = false;
-            installInProgress = false;
+        if (userInteraction->aborted)
             userInteraction->abortHandled();
-            return;
-        }
 
-        // Check for error cases
-        if (ans != HVE_OK) {
-            if ((ans == HVE_NOT_VALIDATED) || (ans == HVE_NOT_TRUSTED)) {
-                cb.fire("failed", ArgumentList( "Integrity validation of the hypervisor configuration failed. Please try again later." )( HVE_USAGE_ERROR ));
-            } else {
-                cb.fire("failed", ArgumentList( "We were unable to install a hypervisor in your system. Please try again manually." )( HVE_USAGE_ERROR ));
-            }
-            threads::remove_one(runningThreads, thisThread);
-            core.installInProgress = false;
-            installInProgress = false;
-            return;
-        }
-
-        // Try to detecy hypervisor again
-        core.hypervisor = detectHypervisor();
-
-        // Was the installation successful? Start requestSession thread
-        if (core.hypervisor) {
-            
-            // Load stored sessions
-            core.hypervisor->loadSessions();
-
-            // Request session in the same thread
-            core.installInProgress = false;
-            installInProgress = false;
-            this->requestSession_thread( &thisThread, eventID, vmcpURL );
-
-            // (Thread will be removed from the pool from within the requestSession)
-            return;
-
-        } else {
-            cb.fire("failed", ArgumentList( "The hypervisor isntallation completed but we were not able to detect it! Please try again later or try to re-install it manually." )( HVE_USAGE_ERROR ));
-            threads::remove_one(runningThreads, thisThread);
-            core.installInProgress = false;
-            installInProgress = false;
-            return;
-        }
-
-    } catch (std::thread_interrupted &e) {
-
-        // Interrupted
-
+        return;
     }
+
+    // Install hypervisor
+    int ans = installHypervisor(
+                core.downloadProvider,
+                core.keystore,
+                userInteraction,
+                pTasks,
+                2
+            );
+
+    // Check if user navigated away with the 
+    // interaction prompt in place
+    if (userInteraction->aborted) {
+        threads::remove_one(runningThreads, thisThread);
+        core.installInProgress = false;
+        installInProgress = false;
+        userInteraction->abortHandled();
+        return;
+    }
+
+    // Check for error cases
+    if (ans != HVE_OK) {
+        if ((ans == HVE_NOT_VALIDATED) || (ans == HVE_NOT_TRUSTED)) {
+            cb.fire("failed", ArgumentList( "Integrity validation of the hypervisor configuration failed. Please try again later." )( HVE_USAGE_ERROR ));
+        } else {
+            cb.fire("failed", ArgumentList( "We were unable to install a hypervisor in your system. Please try again manually." )( HVE_USAGE_ERROR ));
+        }
+        threads::remove_one(runningThreads, thisThread);
+        core.installInProgress = false;
+        installInProgress = false;
+        return;
+    }
+
+    // Try to detecy hypervisor again
+    core.hypervisor = detectHypervisor();
+
+    // Was the installation successful? Start requestSession thread
+    if (core.hypervisor) {
+            
+        // Load stored sessions
+        core.hypervisor->loadSessions();
+
+        // Request session in the same thread
+        core.installInProgress = false;
+        installInProgress = false;
+        this->requestSession_thread( &thisThread, eventID, vmcpURL );
+
+        // (Thread will be removed from the pool from within the requestSession)
+        return;
+
+    } else {
+        cb.fire("failed", ArgumentList( "The hypervisor isntallation completed but we were not able to detect it! Please try again later or try to re-install it manually." )( HVE_USAGE_ERROR ));
+        threads::remove_one(runningThreads, thisThread);
+        core.installInProgress = false;
+        installInProgress = false;
+        return;
+    }
+
     CRASH_REPORT_END;
 }
 
@@ -594,49 +584,37 @@ void DaemonConnection::requestSession_thread( std::thread ** thread, const std::
             // Newline-specific split
             std::string msg = "The website " + domain + " is trying to allocate a " + core.get_hv_name() + " Virtual Machine \"" + vmcpData->get("name") + "\". This website is validated and trusted by CernVM." _EOL _EOL "Do you want to continue?";
 
-            // Interaction might be interrupted
-            try {
+            // Prompt user using the currently active userInteraction 
+            if (userInteraction->confirm("New CernVM WebAPI Session", msg) != UI_OK) {
 
-                // Prompt user using the currently active userInteraction 
-                if (userInteraction->confirm("New CernVM WebAPI Session", msg) != UI_OK) {
-
-                    // Check if user navigated away with the 
-                    // interaction prompt in place
-                    if (userInteraction->aborted) {
-                        threads::remove_one(runningThreads, thisThread);
-                        userInteraction->abortHandled();
-                        return;
-                    }
-
-                    // Manage throttling 
-                    if ((getMillis() - this->throttleTimestamp) <= THROTTLE_TIMESPAN) {
-                        if (++this->throttleDenies >= THROTTLE_TRIES)
-                            this->throttleBlock = true;
-                    } else {
-                        this->throttleDenies = 1;
-                        this->throttleTimestamp = getMillis();
-                    }
-
-                    // Fire error
-                    cb.fire("failed", ArgumentList( "User denied the allocation of new session" )( HVE_ACCESS_DENIED ) );
+                // Check if user navigated away with the 
+                // interaction prompt in place
+                if (userInteraction->aborted) {
                     threads::remove_one(runningThreads, thisThread);
+                    userInteraction->abortHandled();
                     return;
-                
-                } else {
-                
-                    // Reset throttle
-                    this->throttleDenies = 0;
-                    this->throttleTimestamp = 0;
-                
                 }
 
-            } catch (std::thread_interrupted &e) {
+                // Manage throttling 
+                if ((getMillis() - this->throttleTimestamp) <= THROTTLE_TIMESPAN) {
+                    if (++this->throttleDenies >= THROTTLE_TRIES)
+                        this->throttleBlock = true;
+                } else {
+                    this->throttleDenies = 1;
+                    this->throttleTimestamp = getMillis();
+                }
 
-                // Thread entered cleanup state before finishing with the prompt.
-                // Session is not yet open, we are safe to exit.
+                // Fire error
+                cb.fire("failed", ArgumentList( "User denied the allocation of new session" )( HVE_ACCESS_DENIED ) );
                 threads::remove_one(runningThreads, thisThread);
                 return;
-
+                
+            } else {
+                
+                // Reset throttle
+                this->throttleDenies = 0;
+                this->throttleTimestamp = 0;
+                
             }
         
         }
@@ -681,10 +659,6 @@ void DaemonConnection::requestSession_thread( std::thread ** thread, const std::
         // Enable periodic jobs thread after stateChanged is sent
         // (This ensures that apiStateChanged is fired AFTER stateChanged event is sent)
         cvmSession->enablePeriodicJobs(true);
-
-    } catch (std::thread_interrupted &e) {
-
-        // Interrupted
 
     } catch (...) {
 

@@ -27,6 +27,8 @@
 
 //#include <boost/shared_ptr.hpp>
 #include <memory>
+#include <thread>
+#include <functional>
 
 // Forward declarations for the entire project
 class DaemonCore;

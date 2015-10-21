@@ -24,8 +24,8 @@
 
 #include <cstdlib>
 #include <openssl/rand.h>
-#include <boost/make_shared.hpp>
- 
+#include <memory>
+
 #include <CernVM/Utilities.h>
 #include <CernVM/CrashReport.h>
 
