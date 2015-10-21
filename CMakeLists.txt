@@ -240,6 +240,11 @@ else()
         message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
+# On apple, add -stdlib=libc++
+if (APPLE)
+	add_compile_flags( ${PROJECT_NAME} -stdlib=libc++ )
+endif()
+
 # Libraries
 target_link_libraries ( ${PROJECT_NAME} ${CERNVM_LIBRARIES} )
 target_link_libraries ( ${PROJECT_NAME} ${PROJECT_LIBRARIES} )
