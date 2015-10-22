@@ -22,7 +22,7 @@ Maintainer: Ioannis Charalampidis <icharala@cern.ch>
 Section: misc
 Priority: optional
 Standards-Version: ${UPSTREAM_VERSION}
-Build-Depends: debhelper (>= 9), build-essential, libicu-dev
+Build-Depends: debhelper (>= 9), build-essential, libicu-dev, libssl-dev
 Homepage: http://www.cernvm.cern.ch
 
 Package: cernvm-webapi
@@ -104,7 +104,7 @@ cat <<EOF > debian/postinst
 update-desktop-database
 
 # If we are root, switch to the first X user
-if [ $(id -u) -eq 0 ]; then
+if [ \$(id -u) -eq 0 ]; then
 	# Check who's running X and run cernvm-webapi as that user
 	X_TTY=\$(ps ax | grep bin/X | awk '{ print \$2 }' | head -n1)
 	X_USER=\$(who | grep \$X_TTY | awk '{ print \$1 }' | head -n1)
