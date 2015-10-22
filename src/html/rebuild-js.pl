@@ -112,7 +112,7 @@ print DUMP_FILE "})(window.$NS);\n";
 close DUMP_FILE;
 
 # Check if we have yuicompressor in path
-unless (`which yuicompressor` ne "") {
+if (`which yuicompressor` ne "") {
     # Compress
     print "Compressing...";
     `yuicompressor -o cvmwebapi-$VERSION.js cvmwebapi-$VERSION-src.js`;
