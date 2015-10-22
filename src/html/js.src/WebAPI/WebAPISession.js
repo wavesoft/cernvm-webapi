@@ -99,7 +99,10 @@ var WebAPISession = function( socket, session_id, init_callback ) {
                                         this.__config['flags'] = parseSessionFlags(v);
                                     }
                                   } 
-                              }
+                              },
+
+        /* Hypervisor version */
+        "hypervisor"    :   {   get: function () { if (!this.__valid) return u; return this.__config['hypervisor'];          } }
 
     });
 

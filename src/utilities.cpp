@@ -58,6 +58,14 @@ Json::Value sessionStateInfoToJSON( HVSessionPtr hvSession ) {
 	config["executionCap"] = hvSession->parameters->getNum<int>("executionCap", 100);
 	config["flags"] = hvSession->parameters->getNum<int>("flags", 0);
 
+	// Get hypervisor version
+	int hvType = hvSession->hypervisor->getType();
+	config["hypervisor"] = "unknown";
+	if (hvType == HV_NONE) {
+		config["hypervisor"] = "none";
+	} else if (hvType == HV_VIRTUALBOX) {
+		config["hypervisor"] = "virtualbox-" + hvSession->hypervisor->version.verString;
+	}
 
 	// Update data field
 	data.append(config);
