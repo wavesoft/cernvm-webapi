@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Which branch to build
+GIT_BRANCH=master
+
 # Fetch sources from git
 GIT_DIR=$(mktemp -d)
 (
@@ -10,6 +13,10 @@ GIT_DIR=$(mktemp -d)
 	echo "INFO: Fetching libcernvm from git..." 1>&2
 	git clone https://github.com/wavesoft/libcernvm.git 2>/dev/null >/dev/null
 	[ $? -ne 0 ] && echo "ERROR: Could not check-out libcernvm!" 1>&2 && exit 1
+	(cd cernvm-webapi; git checkout ${GIT_BRANCH})
+	[ $? -ne 0 ] && echo "ERROR: Could not switch to ${GIT_BRANCH} branch on cernvm-webapi!" 1>&2 && exit 1
+	(cd libcernvm; git checkout ${GIT_BRANCH})
+	[ $? -ne 0 ] && echo "ERROR: Could not switch to ${GIT_BRANCH} branch on libcernvm!" 1>&2 && exit 1
 )
 
 # Detect version
@@ -18,14 +25,13 @@ UPSTREAM_VERSION=$(cat ${GIT_DIR}/cernvm-webapi/src/config.h | grep -i CERNVM_WE
 # Create a Makefile that steer the build process
 cat <<EOF > ${GIT_DIR}/Makefile
 BUILDDIR = build
-SOURCE_DIR = cernvm-webapi
 CMAKE_BIN = $(which cmake)
 
 all: binary
 
 prepare:
 	mkdir -p \$(BUILDDIR)
-	cd \$(BUILDDIR); \$(CMAKE_BIN) -DSYSTEM_OPENSSL=ON -DCMAKE_BUILD_TYPE=Release -DCRASH_REPORTING=OFF -DTARGET_ARCH=$(uname -p) -DCMAKE_INSTALL_PREFIX=\$(DESTDIR) ../\$(SOURCE_DIR)
+	cd \$(BUILDDIR); \$(CMAKE_BIN) -DCERNVM_LIBSRC=../libcernvm -DSYSTEM_OPENSSL=ON -DCMAKE_BUILD_TYPE=Release -DCRASH_REPORTING=OFF -DTARGET_ARCH=$(uname -p) -DCMAKE_INSTALL_PREFIX=\$(DESTDIR) ../cernvm-webapi
 
 binary: prepare
 	make -C \$(BUILDDIR)
