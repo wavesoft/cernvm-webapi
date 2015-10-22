@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Which branch to build
-GIT_BRANCH=master
+GIT_BRANCH=noboost
 
 # Fetch sources from git
 GIT_DIR=$(mktemp -d)
@@ -13,9 +13,9 @@ GIT_DIR=$(mktemp -d)
 	echo "INFO: Fetching libcernvm from git..." 1>&2
 	git clone https://github.com/wavesoft/libcernvm.git 2>/dev/null >/dev/null
 	[ $? -ne 0 ] && echo "ERROR: Could not check-out libcernvm!" 1>&2 && exit 1
-	(cd cernvm-webapi; git checkout ${GIT_BRANCH})
+	(cd cernvm-webapi; git checkout ${GIT_BRANCH} 2>/dev/null >/dev/null)
 	[ $? -ne 0 ] && echo "ERROR: Could not switch to ${GIT_BRANCH} branch on cernvm-webapi!" 1>&2 && exit 1
-	(cd libcernvm; git checkout ${GIT_BRANCH})
+	(cd libcernvm; git checkout ${GIT_BRANCH} 2>/dev/null >/dev/null)
 	[ $? -ne 0 ] && echo "ERROR: Could not switch to ${GIT_BRANCH} branch on libcernvm!" 1>&2 && exit 1
 )
 
