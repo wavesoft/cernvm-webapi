@@ -111,13 +111,18 @@ print DUMP_FILE $buffer."\n";
 print DUMP_FILE "})(window.$NS);\n";
 close DUMP_FILE;
 
-# Compress
-print "Compressing...";
-`yuicompressor -o cvmwebapi-$VERSION.js cvmwebapi-$VERSION-src.js`;
-if ($? == 0) {
-    print "ok\n";
+# Check if we have yuicompressor in path
+unless (`which yuicompressor` ne "") {
+    # Compress
+    print "Compressing...";
+    `yuicompressor -o cvmwebapi-$VERSION.js cvmwebapi-$VERSION-src.js`;
+    if ($? == 0) {
+        print "ok\n";
+    } else {
+        system("cat -n cvmwebapi-$VERSION-src.js");
+        print "failed\n";
+    }
 } else {
-    system("cat -n cvmwebapi-$VERSION-src.js");
-    print "failed\n";
+    # Otherwise just rename
+    `mv cvmwebapi-$VERSION-src.js cvmwebapi-$VERSION.js`;
 }
-
