@@ -19,6 +19,9 @@ endif()
 set(TARGET_ARCH "${GUESS_ARCH}" CACHE STRING "Override the identified target architecture (x86_64 or i386)" )
 message(STATUS "Building cernvm-webapi for arch: ${TARGET_ARCH}")
 
+# Overridable C++11 parameters
+set(CXX11_FLAGS "" CACHE STRING "Override the C++11 compiler flag(s)" )
+
 # Change OSX architectures
 if (APPLE)
 	set(CMAKE_OSX_ARCHITECTURES ${TARGET_ARCH})
@@ -143,9 +146,6 @@ file ( GLOB_RECURSE WEBAPI_RESOURCES
 		# Get HTML Websites
 		${PROJECT_SOURCE_DIR}/src/html/binary.src/*
 	)
-list( APPEND WEBAPI_RESOURCES 
-		"${PROJECT_SOURCE_DIR}/src/html/cvmwebapi-${VERSION}.js:js/cvmwebapi.js"
-	)
 
 # Setup includes
 include_directories( ${PROJECT_SOURCE_DIR}/src )
@@ -161,6 +161,24 @@ find_package(Perl)
 if(NOT PERL_FOUND)
     message( FATAL_ERROR "CernVM-WebAPI requires perl for building. On windows try ActivePerl (http://www.activestate.com/activeperl)" )
 endif()
+
+# Build javascript sources
+set(CVMWEBAPI_JS_LIB "${PROJECT_SOURCE_DIR}/src/html/cvmwebapi-${VERSION}.js")
+if (NOT EXISTS ${CVMWEBAPI_JS_LIB})
+
+	# Compile CernVM WebAPI library
+    message( STATUS "Rebuilding javascript library" )
+	execute_process(
+		COMMAND ${PERL_EXECUTABLE} "${PROJECT_SOURCE_DIR}/src/html/rebuild-js.pl"
+		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/html
+		)
+
+endif()
+
+# Add javascript library to resources
+list( APPEND WEBAPI_RESOURCES 
+		"${CVMWEBAPI_JS_LIB}:js/cvmwebapi.js"
+	)
 
 # Pick a filename where to place the embedded file contents
 set( GEN_RESOURCES_C "${PROJECT_BINARY_DIR}/generated_data.cpp" )
@@ -232,17 +250,26 @@ endif(WIN32)
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-if(COMPILER_SUPPORTS_CXX11)
-	add_compile_flags( ${PROJECT_NAME} -std=c++11 )
-elseif(COMPILER_SUPPORTS_CXX0X)
-	add_compile_flags( ${PROJECT_NAME} -std=c++0x )
-else()
-        message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
-endif()
+if (CXX11_FLAGS STREQUAL "")
 
-# On apple, add -stdlib=libc++
-if (APPLE)
-	add_compile_flags( ${PROJECT_NAME} -stdlib=libc++ )
+	# Check what compiler flags to add
+	if(COMPILER_SUPPORTS_CXX11)
+		add_compile_flags( ${PROJECT_NAME} -std=c++11 )
+	elseif(COMPILER_SUPPORTS_CXX0X)
+		add_compile_flags( ${PROJECT_NAME} -std=c++0x )
+	else()
+		if ((NOT DEFINED MSVC_VERSION) OR (MSVC_VERSION LESS 1800))
+			message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+		endif()
+	endif()
+
+	# On apple, add -stdlib=libc++
+	if (APPLE)
+		add_compile_flags( ${PROJECT_NAME} -stdlib=libc++ )
+	endif()
+
+else()
+	add_compile_flags( ${PROJECT_NAME} ${CXX11_FLAGS} )
 endif()
 
 # Libraries

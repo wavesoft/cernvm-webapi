@@ -42,7 +42,7 @@ EOS
 
 foreach my $i (0 .. $#ARGV) {
   my $f = $ARGV[$i];
-  $f=$1 if ($f =~ /[^:]+:(.*)/);
+  $f=$1 if ($f =~ /^[^:]+:(.*)/);
   print "  {\"$f\", v$i, sizeof(v$i) - 1},\n";
 }
 
