@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="CernVM WebAPI" Language="1033" Version="2.0.12.0" Manufacturer="PH/SFT Group, CERN" UpgradeCode="70DAC5E8-46A4-4EF3-80B3-A103AE948436">
+	<Product Id="*" Name="CernVM WebAPI" Language="1033" Version="2.0.13.0" Manufacturer="PH/SFT Group, CERN" UpgradeCode="70DAC5E8-46A4-4EF3-80B3-A103AE948436">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
 
     <!-- Uninstall previous versions -->
@@ -17,7 +17,7 @@
 
     <!-- Visual C++ 11 redistributables -->
     <DirectoryRef Id="TARGETDIR">
-      <Merge Id="VCRedist" SourceFile="C:\Program Files (x86)\Common Files\Merge Modules\Microsoft_VC110_CRT_x86.msm" DiskId="1" Language="0"/>      
+      <Merge Id="VCRedist" SourceFile="C:\Program Files (x86)\Common Files\Merge Modules\Microsoft_VC120_CRT_x86.msm" DiskId="1" Language="0"/>      
       <Directory Id="WindowsFolder" Name="WINDOWS"/>
     </DirectoryRef>
     <Feature Id="VCRedist" Title="Visual C++ 11.0 Runtime" AllowAdvertise="no" Display="hidden" Level="1">
@@ -85,7 +85,7 @@
       <Component Id="CernVMWebAPI" Guid="7D61F9E4-BB23-4D39-BD3E-948FE16D8E0F">
         
         <File Id="cernvm_webapi.exe" 
-              Source="..\..\..\..\build_vs2012_t100_xp-Release\Release\cernvm-webapi.exe" 
+              Source="..\..\..\..\build_vs2013_t120_xp-Release\Release\cernvm-webapi.exe" 
               KeyPath="yes" 
               Checksum="yes" />
         
