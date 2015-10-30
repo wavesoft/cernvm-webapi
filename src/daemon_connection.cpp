@@ -630,7 +630,7 @@ void DaemonConnection::requestSession_thread( std::thread ** thread, const std::
         // Open/resume session
         HVSessionPtr session = hv->sessionOpen( vmcpData, pOpen );
         if (!session) {
-            cb.fire("failed", ArgumentList( "Unable to open session" )( HVE_ACCESS_DENIED ) );
+            cb.fire("failed", ArgumentList( "Misconfigured session or wrong secret" )( HVE_ACCESS_DENIED ) );
             threads::remove_one(runningThreads, thisThread);
             return;
         }
